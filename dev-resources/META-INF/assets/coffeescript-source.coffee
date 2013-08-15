@@ -1,0 +1,1 @@
+println "CoffeeScript is fun!"
