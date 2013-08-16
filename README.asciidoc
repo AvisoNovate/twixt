@@ -1,0 +1,66 @@
+== Twixt
+
+Twixt is an extensible asset pipeline for use in Clojure web applications.
+
+Twixt draws inspiration from http://tapestry.apache.org[Apache Tapestry] and Dieter[https://github.com/edgecase/dieter].
+
+Twixt currently supports:
+
+* CoffeeScript to JavaScript compilation (using Rhino)
+* Jade to HTML compilation (using https://github.com/neuland/jade4j[jade4j]
+* Less to CSS compilation (using https://github.com/SomMeri/less4j[less4j]
+
+=== Usage
+
+By default, Twixt serves resources located on the classpath, in the +META-INF/assets/+ folder.
+The contents of this folder is accessible via the URL +/assets/+.
+
+Twixt maps file extensions to MIME types; it then will transform certain MIME types; for example +.coffee+ files are compiled to JavaScript.
+
+[source,clojure]
+----
+(ns example.app
+  (use compojure.core
+       ring.adapter.jetty
+       [io.aviso.twixt]))
+
+;;; Use Compojure to map routes to handlers
+(defroutes app ...)
+
+;;; Create a twixt instance and a middleware to handle /asset/ URLs
+(def app-handler
+  (let [twixt (new-twixt {:development-mode true})
+        twixt-middleware (create-middleware twixt)]
+    (twixt-middleware app)))
+    
+;;; Use the Ring Jetty adapter to serve your site
+(run-jetty app-handler)
+----  
+
+The Twixt middleware intercepts requests for +/assets/+ that map to actual files; it returns nil on anything else so that downstream handlers have their chance.
+
+In development mode, Twixt will write compiled files to the file system (you can configure where if you like). 
+On a restart of the application, it will use those cached files if the source files have not changed. Currently, this only applies to Jade and CoffeeScript source files.
+
+=== Future Plans
+
+The goal is to achieve at least parity with Apache Tapestry. This means:
+
+* E-Tags support
+* Content checksums as part of the asset URL
+* Automatic GZip support
+* Caching of GZipped content
+* Separate URL for GZipped content
+* JavaScript minimization via https://developers.google.com/closure/compiler/[Google Closure]
+* CSS Minification
+* Aggregated JavaScript stacks
+* Aggregated CSS stacks
+
+=== How does Twixt differ from Dieter?
+
+On the application I was building, I had a requirement to deploy as a JAR; Dieter expects all the assets to be on the filesystem; I spent some time attempting to hack the Dieter code to allow resources on the classpath as well.
+When that proved unsuccessful, I decided to build out something a bit more ambitious, that would support the features that have accumulated in Tapestry over the last few years.
+
+Twixt also embraces http://www.infoq.com/presentations/Clojure-Large-scale-patterns-techniques[system as transient state], meaning nothing is stored statically.
+
+Twixt will grow further apart from Dieter as the more advanced pieces are put into place.
