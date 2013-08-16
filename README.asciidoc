@@ -91,6 +91,11 @@ The goal is to achieve at least parity with Apache Tapestry, plus some additiona
 * Aggregated JavaScript stacks
 * Aggregated CSS stacks
 * RequireJS support / modules
+* Leverage core.async
+
+== Stability
+
+Oh, so very, very alpha. But still useful.
 
 === How does Twixt differ from Dieter?
 
