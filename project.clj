@@ -1,6 +1,6 @@
-(defproject twixt "0.1.0-SNAPSHOT"
-  :description "An extensible asset pipeline for Clojure web applications."
-  :url "http://example.com/FIXME"
+(defproject twixt "0.1.0"
+  :description "An extensible asset pipeline for Clojure web applications"
+  :url "https://github.com/AvisoNovate/twixt"
   :license {:name "Apache Sofware Licencse 2.0"
             :url "http://www.apache.org/licenses/LICENSE-2.0.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]
