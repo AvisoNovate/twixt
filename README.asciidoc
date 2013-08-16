@@ -77,10 +77,12 @@ Running with caching enabled in production is not recommended ... there is no pr
 
 === Future Plans
 
-The goal is to achieve at least parity with Apache Tapestry. This means:
+The goal is to achieve at least parity with Apache Tapestry, plus some additional features specific to Clojure. This means:
 
 * E-Tags support
 * Content checksums as part of the asset URL
+* Far-future expires headers
+* ClojureScript compilation
 * Automatic GZip support
 * Caching of GZipped content
 * Separate URL for GZipped content
@@ -88,6 +90,7 @@ The goal is to achieve at least parity with Apache Tapestry. This means:
 * CSS Minification
 * Aggregated JavaScript stacks
 * Aggregated CSS stacks
+* RequireJS support / modules
 
 === How does Twixt differ from Dieter?
 
