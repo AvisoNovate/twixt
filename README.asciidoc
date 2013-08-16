@@ -12,6 +12,8 @@ Twixt currently supports:
 
 Twixt is available under the terms of the Apache Sofware License 2.0.
 
+Twixt is downloadable from the https://clojars.org/io.aviso/twixt[Clojars Repository].
+
 === Usage
 
 By default, Twixt serves resources located on the classpath, in the +META-INF/assets/+ folder.
