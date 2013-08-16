@@ -10,6 +10,8 @@ Twixt currently supports:
 * Jade to HTML compilation (using https://github.com/neuland/jade4j[jade4j])
 * Less to CSS compilation (using https://github.com/SomMeri/less4j[less4j])
 
+Twixt is available under the terms of the Apache Sofware License 2.0.
+
 === Usage
 
 By default, Twixt serves resources located on the classpath, in the +META-INF/assets/+ folder.
@@ -41,6 +43,37 @@ The Twixt middleware intercepts requests for +/assets/+ that map to actual files
 
 In development mode, Twixt will write compiled files to the file system (you can configure where if you like). 
 On a restart of the application, it will use those cached files if the source files have not changed. Currently, this only applies to Jade and CoffeeScript source files.
+
+=== Configuring Twixt
+
+You may pass any number of maps to +new-twixt+; they are all recursively merged together.
+
+The default options:
+
+[source,clojure]
+----
+(def default-options
+  {:path-prefix "/assets/"
+   :root "META-INF/assets/"
+   :content-types (merge mime/default-mime-types {"coffee" "text/coffeescript"
+                                                  "less" "text/less"
+                                                  "jade" "text/jade"})
+   :transformers {"text/coffeescript" cs/coffee-script-compiler-factory
+                  "text/less" less/less-compiler-factory
+                  "text/jade" jade/jade-compiler-factory}
+   :development-mode false
+   :cache-enabled false ;; cache is always enabled in development mode
+   :cache-folder (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))})
+----
+
+You can override +root+ to change where assets are stored on the classpath.
+
+You can override +:path-prefix+ to change the root URL for assets; +/+ is an acceptible value.
+
+Future plugins may provide additional :+content-types+ and +transformers+.
+
+Caching is enabled when either +:development-mode+ or +:cache-enabled+ is set to true. 
+Running with caching enabled in production is not recommended ... there is no process to remove cached files, and an upgrade of Twixt may change the result of compiling source files, leading to inconsistent results if cached files from prior releases are present.
 
 === Future Plans
 
