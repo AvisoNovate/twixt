@@ -120,6 +120,7 @@ The goal is to achieve at least parity with Apache Tapestry, plus some additiona
 * Aggregated CSS stacks
 * RequireJS support / modules
 * Leverage core.async
+* Break out the the Less, Jade, and CoffeeScript support into a-la-carte modules
 
 === Stability
 
