@@ -1,4 +1,4 @@
-(defproject twixt "0.1.0"
+(defproject io.aviso/twixt "0.1.0"
   :description "An extensible asset pipeline for Clojure web applications"
   :url "https://github.com/AvisoNovate/twixt"
   :license {:name "Apache Sofware Licencse 2.0"
