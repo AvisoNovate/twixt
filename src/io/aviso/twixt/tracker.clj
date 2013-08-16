@@ -17,9 +17,9 @@
   "Checks to see if an exception (or any of the exception's causes) is an IExceptionInfo containing an :exception-trace."
   [^Throwable e]
   (cond
-   (nil? e) false
-   (some-> e ex-data :exception-trace) true
-   :else (recur (.getCause e))))
+    (nil? e) false
+    (some-> e ex-data :exception-trace) true
+    :else (recur (.getCause e))))
 
 (defn- log-trace [logger trace-messages message e]
   (.error logger "An exception has occurred:")
@@ -29,10 +29,10 @@
 
 (defn trace-function
   "Traces the execution of a function of no arguments. The trace macro converts into a call to track-function.
-
-   logger - SLF4J Logger where logging should occur
-   trace-message - String, object, or function. Function evaulation is deferred until an exception is actually thrown.
-   f - function to invoke."
+  
+  logger - SLF4J Logger where logging should occur
+  trace-message - String, object, or function. Function evaulation is deferred until an exception is actually thrown.
+  f - function to invoke."
   [logger trace-message f]
   (binding [trace-messages (conj trace-messages trace-message)] 
     (try
@@ -56,9 +56,9 @@
 
 (defmacro trace
   "Traces the execution of its body. trace-message may be a string, or a function that returns a string; execution of
-the function is deferred until needed. If an exception occurs inside the body, then all trace messages leading up to the
-point of exception will be logged (the logger is determined from the current namespace); this logging only occurs at the
-most deeply nested trace."
+  the function is deferred until needed. If an exception occurs inside the body, then all trace messages leading up to the
+  point of exception will be logged (the logger is determined from the current namespace); thus logging only occurs at the
+  most deeply nested trace."
   [trace-message & body]
   `(trace-function (get-logger ~*ns*) ~trace-message #(do ~@body)))
 
@@ -73,6 +73,6 @@ most deeply nested trace."
 
 (defmacro log-time
   "Executes the body, timing the result. The elapsed time in milliseconds (as a double) is passed to the formatter function, which returns
-a string. The resulting string is logged at INFO priority."
+  a string. The resulting string is logged at INFO priority."
   [formatter & body]
   `(time-function #(do ~@body) #(l/info (~formatter %))))
