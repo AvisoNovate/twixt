@@ -50,7 +50,7 @@ On a restart of the application, it will use those cached files if the source fi
 
 At its core, Twixt is a Ring middleware that maps certain URL patterns to matching files on the classpath, and does some transformations along the way.
 
-Currently, the mapping is very straightforward: +/assets/css/style.less+ it mapped to resource +META-INF/assets/css/style.less+ and transformed from Less to CSS along the way.
+Currently, the mapping is very straightforward: the path +/assets/css/style.less+ is mapped to resource +META-INF/assets/css/style.less+ and transformed from Less to CSS along the way.
 
 In the future, the mapping will be more complex:
 
