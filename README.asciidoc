@@ -98,7 +98,14 @@ You can override +root+ to change where assets are stored on the classpath.
 
 You can override +:path-prefix+ to change the root URL for assets; +/+ is an acceptible value.
 
-Future plugins may provide additional +:content-types+ and +transformers+.
+The +:content-types+ key maps file extensions to MIME types.
+
+The +:transformers+ key maps selected MIME types to a transformer _factory_ for that MIME type.
+The transformer factory is passed the fully merged options for the Twixt instance,
+and returns a _transformer_. 
+The transformer is passed a Streamable, and returns a new Streamable.
+
+Future plugins may provide additional content types and transformers.
 
 Caching is enabled when either +:development-mode+ or +:cache-enabled+ is set to true. 
 Running with caching enabled in production is not recommended ... there is no process to remove cached files, and an upgrade of Twixt may change the result of compiling source files, leading to inconsistent results if cached files from prior releases are present.
@@ -130,7 +137,7 @@ Oh, so very, very alpha. But still useful.
 
 http://tapestryjava.blogspot.com/2013/05/once-more-feedback-please.html[Feedback] is very important to me; I often find
 Clojure just a bit frustrating, because if there is an error in your code, it can be a bit of a challenge to track the problem
-backwards from the failure to the offending code. Part of this is inherent in functional programming, part of it is laziness,
+backwards from the failure to the offending code. Part of this is inherent in functional programming, part of it is related to lazy evaluation,
 and part is the trade-off between a typed and untyped language.
 
 In any case, it is very important to me that when thing go wrong, you are provided with a detailed description of the failure.
