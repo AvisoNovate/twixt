@@ -2,6 +2,7 @@
   "Pipeline for accessing and transforming assets for streaming. Integrates with Ring."
   (:use io.aviso.twixt.streamable)
   (:require [clojure.java.io :as io]
+            [clojure.tools.logging :as l]
             [io.aviso.twixt
              [dependency :as d]
              [coffee-script :as cs]
@@ -105,7 +106,7 @@
 (defn- wrap-tracker [delegate]
   (fn [path]
     (tracker/trace
-      #(format "Constructing Streamable for `%s'" path)
+      #(format "Constructing Streamable for `%s'." path)
       (delegate path))))
 
 (defn- create-streamable-pipeline
@@ -132,12 +133,15 @@
     (let [^String path (:uri req)]
       (if (match? path-prefix path)
         (tracker/trace
-          #(format "Handling asset request `%s'" path)
+          #(format "Handling asset request `%s'." path)
           (if-let [streamable (streamable-pipeline (.substring path (.length path-prefix)))]
             (-> streamable
                 open
                 r/response
-                (r/content-type (content-type streamable)))))))))
+                (r/header "X-Served-By" "Twixt") ;; Temporary!
+                (r/content-type (content-type streamable)))
+            ;; else
+            (l/warnf "Asset path `%s' in request does not match an available file." path)))))))
 
 (def default-options
   {:path-prefix "/assets/"
@@ -193,7 +197,8 @@
       
       (create-middleware 
         [this] 
-        (fn middleware [handler] 
+        (fn middleware [handler]
+          (l/infof "Mapping request URL `%s' to resources under `%s'." path-prefix root)
           (let [twixt-handler (create-twixt-handler path-prefix pipeline)]
             (fn [req]
               (or

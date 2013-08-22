@@ -50,7 +50,7 @@
         (tracker/log-time
           #(format "Compiled `%s' to CSS in %.2f ms" name %)
           (tracker/trace
-            #(format "Compiling `%s' from Less to CSS" name)
+            #(format "Compiling `%s' from Less to CSS." name)
             (try
               (let [root-source (create-less-source source)
                     output (.compile less-compiler root-source)]

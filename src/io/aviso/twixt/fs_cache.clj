@@ -32,10 +32,10 @@
 (defn- create-cache-dir [folder]
   (let [file (io/file folder)]
     (if (.exists file)
-      (l/infof "Using cache folder `%s'" file)
+      (l/infof "Using cache folder `%s'." file)
       (do
         (.mkdirs file)
-        (l/infof "Created cache folder `%s'" file)))))
+        (l/infof "Created cache folder `%s'." file)))))
 
 (defn wrap-with-cache 
   "Takes a cache directory and a delegate function. The delegate accepts a Streamable and returns a Streamable.
@@ -50,7 +50,7 @@
   ([cache-dir creator delegate]   
    (create-cache-dir cache-dir)
    (fn check-cache [streamable]
-     (t/trace #(format "Checking file system cache for `%s'" (source-name streamable))
+     (t/trace #(format "Checking file system cache for `%s'." (source-name streamable))
               (let [cache-file (find-cache-file cache-dir streamable)]
                 (if (.exists cache-file)
                   (creator streamable cache-file)
@@ -63,4 +63,5 @@
   "Returns the delegate unchanged, or wrapped via wrap-with-cache, as per standard Twixt options."
   [options subdir creator delegate]
   (if (or (:development-mode options) (:cache-enabled options))
-    (wrap-with-cache (:cache-folder options) subdir creator delegate)))
+    (wrap-with-cache (:cache-folder options) subdir creator delegate)
+    delegate))

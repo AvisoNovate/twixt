@@ -43,7 +43,7 @@
     (reify DependencyChangeTracker
       (track! 
         [this url]
-        (l/tracef "Adding `%s' as tracked dependency", url)
+        (l/tracef "Adding `%s' as tracked dependency.", url)
         ;; Only track URLs that map to files; in production, all the assets will be inside a JAR and will not need to be
         ;; tracked; they can only change as part of a full redeploy. Ultimately, will want a production mode that
         ;; disables all the dependency change tracking.

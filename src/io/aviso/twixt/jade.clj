@@ -28,7 +28,7 @@
       (tracker/log-time
         #(format "Compiled `%s' to HTML in %.2f ms" name %)
         (tracker/trace
-          #(format "Compiling `%s' from Jade to HTML" name)
+          #(format "Compiling `%s' from Jade to HTML." name)
           (try
             (let [loader (create-template-loader source name)
                   parser (Parser. name loader)
