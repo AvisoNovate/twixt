@@ -6,13 +6,13 @@
             [io.aviso.twixt.tracker :as tracker]))
 
 
-(defn load-script [context scope file]
+(defn- load-script [context scope file]
   (with-open [content-reader (-> file io/resource io/reader)]
     (tracker/trace 
      (str "Loading JavaScript from " file)
      (.evaluateReader context scope content-reader file 1 nil))))
 
-(defn invoke-function [context scope function-name arguments]
+(defn- invoke-function [context scope function-name arguments]
   (let [js-fn (.get scope function-name scope)]
     (.call js-fn context scope nil (into-array arguments))))
 
