@@ -34,8 +34,15 @@
     (l/tracef "DTM changed from %tc +%<tL to %tc +%<tL" last-modified (.lastModified file))
     true))
 
+(defn create-placeholder-tracker
+  "Creates a placeholder implementation of dependency tracker, used in production mode when dependency tracking is not desired."
+  []
+  (reify DependencyChangeTracker
+    (track! [this url] this)
+    (dirty? [this] false)))
+
 (defn create-dependency-tracker
-  "Creates an empty dependency tracker."
+  "Creates a new dependency tracker."
   []
   ;; resources is keyed on url of the resource; values are a map with keys :file and :last-modified
   (let [resources (atom {})
@@ -45,8 +52,7 @@
         [this url]
         (l/tracef "Adding `%s' as tracked dependency.", url)
         ;; Only track URLs that map to files; in production, all the assets will be inside a JAR and will not need to be
-        ;; tracked; they can only change as part of a full redeploy. Ultimately, will want a production mode that
-        ;; disables all the dependency change tracking.
+        ;; tracked; they can only change as part of a full redeploy.
         (if (->> url .getProtocol (= "file"))
           (let [file (as-file url)
                 last-modified (.lastModified file)]

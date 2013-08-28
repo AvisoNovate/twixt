@@ -8,6 +8,7 @@
              [coffee-script :as cs]
              [less :as less]
              [jade :as jade]
+             [utils :as u]
              [tracker :as tracker]]
             [ring.util
              [response :as r]
@@ -23,7 +24,7 @@
 
 (defprotocol Twixt
   "Captures the configuration and logic for asset access and transformation."
-  
+
   (get-asset-uri [this asset-path] "Given an asset path (under the configured asset root), returns the URI that can be used to access the asset, or null if the asset does not exist.")
   (get-streamable [this path] "Gets the Streamable defined by the path. May return nil if the path does not map to a streamable.")
   (create-middleware [this] "Creates a Ring middleware function (a function that takes and returns a Ring handler function)."))
@@ -47,12 +48,12 @@
 
 (defn- create-streamable-source
   "Creates a source for streamables on the classpath, under the given root folder (e.g., \"META-INF/assets/\"."
-  [root to-content-type]
+  [root dependency-tracker-factory to-content-type]
   ;; In the future, we will have multiple domains from which to locate assets; some will be "virtual" (such as
   ;; aggregated JavaScript), others representing filesystem or database contents.
   (fn streamable-source
     ([path]
-     (streamable-source path (d/create-dependency-tracker)))
+     (streamable-source path (dependency-tracker-factory)))
     ([path tracker]
      (let [resource-path (str root path)
            url (io/resource resource-path)]
@@ -83,20 +84,15 @@
       ;; No transformer for this content type, pass it through unchanged
       source)))
 
-(defn- transform-values 
-  "Transforms a map by passing each value through a provided function."
-  [m f]
-  (into {} (map (fn [[k v]] [k (f v)]) m)))
-
 (defn- create-wrap-transformer
-    "Handles transformation from on content type to another. 
-  
+    "Handles transformation from on content type to another.
+
   transformers - map from content/type to transformer factory
-  
+
   A transformer factory is is passed the Twixt configuration, and must return a transformer.
   A transformer is passed a streamable and returns a new streamable."
   [twixt-config transformers]
-  (let [instantiated-transformers (transform-values transformers #(% twixt-config))]
+  (let [instantiated-transformers (u/transform-values transformers #(% twixt-config))]
     (fn wrap [delegate]
       (fn transform-handler [path]
         (if-let [streamable (delegate path)]
@@ -138,7 +134,6 @@
             (-> streamable
                 open
                 r/response
-                (r/header "X-Served-By" "Twixt") ;; Temporary!
                 (r/content-type (content-type streamable)))
             ;; else
             (l/warnf "Asset path `%s' in request does not match an available file." path)))))))
@@ -156,47 +151,33 @@
    :cache-enabled false ;; cache is always enabled in development mode
    :cache-folder (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))})
 
-(declare merge-maps-recursively)
-
-(defn- merge-values [l r]
-  (cond
-    ;; We know how to merge two maps together:
-    (and (map? l) (map? r)) (merge-maps-recursively l r)
-    ;; But we can't merge a map with a non-map
-    (or (map? l) (map? r)) (throw (IllegalArgumentException. (format "Unable to merge %s with %s" l r)))
-    ;; We don't try to merge seqs
-    ;; In any other case the right (later) value replaces the left (earlier) value
-    :else r))
-
-(defn- merge-maps-recursively [& maps]
-  (apply merge-with merge-values maps))
-
 (defn new-twixt
   "Creates a new Twixt from the provided options. All of the options are merged together (recursively) to form
   the final set of options."
   [& options]
-  (let [merged-options (apply merge-maps-recursively default-options options)
-        {:keys [path-prefix root content-types transformers options]} merged-options
+  (let [merged-options (apply u/merge-maps-recursively default-options options)
+        {:keys [path-prefix root content-types transformers options development-mode]} merged-options
         to-content-type (create-path->content-type content-types)
-        core-provider (create-streamable-source root to-content-type)
+        tracker-factory (if development-mode d/create-placeholder-tracker d/create-dependency-tracker)
+        core-provider (create-streamable-source root tracker-factory to-content-type)
         wrap-transformer (create-wrap-transformer merged-options transformers)
         pipeline (create-streamable-pipeline core-provider wrap-transformer)]
     (reify
-      
+
       Twixt
-      
-      (get-asset-uri 
+
+      (get-asset-uri
         [this asset-path]
         ;; This will get more complex when the checksum is incorprated into the asset's URI.
         (tracker/trace
           #(format "Constructing URI for asset `%s'" asset-path)
           (when (pipeline asset-path)
             (str path-prefix asset-path))))
-      
+
       (get-streamable [this path] (pipeline path))
-      
-      (create-middleware 
-        [this] 
+
+      (create-middleware
+        [this]
         (fn middleware [handler]
           (l/infof "Mapping request URL `%s' to resources under `%s'." path-prefix root)
           (let [twixt-handler (create-twixt-handler path-prefix pipeline)]
