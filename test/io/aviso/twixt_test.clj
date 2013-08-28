@@ -23,8 +23,10 @@
    String.
    .trim))
 
+(def cache-folder (format "%s/%x" (System/getProperty "java.io.tmpdir") (System/nanoTime)))
+
 (def twixt (new-twixt {:development-mode true 
-                       :cache-folder "target/twixt-cache"}))
+                       :cache-folder cache-folder}))
 (def middleware (create-middleware twixt))
 (def handler (-> next-handler middleware))
 
