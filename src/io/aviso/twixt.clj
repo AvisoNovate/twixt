@@ -148,7 +148,7 @@
                   "text/less" less/less-compiler-factory
                   "text/jade" jade/jade-compiler-factory}
    :development-mode false
-   :cache-enabled false ;; cache is always enabled in development mode
+   :cache-enabled false ;; file-system cache is always enabled in development mode
    :cache-folder (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))})
 
 (defn new-twixt
