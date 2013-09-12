@@ -8,6 +8,6 @@
                  [ring/ring-core "1.1.8"]
                  [org.mozilla/rhino "1.7R4"]
                  [com.github.sommeri/less4j "1.1.1"]
-                 [de.neuland/jade4j "0.3.12"]]
+                 [de.neuland/jade4j "0.3.15"]]
   :repositories [["jade4j" "https://raw.github.com/neuland/jade4j/master/releases"]]
   :profiles {:dev {:dependencies [[log4j "1.2.17"]]}})

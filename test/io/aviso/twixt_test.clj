@@ -88,7 +88,7 @@
 
     (let [response (handler {:uri "/assets/jade-source.jade"})]
       (is (= (-> response :headers (get "Content-Type")) "text/html"))
-      (is (= (-> response read-body) (-> "assets/compile-jade-source.html" read-resource-content)))))
+      (is (= (-> response read-body) (-> "assets/compiled-jade-source.html" read-resource-content)))))
 
 (deftest relative-paths
 
