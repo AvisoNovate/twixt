@@ -1,10 +1,10 @@
 (ns io.aviso.twixt.less
   "Less to CSS compilation transformer."
-  (:use io.aviso.twixt.streamable)
-  (:import [com.github.sommeri.less4j LessSource LessSource$FileNotFound Less4jException LessCompiler$Problem]
-           [com.github.sommeri.less4j.core DefaultLessCompiler])
-  (:require [io.aviso.twixt.tracker :as tracker]
-            [clojure.string :as s]))
+  (use io.aviso.twixt.streamable)
+  (import [com.github.sommeri.less4j LessSource LessSource$FileNotFound Less4jException LessCompiler$Problem]
+          [com.github.sommeri.less4j.core DefaultLessCompiler])
+  (require [io.aviso.twixt.tracker :as tracker]
+           [clojure.string :as s]))
 
 ;; Putting this logic inside the (proxy) call causes some really awful Clojure compiler problems.
 ;; This shim seems to defuse that.
@@ -56,8 +56,8 @@
                     output (.compile less-compiler root-source)]
                 ;; We currently ignore any warnings.
                 (replace-content source
-                   (str "Compiled " name)
-                   "text/css"
-                   (as-bytes (.getCss output))))
+                                 (str "Compiled " name)
+                                 "text/css"
+                                 (as-bytes (.getCss output))))
               (catch Less4jException e
                 (throw (RuntimeException. (format-less-exception e) e))))))))))

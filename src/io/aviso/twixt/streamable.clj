@@ -1,12 +1,12 @@
 (ns io.aviso.twixt.streamable
   "Defines Streamable protocol and implementation, and supporting functions."
-  (:require [io.aviso.twixt.dependency :as d]
-            [clojure.java.io :as io]
-            [clojure.string :as s])
-  (:import [java.io InputStream ByteArrayOutputStream]
-           [java.util.zip Adler32]
-           [java.nio.charset Charset]
-           [java.net URL]))
+  (require [io.aviso.twixt.dependency :as d]
+           [clojure.java.io :as io]
+           [clojure.string :as s])
+  (import [java.io InputStream ByteArrayOutputStream]
+          [java.util.zip Adler32]
+          [java.nio.charset Charset]
+          [java.net URL]))
 
 (def ^Charset utf-8 (Charset/forName "UTF-8"))
 

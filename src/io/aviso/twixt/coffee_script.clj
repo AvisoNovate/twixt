@@ -1,8 +1,8 @@
 (ns io.aviso.twixt.coffee-script
   "Twixt transformer for compiling CoffeeScript to JavaScript."
-  (:use io.aviso.twixt.streamable)
-  (:import [org.mozilla.javascript ScriptableObject])
-  (:require [io.aviso.twixt
+  (use io.aviso.twixt.streamable)
+  (import [org.mozilla.javascript ScriptableObject])
+  (require [io.aviso.twixt
              [fs-cache :as fs]
              [rhino :as rhino]
              [tracker :as tracker]]))

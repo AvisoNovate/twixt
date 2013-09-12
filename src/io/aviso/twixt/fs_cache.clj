@@ -1,11 +1,11 @@
 (ns io.aviso.twixt.fs-cache
   "Manages a simple file system cache for Streamables."
-  (:use io.aviso.twixt.streamable)
-  (:import [java.io File InputStream])
-  (:require [clojure.java.io :as io]
-            [clojure.string :as s]
-            [clojure.tools.logging :as l]
-            [io.aviso.twixt.tracker :as t]))
+  (use io.aviso.twixt.streamable)
+  (import [java.io File InputStream])
+  (require [clojure.java.io :as io]
+           [clojure.string :as s]
+           [clojure.tools.logging :as l]
+           [io.aviso.twixt.tracker :as t]))
 
 (defn- munge-name
   [streamable]

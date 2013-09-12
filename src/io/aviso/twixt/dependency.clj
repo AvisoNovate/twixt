@@ -1,8 +1,8 @@
 (ns io.aviso.twixt.dependency
   "DependencyChangeTracker protocol."
-  (:import [java.net URL URISyntaxException]
-           [java.io File])
-  (:require [clojure.tools.logging :as l]))
+  (import [java.net URL URISyntaxException]
+          [java.io File])
+  (require [clojure.tools.logging :as l]))
 
 (defprotocol DependencyChangeTracker
   

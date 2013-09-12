@@ -1,18 +1,18 @@
 (ns io.aviso.twixt
   "Pipeline for accessing and transforming assets for streaming. Integrates with Ring."
-  (:use io.aviso.twixt.streamable)
-  (:require [clojure.java.io :as io]
-            [clojure.tools.logging :as l]
-            [io.aviso.twixt
-             [dependency :as d]
-             [coffee-script :as cs]
-             [less :as less]
-             [jade :as jade]
-             [utils :as u]
-             [tracker :as tracker]]
-            [ring.util
-             [response :as r]
-             [mime-type :as mime]]))
+  (use io.aviso.twixt.streamable)
+  (require [clojure.java.io :as io]
+           [clojure.tools.logging :as l]
+           [io.aviso.twixt
+            [dependency :as d]
+            [coffee-script :as cs]
+            [less :as less]
+            [jade :as jade]
+            [utils :as u]
+            [tracker :as tracker]]
+           [ring.util
+            [response :as r]
+            [mime-type :as mime]]))
 
 ;;; Lots of stuff from Tapestry 5.4 is not yet implemented; probably won't be until this is spun off as an open-source
 ;;; GitHub project.
@@ -24,7 +24,7 @@
 
 (defprotocol Twixt
   "Captures the configuration and logic for asset access and transformation."
-
+  
   (get-asset-uri [this asset-path] "Given an asset path (under the configured asset root), returns the URI that can be used to access the asset, or null if the asset does not exist.")
   (get-streamable [this path] "Gets the Streamable defined by the path. May return nil if the path does not map to a streamable.")
   (create-middleware [this] "Creates a Ring middleware function (a function that takes and returns a Ring handler function)."))
@@ -85,10 +85,10 @@
       source)))
 
 (defn- create-wrap-transformer
-    "Handles transformation from on content type to another.
-
+  "Handles transformation from on content type to another.
+  
   transformers - map from content/type to transformer factory
-
+  
   A transformer factory is is passed the Twixt configuration, and must return a transformer.
   A transformer is passed a streamable and returns a new streamable."
   [twixt-config transformers]
@@ -163,9 +163,9 @@
         wrap-transformer (create-wrap-transformer merged-options transformers)
         pipeline (create-streamable-pipeline core-provider wrap-transformer)]
     (reify
-
+      
       Twixt
-
+      
       (get-asset-uri
         [this asset-path]
         ;; This will get more complex when the checksum is incorprated into the asset's URI.
@@ -173,9 +173,9 @@
           #(format "Constructing URI for asset `%s'" asset-path)
           (when (pipeline asset-path)
             (str path-prefix asset-path))))
-
+      
       (get-streamable [this path] (pipeline path))
-
+      
       (create-middleware
         [this]
         (fn middleware [handler]
