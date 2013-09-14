@@ -185,3 +185,13 @@
               (or
                 (twixt-handler req)
                 (handler req)))))))))
+
+(defn wrap-with-twixt 
+  "Wraps a handler with Twixt middleware, to handle requests for assets."
+  [handler twixt]
+  ((-> twixt create-middleware) handler))
+
+(defn get-asset-uris 
+  "Converts a number of asset paths into client URIs."
+  [twixt & paths]
+  (map (partial get-asset-uri twixt) paths))
