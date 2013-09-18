@@ -13,12 +13,12 @@
     (recur (message))
     (str message)))
 
-(defn- contains-exception-trace
+(defn- contains-operation-trace
   "Checks to see if an exception (or any of the exception's causes) is an IExceptionInfo containing an :exception-trace."
   [^Throwable e]
   (cond
     (nil? e) false
-    (some-> e ex-data :exception-trace) true
+    (some-> e ex-data :operation-trace) true
     :else (recur (.getCause e))))
 
 (defn- log-trace [logger trace-messages message e]
@@ -39,14 +39,14 @@
       (f)
       (catch Throwable e
         ;; By nature, the track calls get deeply nested. We want to create an exception only at the initial failure,
-        (if (contains-exception-trace e)
+        (if (contains-operation-trace e)
           (throw e)
           ;; This is the initial exception thrown so we'll wrap the original exception with the exception info.
           (let [trace-strings (map trace-to-string trace-messages)
                 message (or (.getMessage e) (-> e .getClass .getName))]
             (log-trace logger trace-strings message e)
             (throw (ex-info message
-                            {:exception-trace trace-strings}
+                            {:operation-trace trace-strings}
                             e))))))))
 
 (defn get-logger 
