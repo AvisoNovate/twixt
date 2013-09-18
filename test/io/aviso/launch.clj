@@ -1,10 +1,16 @@
 (ns io.aviso.launch
   (use io.aviso.twixt 
-       io.aviso.twixt.exceptions
-       ring.adapter.jetty))
+       [io.aviso.twixt exceptions tracker]       
+       ring.adapter.jetty)
+  (import [java.sql SQLException]))
 
 (defn handler [request]
-  (throw (RuntimeException. "Exception inside handler!")))
+  (trace "Invoking handler (that throws exceptions)"
+         (throw 
+           (->>
+             (SQLException. "Inner Exception" "SQL-STATE", 999)
+             (RuntimeException. "Middle Exception")
+             (IllegalArgumentException. "Outer Exception")))))
 
 (defn app []
   (let [twixt (new-twixt {:development-mode true})]
@@ -15,4 +21,5 @@
 
 
 (defn launch []
-  (run-jetty (app) {:port 8888 :join? false}))
+  (let [server (run-jetty (app) {:port 8888 :join? false})]
+    #(.stop server)))
