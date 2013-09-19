@@ -158,7 +158,7 @@
   (let [merged-options (apply u/merge-maps-recursively default-options options)
         {:keys [path-prefix root content-types transformers options development-mode]} merged-options
         to-content-type (create-path->content-type content-types)
-        tracker-factory (if development-mode d/create-placeholder-tracker d/create-dependency-tracker)
+        tracker-factory (if development-mode d/create-dependency-tracker d/create-placeholder-tracker)
         core-provider (create-streamable-source root tracker-factory to-content-type)
         wrap-transformer (create-wrap-transformer merged-options transformers)
         pipeline (create-streamable-pipeline core-provider wrap-transformer)]
@@ -179,7 +179,9 @@
       (create-middleware
         [this]
         (fn middleware [handler]
-          (l/infof "Mapping request URL `%s' to resources under `%s'." path-prefix root)
+          (l/infof "Mapping request URL `%s' to resources under `%s'%s." 
+                   path-prefix root
+                   (if development-mode " (development mode)"))
           (let [twixt-handler (create-twixt-handler path-prefix pipeline)]
             (fn [req]
               (or
