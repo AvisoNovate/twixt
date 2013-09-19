@@ -135,7 +135,7 @@
      [:div.container
       [:div.panel.panel-danger
        [:div.panel-heading
-        [:h3.panel-title "An unexpected exception has occured."]]
+        [:h3.panel-title "An unexpected exception has occurred."]]
        [:div.panel-body
         [:div.alert.alert-danger (h (exception-message exception))]
         ]
