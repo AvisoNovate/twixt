@@ -69,6 +69,11 @@
                  ))
         ]))))
 
+(defn- stack-trace-element->row-markup
+  [element]
+  [:tr
+   [:td (to-markup element)]])
+
 (defn- exception->markup 
   "Given an analyzed exception, generate markup for it."
   [{:keys [class message properties stack-trace]}]
@@ -85,8 +90,11 @@
          (apply concat           
                 (for [k (-> properties keys sort)]
                   [[:dt (-> k name h)] [:dd (-> (get properties k) to-markup)]]))
-         ])
-      ]
+         ])]
+     (when-not (empty? stack-trace)
+       [:table.table.table-hover.table-condensed.table-striped.table-bordered
+        (map stack-trace-element->row-markup stack-trace)])
+     
      ]))
 
 (defn- match-keys 
@@ -124,7 +132,7 @@
 
 (defn build-report
   "Builds an HTML exception report (as a string)."
-  [twixt exception]
+  [twixt request exception]
   (html5
     [:head
      [:title "Exception"]
@@ -140,7 +148,14 @@
         [:div.alert.alert-danger (h (exception-message exception))]
         ]
        ]
-      (write-exception-stack exception)      
+      (write-exception-stack exception)
+      
+      [:h3 "Request"]
+      
+      (to-markup request)  
+      
+      [:h3 "System Properties"]
+      (to-markup (System/getProperties))          
       ]
      ]))
 
@@ -160,7 +175,7 @@
       (catch Throwable t
         ;; TODO: logging!
         (->          
-          (build-report twixt t)
+          (build-report twixt request t)
           #_ (spy "report")
           response
           (content-type "text/html")
