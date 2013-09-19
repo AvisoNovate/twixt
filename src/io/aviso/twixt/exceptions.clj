@@ -127,9 +127,13 @@
                 (for [k (-> properties keys sort)]
                   [[:dt (-> k name h)] [:dd (-> (get properties k) to-markup)]]))
          ])]
-     (when-not (empty? stack-trace)
-       [:table.table.table-hover.table-condensed.table-striped
-        (map stack-trace-element->row-markup stack-trace)])     
+     (if-not (empty? stack-trace)
+       (list
+         [:table.table.table-hover.table-condensed.table-striped
+          (map stack-trace-element->row-markup stack-trace)]
+         [:div.panel-footer
+          [:div.btn-toolbar
+           [:button.btn.btn-default.btn-sm.pull-right {:data-action :toggle-filter} "Toggle Filter"]]]))
      ]))
 
 (defn- match-keys 
@@ -174,7 +178,7 @@
      (apply include-css (get-asset-uris twixt
                                         "bootstrap3/css/bootstrap.css"
                                         "twixt/exception.less"))]
-    [:body
+    [:body.hide-filtered
      [:div.container
       [:div.panel.panel-danger
        [:div.panel-heading
@@ -192,6 +196,9 @@
       [:h3 "System Properties"]
       (to-markup (System/getProperties))          
       ]
+     (apply include-js (get-asset-uris twixt
+                                       "bootstrap3/js/jquery-2.0.3.js"
+                                       "twixt/exception.coffee"))
      ]))
 
 #_ (defn spy [value label]
