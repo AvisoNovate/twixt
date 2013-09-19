@@ -6,7 +6,8 @@
        ring.util.response)
   (import [clojure.lang APersistentMap Sequential]
           [java.util Map])
-  (require [clojure.tools.logging :as l]))
+  (require [clojure.tools.logging :as l]
+           [clojure.string :as s]))
 
 (defn- exception-message [exception]
   (or (.getMessage exception) 
@@ -69,10 +70,45 @@
                  ))
         ]))))
 
+(defn- ste->source-location
+  [element]
+  (if-let [fname (.getFileName element)]
+    (format "%s:%d" fname (.getLineNumber element))))
+
+(defn- convert-underscores [string] (s/replace string \_ \-))
+
+;;; TODO: demangle other things, such as __QMARK, etc.
+(def ^:private demangle-function-name convert-underscores)
+
+(defn- convert-clojure-frame
+  [class-name method-name]
+  (let [[namespace-name & raw-function-ids] (s/split class-name #"\$")
+        function-ids (map #(or (nth (first (re-seq #"([\w|.|-]+)__\d+?" %)) 1 nil) %) raw-function-ids)
+        function-names (map demangle-function-name function-ids)]
+    ;; The assumption is that no real namespace or function name will contain underscores (the underscores
+    ;; are name-mangled dashes).
+    (str (convert-underscores namespace-name) "/" (s/join "/" function-names))))
+
+(defn- ste->frame-markup
+  [element]
+  (let [class-name (.getClassName element)
+        method-name (.getMethodName element)
+        file-name (or (.getFileName element) "")
+        is-clojure (and (.endsWith file-name ".clj")
+                        (contains? #{"invoke" "doInvoke"} method-name))
+        formatted (str class-name " &mdash; " method-name)]
+      (if is-clojure
+        (list 
+           (convert-clojure-frame class-name method-name)
+           [:span.filtered formatted])
+        formatted)))
+
 (defn- stack-trace-element->row-markup
   [element]
   [:tr
-   [:td (to-markup element)]])
+   [:td.source-location (ste->source-location element)]
+   [:td (ste->frame-markup element)]
+   ])
 
 (defn- exception->markup 
   "Given an analyzed exception, generate markup for it."
@@ -92,9 +128,8 @@
                   [[:dt (-> k name h)] [:dd (-> (get properties k) to-markup)]]))
          ])]
      (when-not (empty? stack-trace)
-       [:table.table.table-hover.table-condensed.table-striped.table-bordered
-        (map stack-trace-element->row-markup stack-trace)])
-     
+       [:table.table.table-hover.table-condensed.table-striped
+        (map stack-trace-element->row-markup stack-trace)])     
      ]))
 
 (defn- match-keys 
