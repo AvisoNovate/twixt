@@ -11,5 +11,10 @@
                  [de.neuland/jade4j "0.3.15"]
                  [hiccup "1.0.4"]]
   :repositories [["jade4j" "https://raw.github.com/neuland/jade4j/master/releases"]]
+  :repl-options {
+                 :init-ns io.aviso.launch
+                 :port 4001}
+  ;; The Sublime Text nREPL plugin is out of date, so...
+  :repl-port 4001
   :profiles {:dev {:dependencies [[log4j "1.2.17"]
                                   [ring/ring-jetty-adapter "1.2.0"]]}})
