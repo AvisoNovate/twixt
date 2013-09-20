@@ -13,7 +13,6 @@
   (or (.getMessage exception) 
       (-> exception .getClass .getName)))
 
-
 (defprotocol MarkupGeneration
   (to-markup 
     [value]
@@ -100,7 +99,7 @@
       (if is-clojure
         (list 
            (convert-clojure-frame class-name method-name)
-           [:span.filtered formatted])
+           [:div.filtered formatted])
         formatted)))
 
 (defn- stack-trace-element->row-markup
@@ -119,7 +118,7 @@
       [:h3.panel-title class]
       ]
      [:div.panel-body
-      message
+      [:h4 message]
       ;; TODO: sorting
       (when-not (empty? properties)
         [:dl
@@ -127,13 +126,13 @@
                 (for [k (-> properties keys sort)]
                   [[:dt (-> k name h)] [:dd (-> (get properties k) to-markup)]]))
          ])]
-     (if-not (empty? stack-trace)
+     (if stack-trace
        (list
+         [:div.btn-toolbar.spacing-below
+          [:button.btn.btn-default.btn-sm {:data-action :toggle-filter} "Toggle Stack Frame Filter"]]
          [:table.table.table-hover.table-condensed.table-striped
-          (map stack-trace-element->row-markup stack-trace)]
-         [:div.panel-footer
-          [:div.btn-toolbar
-           [:button.btn.btn-default.btn-sm.pull-right {:data-action :toggle-filter} "Toggle Filter"]]]))
+          (map stack-trace-element->row-markup stack-trace)
+          ]))
      ]))
 
 (defn- match-keys 
@@ -170,7 +169,11 @@
       (apply str result))))
 
 (defn build-report
-  "Builds an HTML exception report (as a string)."
+  "Builds an HTML exception report (as a string).
+  
+  twixt - Twixt instance, used to resolve client URIs for assets
+  request - Ring request map
+  exception - Exception to report"
   [twixt request exception]
   (html5
     [:head
@@ -184,7 +187,7 @@
        [:div.panel-heading
         [:h3.panel-title "An unexpected exception has occurred."]]
        [:div.panel-body
-        [:div.alert.alert-danger (h (exception-message exception))]
+        [:h3 (h (exception-message exception))]
         ]
        ]
       (write-exception-stack exception)
@@ -201,10 +204,6 @@
                                        "twixt/exception.coffee"))
      ]))
 
-#_ (defn spy [value label]
-  (l/infof "spy %s: %s" label value)
-  value) 
-
 (defn wrap-with-exception-reporting 
   "Wraps the handler to report any uncaught exceptions as an HTML exception report.
   
@@ -218,9 +217,6 @@
         ;; TODO: logging!
         (->          
           (build-report twixt request t)
-          #_ (spy "report")
           response
           (content-type "text/html")
-          (status 500)
-          #_ (spy "response")
-          )))))
+          (status 500))))))
