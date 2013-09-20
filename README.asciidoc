@@ -2,6 +2,15 @@
 
 Twixt is an extensible asset pipeline for use in Clojure web applications.
 
+Twixt includes a very readable HTML exception report page, which displays:
+
+* The entire stack of nested exceptions, top to bottom
+* The stack trace for only the root exception
+* Demangled namespace and function names for Clojure stack frames (io.aviso.twixt/new-twixt/reify/middleware/fn instead of
+  `io.aviso.twixt$new_twixt$reify__954$middleware__959$fn__960.invoke()`).
+* The contents of the Ring request map
+* All JVM system properties
+
 Twixt draws inspiration from http://tapestry.apache.org[Apache Tapestry] and https://github.com/edgecase/dieter[Dieter].
 
 Twixt currently supports:
@@ -26,16 +35,19 @@ Twixt maps file extensions to MIME types; it then will transform certain MIME ty
 (ns example.app
   (use compojure.core
        ring.adapter.jetty
-       [io.aviso.twixt]))
+       [io.aviso.twixt :as t]
+       [io.aviso.twixt.exceptions :as te))
 
 ;;; Use Compojure to map routes to handlers
 (defroutes app ...)
 
 ;;; Create a twixt instance and a middleware to handle /asset/ URLs
 (def app-handler
-  (let [twixt (new-twixt {:development-mode true})
-        twixt-middleware (create-middleware twixt)]
-    (twixt-middleware app)))
+  (let [twixt (t/new-twixt {:development-mode true})]
+    (->
+      app
+      (t/wrap-with-twixt twixt)
+      (te/wrap-with-exception-reporting twixt))))
     
 ;;; Use the Ring Jetty adapter to serve your site
 (run-jetty app-handler)
@@ -54,10 +66,11 @@ Currently, the mapping is very straightforward: the path +/assets/css/style.less
 
 In the future, the mapping will be more complex:
 
-* The URL will start to include a checksum of the resource's content, e.g., +/assets/32fec9/css/style.less+.
+* The URL will include a checksum of the resource's content, e.g., +/assets/32fec9/css/style.less+.
 * The URL may reflect the use of GZip compression, e.g., +/assets.gz/33839a/css/style.less+.
 
-Because of this, when referencing assets inside your templates, you must pass paths through Twixt to get URIs that will work in the browser:
+Because of this, when referencing assets inside your templates, you must pass paths (relative to +META-INF/assets+) 
+through Twixt to get URIs that will work in the browser:
 
 [source,clojure]
 ----
@@ -94,7 +107,8 @@ The default options:
    :cache-folder (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))})
 ----
 
-You can override +root+ to change where assets are stored on the classpath.
+You can override +root+ to change where assets are stored on the classpath, but there is rarely a need to do so. Changing
+to root may break other libraries that depend on Twixt, such as Twixt's own exception reporting.
 
 You can override +:path-prefix+ to change the root URL for assets; +/+ is an acceptible value.
 
@@ -165,6 +179,9 @@ java.lang.RuntimeException: META-INF/assets/invalid-coffeescript.coffee:6:1: err
 ----
 
 In other words, when there's a failure, Twixt can tell you the steps that led up the failure, which is 90% of solving the problem in the first place.
+
+Twixt's exception wrapper now captures all of this and presents a quite readable exception report page. The exception report
+page also does a decent job of de-mangling Java class names to Clojure namespaces and function names. 
 
 === How does Twixt differ from Dieter?
 
