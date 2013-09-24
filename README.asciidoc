@@ -108,7 +108,7 @@ The default options:
 ----
 
 You can override +root+ to change where assets are stored on the classpath, but there is rarely a need to do so. Changing
-to root may break other libraries that depend on Twixt, such as Twixt's own exception reporting.
+root may break other libraries that depend on Twixt, such as Twixt's own exception reporting.
 
 You can override +:path-prefix+ to change the root URL for assets; +/+ is an acceptible value.
 
