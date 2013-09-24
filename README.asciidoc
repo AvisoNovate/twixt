@@ -6,8 +6,8 @@ Twixt includes a very readable HTML exception report page, which displays:
 
 * The entire stack of nested exceptions, top to bottom
 * The stack trace for only the root exception
-* Demangled namespace and function names for Clojure stack frames (io.aviso.twixt/new-twixt/reify/middleware/fn instead of
-  `io.aviso.twixt$new_twixt$reify__954$middleware__959$fn__960.invoke()`).
+* Demangled namespace and function names for Clojure stack frames: `io.aviso.twixt/new-twixt/reify/middleware/fn` instead of
+  `io.aviso.twixt$new_twixt$reify__954$middleware__959$fn__960.invoke()`.
 * The contents of the Ring request map
 * All JVM system properties
 
@@ -121,8 +121,12 @@ The transformer is passed a Streamable, and returns a new Streamable.
 
 Future plugins may provide additional content types and transformers.
 
-Caching is enabled when either +:development-mode+ or +:cache-enabled+ is set to true. 
+File system caching is enabled when either +:development-mode+ or +:cache-enabled+ is set to true. 
 Running with caching enabled in production is not recommended ... there is no process to remove cached files, and an upgrade of Twixt may change the result of compiling source files, leading to inconsistent results if cached files from prior releases are present.
+
+Twixt always caches the content of files in memory, after any transforming operations. In development mode, checks are enabled
+to refresh the cache when underlying files are modified; in production, no such checks occur as it is assumed that all such
+assets are stable (until the entire application is re-deployed).
 
 === Future Plans
 
@@ -141,11 +145,12 @@ The goal is to achieve at least parity with Apache Tapestry, plus some additiona
 * Aggregated CSS stacks
 * RequireJS support / modules
 * Leverage core.async
-* Break out the the Less, Jade, and CoffeeScript support into a-la-carte modules
+* Break out the the Less, Jade, CoffeeScript, and exception reporting support into a-la-carte modules
 
 === Stability
 
-Oh, so very, very alpha. But still useful.
+*Alpha*: Most features are not yet implemented and the code is likely to change in many ways going forward ... but still very
+useful!
 
 === A note about feedback
 
