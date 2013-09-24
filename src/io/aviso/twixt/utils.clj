@@ -21,8 +21,6 @@
   "Merges any number of maps together, recursively. When merging values:
   - two maps are merged, recursively
   - two seqs are concatinated
-  - one map and one non-map is an error
-  - one seq and one non-seq is an error
   - otherwise, the 'right' value overwrites the 'left' value"
   [& maps]
   (apply merge-with merge-values maps))
