@@ -12,7 +12,7 @@
   (cond
     ;; We know how to merge two maps together:
     (and (map? l) (map? r)) (merge-maps-recursively l r)
-    ;; But we can't merge a map with a non-map
+    ;; and how to merge two seqs  together
     (and (seq? l) (seq? r)) (concat l r)
     ;; In any other case the right (later) value replaces the left (earlier) value
     :else r))
