@@ -1,9 +1,9 @@
 (ns io.aviso.twixt-test
-  (:use clojure.test
-        io.aviso.twixt
-        io.aviso.twixt.streamable
-        clojure.tools.logging)
-  (:require [clojure.java.io :as io]))
+  (use clojure.test
+       io.aviso.twixt
+       io.aviso.twixt.streamable
+       clojure.tools.logging)
+  (require [clojure.java.io :as io]))
 
 (defn next-handler [req] :next-handler)
 
