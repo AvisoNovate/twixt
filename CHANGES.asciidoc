@@ -1,5 +1,0 @@
-== Twixt Change History
-
-=== Release 0.1.0 - 16 Aug 2013
-
-Initial Release.
