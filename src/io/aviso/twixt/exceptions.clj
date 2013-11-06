@@ -7,7 +7,8 @@
   (:import [clojure.lang APersistentMap Sequential]
            [java.util Map])
   (:require [clojure.tools.logging :as l]
-            [clojure.string :as s]))
+            [clojure.string :as s]
+            [io.aviso.exception :as exception]))
 
 (defn- exception-message [exception]
   (or (.getMessage exception)
@@ -21,7 +22,7 @@
 (extend-type nil
   MarkupGeneration
   (to-markup [_] "<em>nil</em>"))
-
+h
 (extend-type String
   MarkupGeneration
   (to-markup [value] (h value)))
@@ -69,56 +70,58 @@
                   ))
          ]))))
 
-(defn- ste->source-location
-  [element]
-  (if-let [fname (.getFileName element)]
-    (format "%s:%d" fname (.getLineNumber element))))
+(defn- element->clojure-name [element]
+  (let [names (:names element)]
+    (list
+      (s/join "/" (butlast names))
+      "/"
+      [:strong (last names)])))
 
-(defn- convert-underscores [string] (s/replace string \_ \-))
-
-;;; TODO: demangle other things, such as __QMARK, etc.
-(def ^:private demangle-function-name convert-underscores)
-
-(defn- convert-clojure-frame
-  [class-name method-name]
-  (let [[namespace-name & raw-function-ids] (s/split class-name #"\$")
-        function-ids (map #(or (nth (first (re-seq #"([\w|.|-]+)__\d+?" %)) 1 nil) %) raw-function-ids)
-        function-names (map demangle-function-name function-ids)]
-    ;; The assumption is that no real namespace or function name will contain underscores (the underscores
-    ;; are name-mangled dashes).
-    (str (convert-underscores namespace-name) "/" (s/join "/" function-names))))
-
-(defn- ste->frame-markup
-  [element]
-  (let [class-name (.getClassName element)
-        method-name (.getMethodName element)
-        file-name (or (.getFileName element) "")
-        is-clojure (and (.endsWith file-name ".clj")
-                        (contains? #{"invoke" "doInvoke"} method-name))
-        formatted (str class-name " &mdash; " method-name)]
-    (if is-clojure
-      (list
-        (convert-clojure-frame class-name method-name)
-        [:div.filtered formatted])
-      formatted)))
+(defn- element->java-name [element]
+  (let [class-name (:class element)
+        dotx (.lastIndexOf class-name ".")]
+    (list
+      (if (pos? dotx)
+        (list
+          ;; Take up to and including the "dot"
+          [:span.package-name (.substring class-name 0 (inc dotx))]
+          (.substring class-name (inc dotx)))
+        class-name)
+      " &mdash; "
+      (:method element))))
 
 (defn- stack-trace-element->row-markup
   [element]
-  [:tr
-   [:td.source-location (ste->source-location element)]
-   [:td (ste->frame-markup element)]
-   ])
+  (let [clojure? (-> element :names empty? not)
+        class-name (:class element)
+        java-name (element->java-name element)
+        ^String line (:line element)]
+    [:tr
+     [:td.function-name
+      (if clojure?
+        (list
+          (element->clojure-name element)
+          [:div.filtered java-name])
+        java-name)
+      ]
+     [:td.source-location (:file element)]
+     [:td (if (and (-> line s/blank? not)
+                   (-> line (Integer/parseInt) pos?))
+            line
+            "")]
+     ]))
 
 (defn- exception->markup
   "Given an analyzed exception, generate markup for it."
-  [{:keys [class message properties stack-trace]}]
+  [{^Throwable e :exception
+    :keys        [properties root]}]
   (html
     [:div.panel.panel-default
      [:div.panel-heading
-      [:h3.panel-title class]
+      [:h3.panel-title (-> e .getClass .getName)]
       ]
      [:div.panel-body
-      [:h4 message]
+      [:h4 (.getMessage e)]
       ;; TODO: sorting
       (when-not (empty? properties)
         [:dl
@@ -126,47 +129,27 @@
                 (for [k (-> properties keys sort)]
                   [[:dt (-> k name h)] [:dd (-> (get properties k) to-markup)]]))
          ])]
-     (if stack-trace
+     (if root
        (list
          [:div.btn-toolbar.spacing-below
           [:button.btn.btn-default.btn-sm {:data-action :toggle-filter} "Toggle Stack Frame Filter"]]
          [:table.table.table-hover.table-condensed.table-striped
-          (map stack-trace-element->row-markup stack-trace)
+          (->>
+            e
+            exception/expand-stack-trace
+            (map stack-trace-element->row-markup))
           ]))
      ]))
 
-(defn- match-keys
-  "Apply the function f to all values in the map; where the result is truthy, add the key to the result."
-  [m f]
-  ;; (seq m) is necessary because the source is via (bean), which returns an odd implementation of map
-  (reduce (fn [result [k v]] (if (f v) (conj result k) result)) [] (seq m)))
 
-(defn- analyze-exception
-  [exception]
-  (let [properties (bean exception)
-        cause (:cause properties)
-        nil-property-keys (match-keys properties nil?)
-        throwable-property-keys (match-keys properties #(.isInstance Throwable %))
-        discarded-keys (concat [:suppressed :message :localizedMessage :class :stackTrace]
-                               nil-property-keys
-                               throwable-property-keys)
-        visual-properties (apply dissoc properties discarded-keys)
-        message (:message properties)]
-    {
-      :class       (-> properties :class .getName)
-      :message     (and message (to-markup message))
-      :properties  visual-properties
-      :stack-trace (if (nil? cause) (-> properties :stackTrace seq))
-      :cause       cause
-      }))
-
-(defn write-exception-stack [root-exception]
-  (loop [result []
-         exception root-exception]
-    (if exception
-      (let [analyzed (analyze-exception exception)]
-        (recur (conj result (exception->markup analyzed)) (:cause analyzed)))
-      (apply str result))))
+(defn write-exception-stack
+  "Writes the markup for a root exception and its stack of causes, including a stack trace for the deepest exception."
+  [^Throwable root-exception]
+  (->>
+    root-exception
+    exception/analyze-exception
+    (map exception->markup)
+    (apply str)))
 
 (defn build-report
   "Builds an HTML exception report (as a string).

@@ -1,7 +1,8 @@
 (ns io.aviso.twixt.tracker
   "Code for tracing behavior so that it can be logged when there's an exception."
   (:require [clojure.tools.logging :as l]
-            [clojure.tools.logging.impl :as impl]))
+            [clojure.tools.logging.impl :as impl]
+            [io.aviso.exception :as exception]))
 
 ;; Contains a list of messages (or functions that return messages) used to log the route to the exception.
 (def ^:dynamic trace-messages [])
@@ -25,7 +26,7 @@
   (.error logger "An exception has occurred:")
   (doseq [[trace-message i] (map vector trace-messages (iterate inc 1))]
     (.error logger (format "[%3d] - %s" i trace-message)))
-  (.error logger message e))
+  (.error logger (format "%s%n%s" message (exception/format-exception e))))
 
 (defn trace-function
   "Traces the execution of a function of no arguments. The trace macro converts into a call to track-function.
