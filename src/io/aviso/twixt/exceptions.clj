@@ -48,6 +48,18 @@ h
                   ))
          ]))))
 
+(defn- seq->markup [coll]
+  ;; Since *print-length* is normally nil, we provide an actual limit
+  (let [limit (or *print-length* 10)
+        values (take (inc limit) coll)
+        trimmed (if (<= (count values) limit)
+                  values
+                  (concat
+                    (take limit values)
+                    ["..."]))]
+    (for [v trimmed]
+      [:li (to-markup v)])))
+
 (extend-type Sequential
   MarkupGeneration
   (to-markup
@@ -55,9 +67,7 @@ h
     (html
       (if (empty? coll)
         [:em "none"]
-        [:ul
-         (for [v coll] [:li (to-markup v)])
-         ]))))
+        [:ul (seq->markup coll)]))))
 
 (extend-type Map
   MarkupGeneration
