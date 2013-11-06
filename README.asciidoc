@@ -178,48 +178,7 @@ ERROR [     qtp199535055-16] io.aviso.twixt.coffee-script META-INF/assets/invali
 java.lang.RuntimeException: META-INF/assets/invalid-coffeescript.coffee:6:1: error: unexpected INDENT
       argument: dep2
 ^^^^^^
-                                                                                        NativeConstructorAccessorImpl.java:                                                    sun.reflect.NativeConstructorAccessorImpl.newInstance0
-                                                                                        NativeConstructorAccessorImpl.java: 57                                                 sun.reflect.NativeConstructorAccessorImpl.newInstance
-                                                                                    DelegatingConstructorAccessorImpl.java: 45                                             sun.reflect.DelegatingConstructorAccessorImpl.newInstance
-                                                                                                          Constructor.java:525                                                             java.lang.reflect.Constructor.newInstance
-                                                                                                            Reflector.java:180                                                                    clojure.lang.Reflector.invokeConstructor
-                         io.aviso.twixt.coffee-script/coffee-script-compiler/fn/fn                       coffee_script.clj: 30                       io.aviso.twixt.coffee_script$coffee_script_compiler$fn__664$fn__667.invoke
-                                             io.aviso.twixt.tracker/trace-function                             tracker.clj: 40                                                     io.aviso.twixt.tracker$trace_function.invoke
-                            io.aviso.twixt.coffee-script/coffee-script-compiler/fn                       coffee_script.clj: 20                               io.aviso.twixt.coffee_script$coffee_script_compiler$fn__664.invoke
-                                              io.aviso.twixt.tracker/time-function                             tracker.clj: 70                                                      io.aviso.twixt.tracker$time_function.invoke
-                               io.aviso.twixt.coffee-script/coffee-script-compiler                       coffee_script.clj: 18                                       io.aviso.twixt.coffee_script$coffee_script_compiler.invoke
-                            io.aviso.twixt.fs-cache/wrap-with-cache/check-cache/fn                            fs_cache.clj: 57                          io.aviso.twixt.fs_cache$wrap_with_cache$check_cache__627$fn__630.invoke
-                                             io.aviso.twixt.tracker/trace-function                             tracker.clj: 40                                                     io.aviso.twixt.tracker$trace_function.invoke
-                               io.aviso.twixt.fs-cache/wrap-with-cache/check-cache                            fs_cache.clj: 53                                  io.aviso.twixt.fs_cache$wrap_with_cache$check_cache__627.invoke
-                                          io.aviso.twixt/transform-by-content-type                               twixt.clj: 83                                                  io.aviso.twixt$transform_by_content_type.invoke
-                     io.aviso.twixt/create-wrap-transformer/wrap/transform-handler                               twixt.clj: 99                   io.aviso.twixt$create_wrap_transformer$wrap__950$transform_handler__951.invoke
-                        io.aviso.twixt/wrap-cache-handler/streamable-cache-handler                               twixt.clj: 41                           io.aviso.twixt$wrap_cache_handler$streamable_cache_handler__931.invoke
-                                                 io.aviso.twixt/wrap-tracker/fn/fn                               twixt.clj:106                                               io.aviso.twixt$wrap_tracker$fn__956$fn__959.invoke
-                                             io.aviso.twixt.tracker/trace-function                             tracker.clj: 40                                                     io.aviso.twixt.tracker$trace_function.invoke
-                                                    io.aviso.twixt/wrap-tracker/fn                               twixt.clj:104                                                       io.aviso.twixt$wrap_tracker$fn__956.invoke
-                                                 io.aviso.twixt/new-twixt/reify/fn                               twixt.clj:174                                               io.aviso.twixt$new_twixt$reify__977$fn__980.invoke
-                                             io.aviso.twixt.tracker/trace-function                             tracker.clj: 40                                                     io.aviso.twixt.tracker$trace_function.invoke
-                                                                                                                 twixt.clj:172                                                       io.aviso.twixt$new_twixt$reify__977.get_asset_uri
-                                                           user/make-handler/fn/fn                                user.clj: 10                                                       user$make_handler$fn__1760$fn__1761.invoke
-                                             io.aviso.twixt.tracker/trace-function                             tracker.clj: 40                                                     io.aviso.twixt.tracker$trace_function.invoke
-                                                              user/make-handler/fn                                user.clj:  8                                                                user$make_handler$fn__1760.invoke
-                                      io.aviso.twixt/new-twixt/reify/middleware/fn                               twixt.clj:189                               io.aviso.twixt$new_twixt$reify__977$middleware__982$fn__983.invoke
-io.aviso.twixt.exceptions/wrap-with-exception-reporting/exception-catching-handler                          exceptions.clj:207  io.aviso.twixt.exceptions$wrap_with_exception_reporting$exception_catching_handler__1661.invoke
-                                               ring.adapter.jetty/proxy-handler/fn                               jetty.clj: 18                                                 ring.adapter.jetty$proxy_handler$fn__1741.invoke
-                                                                                                                          :                  ring.adapter.jetty.proxy$org.eclipse.jetty.server.handler.AbstractHandler$0.handle
-                                                                                                       HandlerWrapper.java:116                                           org.eclipse.jetty.server.handler.HandlerWrapper.handle
-                                                                                                               Server.java:363                                                           org.eclipse.jetty.server.Server.handle
-                                                                                               AbstractHttpConnection.java:483                                           org.eclipse.jetty.server.AbstractHttpConnection.handleRequest
-                                                                                               AbstractHttpConnection.java:920                                           org.eclipse.jetty.server.AbstractHttpConnection.headerComplete
-                                                                                               AbstractHttpConnection.java:982                            org.eclipse.jetty.server.AbstractHttpConnection$RequestHandler.headerComplete
-                                                                                                           HttpParser.java:635                                                         org.eclipse.jetty.http.HttpParser.parseNext
-                                                                                                           HttpParser.java:235                                                         org.eclipse.jetty.http.HttpParser.parseAvailable
-                                                                                                  AsyncHttpConnection.java: 82                                              org.eclipse.jetty.server.AsyncHttpConnection.handle
-                                                                                                SelectChannelEndPoint.java:628                                            org.eclipse.jetty.io.nio.SelectChannelEndPoint.handle
-                                                                                                SelectChannelEndPoint.java: 52                                          org.eclipse.jetty.io.nio.SelectChannelEndPoint$1.run
-                                                                                                     QueuedThreadPool.java:608                                            org.eclipse.jetty.util.thread.QueuedThreadPool.runJob
-                                                                                                     QueuedThreadPool.java:543                                          org.eclipse.jetty.util.thread.QueuedThreadPool$3.run
-                                                                                                               Thread.java:722                                                                          java.lang.Thread.run
+   ....
 ----
 
 In other words, when there's a failure, Twixt can tell you the steps that led up the failure, which is 90% of solving the problem in the first place.
