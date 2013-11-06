@@ -33,7 +33,7 @@
   (let [streamable-cache (atom {})]
     (fn streamable-cache-handler [path]
       (let [cached (get @streamable-cache path)]
-        (if (or (nil? cached) (-> cached dirty?))
+        (if (or (nil? cached) (-> cached tracker d/dirty?))
           (do
             ;; A small race condition: two threads may both continue down through the delegate.
             ;; However, the result will be identical regardless of which thread wins the race.
@@ -61,7 +61,7 @@
          (let [create-relative (fn [relative-path]
                                  ;; Calculate a new relative path but re-use the tracker.
                                  (streamable-source (compute-relative-path path relative-path) tracker))]
-           (create-streamable (d/track! tracker url) create-relative resource-path (to-content-type path) url)))))))
+           (create-streamable (d/track! tracker path url) create-relative resource-path (to-content-type path) url)))))))
 
 (defn- extract-file-extension [^String path]
   (let [dotx (.lastIndexOf path ".")]

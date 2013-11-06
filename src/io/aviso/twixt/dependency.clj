@@ -11,9 +11,13 @@
   ;; its dependents that they are now dirty as well.
 
   (^DependencyChangeTracker track!
-    [this ^URL url]
-    "Adds the URL (if a file: protocol) as a tracked dependency, returning
-    the same DependencyChangeTracker (its internal state changes).")
+    [this path url]
+    "Adds the path and URL (if a file: protocol) as a tracked dependency, returning
+    the same DependencyChangeTracker (its internal state changes). The path is relative to the asset root.")
+
+  (paths
+    [this]
+    "Returns a collection of all paths currently tracked.")
 
   (^boolean dirty?
     [this]
@@ -39,7 +43,8 @@
   "Creates a placeholder implementation of dependency tracker, used in production mode when dependency tracking is not desired."
   []
   (reify DependencyChangeTracker
-    (track! [this url] this)
+    (track! [this path url] this)
+    (paths [this] [])
     (dirty? [this] false)))
 
 (defn create-dependency-tracker
@@ -47,11 +52,13 @@
   []
   ;; resources is keyed on url of the resource; values are a map with keys :file and :last-modified
   (let [resources (atom {})
+        paths (atom [])
         dirty (atom false)]
     (reify DependencyChangeTracker
-      (track!
-          [this url]
-        (l/tracef "Adding `%s' as tracked dependency.", url)
+      (track! [this path url]
+        (l/tracef "Adding `%s' as tracked dependency." path)
+
+        (swap! paths conj path)
         ;; Only track URLs that map to files; in production, all the assets will be inside a JAR and will not need to be
         ;; tracked; they can only change as part of a full redeploy.
         (if (->> url .getProtocol (= "file"))
@@ -60,10 +67,8 @@
             (l/tracef "DTM for `%s' is %tc +%<tL", (.getName file) last-modified)
             (swap! resources assoc url {:file file :last-modified last-modified})))
         this)
-      (dirty?
-          [this]
-        ;; Once we see that it is dirty, we don't do further checks. This will be even more important in the future,
-        ;; where DCT's may be linked together.
+      (dirty? [this]
+        ;; Once we see that it is dirty, we don't do further checks.
         (if-not @dirty
           (reset! dirty (some last-modified-changed? @resources)))
         @dirty))))

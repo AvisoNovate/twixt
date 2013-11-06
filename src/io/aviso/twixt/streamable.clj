@@ -67,7 +67,7 @@
   (^Streamable relative
     [this relative-path]
     "Returns a new Streamable relative to this one, or null if it does not exist.
-    The new streamable will share its DependencyChangeTracker (used by dirty?)
+    The new streamable will share its DependencyChangeTracker
     and the underlying resource will be tracked for changes.")
   (^int content-size
     [this]
@@ -80,12 +80,12 @@
     "Returns a checksum string of the content of this Streamable.")
   (^Streamable replace-content
     [this source-name content-type source]
-    "Replaces the content (say, after CoffeeScript compilation), but maintains the same tracker (used by dirty?).
+    "Replaces the content (say, after CoffeeScript compilation), but maintains the same tracker.
     source must be compatible with clojure.java.io/input-stream.
     It is not allowed to find relative Streamables from the returned Streamable.")
-  (^boolean dirty? [this]
-                   "Returns true if this Streamable (or any related Streamable due to (relative) is dirty
-                   (the underlying source resource has changed since the Streamable was created)."))
+  (tracker
+    [this]
+    "Returns the dependency tracker for this streamable."))
 
 (defn- create-streamable-from-source
   [tracker create-relative source-name content-type source]
@@ -100,8 +100,8 @@
       (open [this] (io/input-stream content))
       (as-string [this] (as-string this utf-8))
       (as-string [this charset] (String. content charset))
-      (dirty? [this] (d/dirty? tracker))
       (checksum [this] content-checksum)
+      (tracker [this] tracker)
       (replace-content
           [this source-name content-type source]
         (create-streamable-from-source tracker invalid-create-relative
