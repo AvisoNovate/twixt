@@ -50,6 +50,9 @@
     Long/toHexString))
 
 (defprotocol Streamable
+
+  "A resource that can be streamed to the client; this starts as the content of a resource,
+  but can also represent the transformation of the resource, or the aggregation of several resources."
   ;; TODO - additional functions related to content aggregation
   (^String source-name
     [this]

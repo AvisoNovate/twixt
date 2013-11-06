@@ -6,6 +6,7 @@
 
 (defprotocol DependencyChangeTracker
 
+  "Used to track changes to a number of files based on last-modified timestamp."
   ;; Would be nice to add ability to one tracker to track another; when a tracker goes "dirty" it can notify
   ;; its dependents that they are now dirty as well.
 
