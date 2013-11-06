@@ -16,7 +16,7 @@
          (checksum streamable)
          (.substring name dotx))))
 
-(defn ^File find-cache-file
+(defn- ^File find-cache-file
   [cache-dir streamable]
   "Checks the file system cache for previously generated content for the streamable. Returns the File
   for the cached content, which may or may not exist."
