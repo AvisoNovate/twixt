@@ -1,20 +1,20 @@
 (ns io.aviso.twixt.exceptions
   "Support for generating pretty and useful HTML reports when server-side exceptions occur."
-  (use hiccup.core
-       hiccup.page
-       io.aviso.twixt
-       ring.util.response)
-  (import [clojure.lang APersistentMap Sequential]
-          [java.util Map])
-  (require [clojure.tools.logging :as l]
-           [clojure.string :as s]))
+  (:use hiccup.core
+        hiccup.page
+        io.aviso.twixt
+        ring.util.response)
+  (:import [clojure.lang APersistentMap Sequential]
+           [java.util Map])
+  (:require [clojure.tools.logging :as l]
+            [clojure.string :as s]))
 
 (defn- exception-message [exception]
-  (or (.getMessage exception) 
+  (or (.getMessage exception)
       (-> exception .getClass .getName)))
 
 (defprotocol MarkupGeneration
-  (to-markup 
+  (to-markup
     [value]
     "Returns HTML markup representing the value."))
 
@@ -32,22 +32,22 @@
 
 (extend-type APersistentMap
   MarkupGeneration
-  (to-markup 
-    [m]
+  (to-markup
+      [m]
     (html
       (if (empty? m)
-      [:em "empty map"]
-      [:dl
-        (apply concat
-               (for [k (-> m keys sort)]
-                 [[:dt (to-markup k)] [:dd (-> (get m k) to-markup)]]
-                 ))
-        ]))))
+        [:em "empty map"]
+        [:dl
+         (apply concat
+                (for [k (-> m keys sort)]
+                  [[:dt (to-markup k)] [:dd (-> (get m k) to-markup)]]
+                  ))
+         ]))))
 
 (extend-type Sequential
   MarkupGeneration
-  (to-markup 
-    [coll]
+  (to-markup
+      [coll]
     (html
       (if (empty? coll)
         [:em "none"]
@@ -57,17 +57,17 @@
 
 (extend-type Map
   MarkupGeneration
-  (to-markup 
-    [m]
+  (to-markup
+      [m]
     (html
       (if (.isEmpty m)
-      [:em "empty map"]
-      [:dl
-        (apply concat
-               (for [k (-> m .keySet sort)]
-                 [[:dt (to-markup k)] [:dd (-> (.get m k) to-markup)]]
-                 ))
-        ]))))
+        [:em "empty map"]
+        [:dl
+         (apply concat
+                (for [k (-> m .keySet sort)]
+                  [[:dt (to-markup k)] [:dd (-> (.get m k) to-markup)]]
+                  ))
+         ]))))
 
 (defn- ste->source-location
   [element]
@@ -96,11 +96,11 @@
         is-clojure (and (.endsWith file-name ".clj")
                         (contains? #{"invoke" "doInvoke"} method-name))
         formatted (str class-name " &mdash; " method-name)]
-      (if is-clojure
-        (list 
-           (convert-clojure-frame class-name method-name)
-           [:div.filtered formatted])
-        formatted)))
+    (if is-clojure
+      (list
+        (convert-clojure-frame class-name method-name)
+        [:div.filtered formatted])
+      formatted)))
 
 (defn- stack-trace-element->row-markup
   [element]
@@ -109,7 +109,7 @@
    [:td (ste->frame-markup element)]
    ])
 
-(defn- exception->markup 
+(defn- exception->markup
   "Given an analyzed exception, generate markup for it."
   [{:keys [class message properties stack-trace]}]
   (html
@@ -122,7 +122,7 @@
       ;; TODO: sorting
       (when-not (empty? properties)
         [:dl
-         (apply concat           
+         (apply concat
                 (for [k (-> properties keys sort)]
                   [[:dt (-> k name h)] [:dd (-> (get properties k) to-markup)]]))
          ])]
@@ -135,13 +135,13 @@
           ]))
      ]))
 
-(defn- match-keys 
+(defn- match-keys
   "Apply the function f to all values in the map; where the result is truthy, add the key to the result."
   [m f]
   ;; (seq m) is necessary because the source is via (bean), which returns an odd implementation of map
   (reduce (fn [result [k v]] (if (f v) (conj result k) result)) [] (seq m)))
 
-(defn- analyze-exception 
+(defn- analyze-exception
   [exception]
   (let [properties (bean exception)
         cause (:cause properties)
@@ -153,12 +153,12 @@
         visual-properties (apply dissoc properties discarded-keys)
         message (:message properties)]
     {
-     :class (-> properties :class .getName)
-     :message (and message (to-markup message))
-     :properties visual-properties
-     :stack-trace (if (nil? cause) (-> properties :stackTrace seq))
-     :cause cause
-     }))
+      :class       (-> properties :class .getName)
+      :message     (and message (to-markup message))
+      :properties  visual-properties
+      :stack-trace (if (nil? cause) (-> properties :stackTrace seq))
+      :cause       cause
+      }))
 
 (defn write-exception-stack [root-exception]
   (loop [result []
@@ -191,20 +191,20 @@
         ]
        ]
       (write-exception-stack exception)
-      
+
       [:h3 "Request"]
-      
-      (to-markup request)  
-      
+
+      (to-markup request)
+
       [:h3 "System Properties"]
-      (to-markup (System/getProperties))          
+      (to-markup (System/getProperties))
       ]
      (apply include-js (get-asset-uris twixt
                                        "bootstrap3/js/jquery-2.0.3.js"
                                        "twixt/exception.coffee"))
      ]))
 
-(defn wrap-with-exception-reporting 
+(defn wrap-with-exception-reporting
   "Wraps the handler to report any uncaught exceptions as an HTML exception report.
   
   handler - handler to wrap
@@ -215,7 +215,7 @@
       (handler request)
       (catch Throwable t
         ;; TODO: logging!
-        (->          
+        (->
           (build-report twixt request t)
           response
           (content-type "text/html")

@@ -1,22 +1,22 @@
 (ns io.aviso.twixt.dependency
   "DependencyChangeTracker protocol."
-  (import [java.net URL URISyntaxException]
-          [java.io File])
-  (require [clojure.tools.logging :as l]))
+  (:import [java.net URL URISyntaxException]
+           [java.io File])
+  (:require [clojure.tools.logging :as l]))
 
 (defprotocol DependencyChangeTracker
-  
+
   ;; Would be nice to add ability to one tracker to track another; when a tracker goes "dirty" it can notify
   ;; its dependents that they are now dirty as well.
-  
-  (^DependencyChangeTracker track! 
-                            [this ^URL url] 
-                            "Adds the URL (if a file: protocol) as a tracked dependency, returning
-                            the same DependencyChangeTracker (its internal state changes).")
-  
-  (^boolean dirty? 
-            [this] 
-            "Checks the dependencies, if any, to determine if any have changed, returning true when such a change is found."))
+
+  (^DependencyChangeTracker track!
+    [this ^URL url]
+    "Adds the URL (if a file: protocol) as a tracked dependency, returning
+    the same DependencyChangeTracker (its internal state changes).")
+
+  (^boolean dirty?
+    [this]
+    "Checks the dependencies, if any, to determine if any have changed, returning true when such a change is found."))
 
 
 ;; Not the same as io/file!
@@ -48,8 +48,8 @@
   (let [resources (atom {})
         dirty (atom false)]
     (reify DependencyChangeTracker
-      (track! 
-        [this url]
+      (track!
+          [this url]
         (l/tracef "Adding `%s' as tracked dependency.", url)
         ;; Only track URLs that map to files; in production, all the assets will be inside a JAR and will not need to be
         ;; tracked; they can only change as part of a full redeploy.
@@ -59,8 +59,8 @@
             (l/tracef "DTM for `%s' is %tc +%<tL", (.getName file) last-modified)
             (swap! resources assoc url {:file file :last-modified last-modified})))
         this)
-      (dirty? 
-        [this]
+      (dirty?
+          [this]
         ;; Once we see that it is dirty, we don't do further checks. This will be even more important in the future,
         ;; where DCT's may be linked together.
         (if-not @dirty

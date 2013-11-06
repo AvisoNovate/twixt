@@ -1,8 +1,8 @@
 (ns io.aviso.twixt.coffee-script
   "Twixt transformer for compiling CoffeeScript to JavaScript."
-  (use io.aviso.twixt.streamable)
-  (import [org.mozilla.javascript ScriptableObject])
-  (require [io.aviso.twixt
+  (:use io.aviso.twixt.streamable)
+  (:import [org.mozilla.javascript ScriptableObject])
+  (:require [io.aviso.twixt
              [fs-cache :as fs]
              [rhino :as rhino]
              [tracker :as tracker]]))
@@ -24,11 +24,11 @@
                                        "compileCoffeeScriptSource"
                                        (as-string source utf-8)
                                        name)]
-          
+
           ;; The script returns an object with key "exception" or key "output":
           (when (.containsKey result "exception")
             (throw (RuntimeException. (extract-value result "exception"))))
-          
+
           (converter source (as-bytes (extract-value result "output"))))))))
 
 (defn coffee-script-compiler-factory

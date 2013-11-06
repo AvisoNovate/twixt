@@ -1,11 +1,11 @@
 (ns io.aviso.twixt.fs-cache
   "Manages a simple file system cache for Streamables."
-  (use io.aviso.twixt.streamable)
-  (import [java.io File InputStream])
-  (require [clojure.java.io :as io]
-           [clojure.string :as s]
-           [clojure.tools.logging :as l]
-           [io.aviso.twixt.tracker :as t]))
+  (:use io.aviso.twixt.streamable)
+  (:import [java.io File InputStream])
+  (:require [clojure.java.io :as io]
+            [clojure.string :as s]
+            [clojure.tools.logging :as l]
+            [io.aviso.twixt.tracker :as t]))
 
 (defn- munge-name
   [streamable]
@@ -22,7 +22,7 @@
   for the cached content, which may or may not exist."
   (io/file cache-dir (munge-name streamable)))
 
-(defn- write-to-cache-file 
+(defn- write-to-cache-file
   [streamable file]
   (t/trace #(format "Writing `%s' content to `%s'" (source-name streamable) file)
            (with-open [content-stream (open streamable)
@@ -37,7 +37,7 @@
         (.mkdirs file)
         (l/infof "Created cache folder `%s'." file)))))
 
-(defn wrap-with-cache 
+(defn wrap-with-cache
   "Takes a cache directory and a delegate function. The delegate accepts a Streamable and returns a Streamable.
   A file system cache is used for storing the results of 
   
@@ -47,7 +47,7 @@
   delegate - function whose result is being cached; invoked if the cache file is missing."
   ([cache-dir subdir creator delegate]
    (wrap-with-cache (io/file cache-dir subdir) creator delegate))
-  ([cache-dir creator delegate]   
+  ([cache-dir creator delegate]
    (create-cache-dir cache-dir)
    (fn check-cache [streamable]
      (t/trace #(format "Checking file system cache for `%s'." (source-name streamable))

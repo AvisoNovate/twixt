@@ -1,13 +1,13 @@
 (ns io.aviso.twixt.jade
   "Support for using Jade templates (using jade4j)."
-  (use io.aviso.twixt.streamable)
-  (import [java.io Reader InputStreamReader BufferedReader]
-          [de.neuland.jade4j Jade4J]
-          [de.neuland.jade4j.exceptions JadeException])
-  (require [io.aviso.twixt 
-            [tracker :as tracker]
-            [fs-cache :as fs]]
-           [clojure.java.io :as io]))
+  (:use io.aviso.twixt.streamable)
+  (:import [java.io Reader InputStreamReader BufferedReader]
+           [de.neuland.jade4j Jade4J]
+           [de.neuland.jade4j.exceptions JadeException])
+  (:require [io.aviso.twixt
+             [tracker :as tracker]
+             [fs-cache :as fs]]
+            [clojure.java.io :as io]))
 
 (defn- converter [streamable new-content]
   (replace-content streamable (str "Compiled " (source-name streamable)) "text/html" new-content))
@@ -32,6 +32,6 @@
 (defn jade-compiler-factory
   [options]
   (let [pretty-print (:development-mode options)]
-    (fs/optionally-wrap-with-cache options "jade" 
-                                   converter 
+    (fs/optionally-wrap-with-cache options "jade"
+                                   converter
                                    (partial jade-compiler pretty-print))))

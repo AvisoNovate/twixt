@@ -1,32 +1,32 @@
 (ns io.aviso.twixt-test
-  (use clojure.test
-       io.aviso.twixt
-       io.aviso.twixt.streamable
-       clojure.tools.logging)
-  (require [clojure.java.io :as io]))
+  (:use clojure.test
+        io.aviso.twixt
+        io.aviso.twixt.streamable
+        clojure.tools.logging)
+  (:require [clojure.java.io :as io]))
 
 (defn next-handler [req] :next-handler)
 
 (defn read-body [response]
   (->
-   response
-   :body
-   read-content
-   String.
-   .trim))
+    response
+    :body
+    read-content
+    String.
+    .trim))
 
 (defn read-resource-content [path]
   (->
-   (str "META-INF/" path)
-   io/resource
-   read-content
-   String.
-   .trim))
+    (str "META-INF/" path)
+    io/resource
+    read-content
+    String.
+    .trim))
 
 (def cache-folder (format "%s/%x" (System/getProperty "java.io.tmpdir") (System/nanoTime)))
 
-(def twixt (new-twixt {:development-mode true 
-                       :cache-folder cache-folder}))
+(def twixt (new-twixt {:development-mode true
+                       :cache-folder     cache-folder}))
 (def middleware (create-middleware twixt))
 (def handler (-> next-handler middleware))
 
@@ -44,10 +44,10 @@
   (deftest folders-are-ignored
 
     (are [path] (is (= (handler {:uri path}) :next-handler))
-         ;; exact match on the path prefix
-         "/assets/"
-         ;; any path that ends in a slash
-         "/assets/sub/"))
+                ;; exact match on the path prefix
+                "/assets/"
+                ;; any path that ends in a slash
+                "/assets/sub/"))
 
   (deftest missing-file
 
@@ -86,21 +86,21 @@
 
 (deftest jade-compilation
 
-    (let [response (handler {:uri "/assets/jade-source.jade"})]
-      (is (= (-> response :headers (get "Content-Type")) "text/html"))
-      (is (= (-> response read-body) (-> "assets/compiled-jade-source.html" read-resource-content)))))
+  (let [response (handler {:uri "/assets/jade-source.jade"})]
+    (is (= (-> response :headers (get "Content-Type")) "text/html"))
+    (is (= (-> response read-body) (-> "assets/compiled-jade-source.html" read-resource-content)))))
 
 (deftest relative-paths
 
   (are [start relative expected] (= (compute-relative-path start relative) expected)
 
-       "foo/bar.gif" "baz.png" "foo/baz.png"
+                                 "foo/bar.gif" "baz.png" "foo/baz.png"
 
-       "foo/bar.gif" "./baz.png" "foo/baz.png"
+                                 "foo/bar.gif" "./baz.png" "foo/baz.png"
 
-       "foo/bar.gif" "../zip.zap" "zip.zap"
+                                 "foo/bar.gif" "../zip.zap" "zip.zap"
 
-       "foo/bar/gif" "../frozz/pugh.pdf" "foo/frozz/pugh.pdf")
+                                 "foo/bar/gif" "../frozz/pugh.pdf" "foo/frozz/pugh.pdf")
 
   (is (thrown? IllegalArgumentException (compute-relative-path "foo/bar.png" "../../too-high.pdf"))))
 
@@ -111,9 +111,9 @@
         f3 (relative f2 "f3.txt")
         missing (relative f3 "../does-not-exist.txt")]
     (are [streamable expected-content] (= (-> streamable as-string .trim) expected-content)
-         f1 "file 1"
-         f2 "file 2"
-         f3 "file 3")
+                                       f1 "file 1"
+                                       f2 "file 2"
+                                       f3 "file 3")
 
     (is (nil? missing))))
 
@@ -121,7 +121,7 @@
 
   (let [streamable (get-streamable twixt "sample.less")
         expected (read-resource-content "assets/compiled-sample.css")]
-    
+
     (is (= (content-type streamable) "text/css"))
     (is (= (-> streamable as-string .trim) expected)))
 

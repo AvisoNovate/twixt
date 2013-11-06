@@ -1,7 +1,7 @@
 (ns io.aviso.twixt.tracker
   "Code for tracing behavior so that it can be logged when there's an exception."
-  (require [clojure.tools.logging :as l]
-           [clojure.tools.logging.impl :as impl]))
+  (:require [clojure.tools.logging :as l]
+            [clojure.tools.logging.impl :as impl]))
 
 ;; Contains a list of messages (or functions that return messages) used to log the route to the exception.
 (def ^:dynamic trace-messages [])
@@ -34,7 +34,7 @@
   trace-message - String, object, or function. Function evaulation is deferred until an exception is actually thrown.
   f - function to invoke."
   [logger trace-message f]
-  (binding [trace-messages (conj trace-messages trace-message)] 
+  (binding [trace-messages (conj trace-messages trace-message)]
     (try
       (f)
       (catch Throwable e
@@ -49,7 +49,7 @@
                             {:operation-trace trace-strings}
                             e))))))))
 
-(defn get-logger 
+(defn get-logger
   "Determines the logger instance for a namespace (by leveraging some clojure.tools.logging internals)."
   [namespace]
   (impl/get-logger l/*logger-factory* namespace))

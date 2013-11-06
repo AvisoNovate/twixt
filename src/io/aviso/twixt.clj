@@ -1,18 +1,18 @@
 (ns io.aviso.twixt
   "Pipeline for accessing and transforming assets for streaming. Integrates with Ring."
-  (use io.aviso.twixt.streamable)
-  (require [clojure.java.io :as io]
-           [clojure.tools.logging :as l]
-           [io.aviso.twixt
-            [dependency :as d]
-            [coffee-script :as cs]
-            [less :as less]
-            [jade :as jade]
-            [utils :as u]
-            [tracker :as tracker]]
-           [ring.util
-            [response :as r]
-            [mime-type :as mime]]))
+  (:use io.aviso.twixt.streamable)
+  (:require [clojure.java.io :as io]
+            [clojure.tools.logging :as l]
+            [io.aviso.twixt
+             [dependency :as d]
+             [coffee-script :as cs]
+             [less :as less]
+             [jade :as jade]
+             [utils :as u]
+             [tracker :as tracker]]
+            [ring.util
+             [response :as r]
+             [mime-type :as mime]]))
 
 ;;; Lots of stuff from Tapestry 5.4 is not yet implemented; probably won't be until this is spun off as an open-source
 ;;; GitHub project.
@@ -24,7 +24,7 @@
 
 (defprotocol Twixt
   "Captures the configuration and logic for asset access and transformation."
-  
+
   (get-asset-uri [this asset-path] "Given an asset path (under the configured asset root), returns the URI that can be used to access the asset, or null if the asset does not exist.")
   (get-streamable [this path] "Gets the Streamable defined by the path. May return nil if the path does not map to a streamable.")
   (create-middleware [this] "Creates a Ring middleware function (a function that takes and returns a Ring handler function)."))
@@ -139,17 +139,17 @@
             (l/warnf "Asset path `%s' in request does not match an available file." path)))))))
 
 (def default-options
-  {:path-prefix "/assets/"
-   :root "META-INF/assets/"
-   :content-types (merge mime/default-mime-types {"coffee" "text/coffeescript"
-                                                  "less" "text/less"
-                                                  "jade" "text/jade"})
-   :transformers {"text/coffeescript" cs/coffee-script-compiler-factory
-                  "text/less" less/less-compiler-factory
-                  "text/jade" jade/jade-compiler-factory}
+  {:path-prefix      "/assets/"
+   :root             "META-INF/assets/"
+   :content-types    (merge mime/default-mime-types {"coffee" "text/coffeescript"
+                                                     "less"   "text/less"
+                                                     "jade"   "text/jade"})
+   :transformers     {"text/coffeescript" cs/coffee-script-compiler-factory
+                      "text/less"         less/less-compiler-factory
+                      "text/jade"         jade/jade-compiler-factory}
    :development-mode false
-   :cache-enabled false ;; file-system cache is always enabled in development mode
-   :cache-folder (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))})
+   :cache-enabled    false ;; file-system cache is always enabled in development mode
+   :cache-folder     (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))})
 
 (defn new-twixt
   "Creates a new Twixt from the provided options. All of the options are merged together (recursively) to form
@@ -163,23 +163,23 @@
         wrap-transformer (create-wrap-transformer merged-options transformers)
         pipeline (create-streamable-pipeline core-provider wrap-transformer)]
     (reify
-      
-      Twixt
-      
+
+        Twixt
+
       (get-asset-uri
-        [this asset-path]
+          [this asset-path]
         ;; This will get more complex when the checksum is incorprated into the asset's URI.
         (tracker/trace
           #(format "Constructing URI for asset `%s'" asset-path)
           (when (pipeline asset-path)
             (str path-prefix asset-path))))
-      
+
       (get-streamable [this path] (pipeline path))
-      
+
       (create-middleware
-        [this]
+          [this]
         (fn middleware [handler]
-          (l/infof "Mapping request URL `%s' to resources under `%s'%s." 
+          (l/infof "Mapping request URL `%s' to resources under `%s'%s."
                    path-prefix root
                    (if development-mode " (development mode)"))
           (let [twixt-handler (create-twixt-handler path-prefix pipeline)]
@@ -188,12 +188,12 @@
                 (twixt-handler req)
                 (handler req)))))))))
 
-(defn wrap-with-twixt 
+(defn wrap-with-twixt
   "Wraps a handler with Twixt middleware, to handle requests for assets."
   [handler twixt]
   ((-> twixt create-middleware) handler))
 
-(defn get-asset-uris 
+(defn get-asset-uris
   "Converts a number of asset paths into client URIs."
   [twixt & paths]
   (map (partial get-asset-uri twixt) paths))

@@ -1,10 +1,10 @@
 (ns io.aviso.twixt.less
   "Less to CSS compilation transformer."
-  (use io.aviso.twixt.streamable)
-  (import [com.github.sommeri.less4j LessSource LessSource$FileNotFound Less4jException LessCompiler$Problem]
-          [com.github.sommeri.less4j.core DefaultLessCompiler])
-  (require [io.aviso.twixt.tracker :as tracker]
-           [clojure.string :as s]))
+  (:use io.aviso.twixt.streamable)
+  (:import [com.github.sommeri.less4j LessSource LessSource$FileNotFound Less4jException LessCompiler$Problem]
+           [com.github.sommeri.less4j.core DefaultLessCompiler])
+  (:require [io.aviso.twixt.tracker :as tracker]
+            [clojure.string :as s]))
 
 ;; Putting this logic inside the (proxy) call causes some really awful Clojure compiler problems.
 ;; This shim seems to defuse that.
@@ -15,14 +15,14 @@
   [streamable]
   (proxy [LessSource] []
     (relativeSource [filename]
-                    (if-let [rel (find-relative streamable filename)]
-                      (create-less-source rel)
-                      (throw (new LessSource$FileNotFound))))
-    
+      (if-let [rel (find-relative streamable filename)]
+        (create-less-source rel)
+        (throw (new LessSource$FileNotFound))))
+
     (toString [] (source-name streamable))
-    
+
     (getContent []
-                (-> (as-string streamable utf-8) (.replace "\r\n" "\n")))))
+      (-> (as-string streamable utf-8) (.replace "\r\n" "\n")))))
 
 (defn- problem-to-string [^LessCompiler$Problem problem]
   (let [source (-> problem .getSource .toString)
