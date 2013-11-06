@@ -15,6 +15,9 @@
       (-> exception .getClass .getName)))
 
 (defprotocol MarkupGeneration
+  "Used to convert arbitrary values into markup strings.
+
+  Extended onto nil, String, APersistentMap, Sequential and Object."
   (to-markup
     [value]
     "Returns HTML markup representing the value."))
@@ -73,29 +76,27 @@ h
 (defn- element->clojure-name [element]
   (let [names (:names element)]
     (list
-      (s/join "/" (butlast names))
+      (s/join "/" (drop-last names))
       "/"
       [:strong (last names)])))
 
-(defn- element->java-name [element]
-  (let [class-name (:class element)
-        dotx (.lastIndexOf class-name ".")]
-    (list
-      (if (pos? dotx)
-        (list
-          ;; Take up to and including the "dot"
-          [:span.package-name (.substring class-name 0 (inc dotx))]
-          (.substring class-name (inc dotx)))
-        class-name)
-      " &mdash; "
-      (:method element))))
+(defn- element->java-name
+  [{:keys [package class simple-class method]}]
+  (list
+    (if package
+      (list
+        [:span.package-name package]
+        "."
+        simple-class)
+      class)
+    " &mdash; "
+    method))
 
 (defn- stack-trace-element->row-markup
-  [element]
-  (let [clojure? (-> element :names empty? not)
-        class-name (:class element)
-        java-name (element->java-name element)
-        ^String line (:line element)]
+  [{:keys [file line names]
+    :as   element}]
+  (let [clojure? (-> names empty? not)
+        java-name (element->java-name element)]
     [:tr
      [:td.function-name
       (if clojure?
@@ -104,24 +105,21 @@ h
           [:div.filtered java-name])
         java-name)
       ]
-     [:td.source-location (:file element)]
-     [:td (if (and (-> line s/blank? not)
-                   (-> line (Integer/parseInt) pos?))
-            line
-            "")]
+     [:td.source-location file]
+     [:td (or line "")]
      ]))
 
-(defn- exception->markup
+(defn- single-exception->markup
   "Given an analyzed exception, generate markup for it."
   [{^Throwable e :exception
-    :keys        [properties root]}]
+    :keys        [class-name message properties root]}]
   (html
     [:div.panel.panel-default
      [:div.panel-heading
-      [:h3.panel-title (-> e .getClass .getName)]
+      [:h3.panel-title class-name]
       ]
      [:div.panel-body
-      [:h4 (.getMessage e)]
+      [:h4 message]
       ;; TODO: sorting
       (when-not (empty? properties)
         [:dl
@@ -142,13 +140,14 @@ h
      ]))
 
 
-(defn write-exception-stack
-  "Writes the markup for a root exception and its stack of causes, including a stack trace for the deepest exception."
-  [^Throwable root-exception]
+(defn exception->markup
+  "Returns the markup (as a string) for a root exception and its stack of causes,
+  including a stack trace for the deepest exception."
+  [root-exception]
   (->>
     root-exception
     exception/analyze-exception
-    (map exception->markup)
+    (map single-exception->markup)
     (apply str)))
 
 (defn build-report
@@ -173,7 +172,7 @@ h
         [:h3 (h (exception-message exception))]
         ]
        ]
-      (write-exception-stack exception)
+      (exception->markup exception)
 
       [:h3 "Request"]
 
