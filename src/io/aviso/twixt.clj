@@ -25,9 +25,15 @@
 (defprotocol Twixt
   "Captures the configuration and logic for asset access and transformation."
 
-  (get-asset-uri [this asset-path] "Given an asset path (under the configured asset root), returns the URI that can be used to access the asset, or null if the asset does not exist.")
-  (get-streamable [this path] "Gets the Streamable defined by the path. May return nil if the path does not map to a streamable.")
-  (create-middleware [this] "Creates a Ring middleware function (a function that takes and returns a Ring handler function)."))
+  (get-asset-uri
+    [this asset-path]
+    "Given an asset path (under the configured asset root), returns the URI that can be used to access the asset, or null if the asset does not exist.")
+  (get-streamable
+    [this path]
+    "Gets the Streamable defined by the path. May return nil if the path does not map to a streamable.")
+  (create-middleware
+    [this]
+    "Creates a Ring middleware function (a function that takes and returns a Ring handler function)."))
 
 (defn- wrap-cache-handler [delegate]
   (let [streamable-cache (atom {})]
