@@ -41,7 +41,8 @@
   "Takes a cache directory and a delegate function. The delegate accepts a Streamable and returns a Streamable.
   A file system cache is used for storing the results of 
   
-  cache-dir - File, String, or otherwise compatible with clojure.java.io/as-file. The cache-dir is created.
+  cache-dir - File, String, or otherwise compatib
+  le with clojure.java.io/as-file. The cache-dir is created.
   subdir - optional sub-directory beneath the cache dir
   creator - Passed original (untransformed) Streamable and a source (e.g., the file) and provides a new Streamble.
   delegate - function whose result is being cached; invoked if the cache file is missing."
