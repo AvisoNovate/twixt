@@ -1,6 +1,5 @@
 (ns io.aviso.twixt.coffee-script
   "Twixt transformer for compiling CoffeeScript to JavaScript."
-  (:use io.aviso.twixt.streamable)
   (:import [org.mozilla.javascript ScriptableObject])
   (:require [io.aviso.twixt
              [rhino :as rhino]
@@ -9,9 +8,6 @@
 
 (defn- extract-value [^ScriptableObject object key]
   (str (.get object key)))
-
-(defn- converter [streamable new-content]
-  (replace-content streamable (str "Compiled " (source-name streamable)) "text/javascript" new-content))
 
 (defn- coffee-script-compiler [asset]
   (let [name (:resource-path asset)]
@@ -29,22 +25,9 @@
           (when (.containsKey result "exception")
             (throw (RuntimeException. (extract-value result "exception"))))
 
-          (let [output (extract-value result "output")
-                compiled (.getBytes output "utf-8")]
-            (assoc asset
-              ;; Indicate to upper levels that the raw content has been transformed in some way worth caching.
-              :compiled true
-              :content-type "text/javascript"
-              :dependencies {name (select-keys asset [:checksum :modified-at])}
-              :content compiled
-              :size (alength compiled)
-              :checksum (compute-checksum compiled))))))))
+          (utils/create-compiled-asset asset "text/javascript" (extract-value result "output")))))))
 
 (defn wrap-with-coffee-script-compilation
   "Wraps an asset pipeline handler such that CoffeeScript source is compiled."
   [handler]
-  (fn coffee-script-compilation [path]
-    (let [asset (handler path)]
-      (if (= "text/coffeescript" (:content-type asset))
-        (coffee-script-compiler asset)
-        asset))))
+  (utils/content-type-matcher handler "text/coffeescript" coffee-script-compiler))

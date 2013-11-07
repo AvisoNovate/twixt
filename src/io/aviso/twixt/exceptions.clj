@@ -197,18 +197,36 @@ h
      ]))
 
 (defn wrap-with-exception-reporting
-  "Wraps the handler to report any uncaught exceptions as an HTML exception report.
+  "Wraps the handler to report any uncaught exceptions as an HTML exception report.  This wrapper
+  should wrap around other handlers (including the Twixt handler itself), but be nested within
+  the twixt-setup handler (which provides the :twixt request map key).
   
   handler - handler to wrap
   twixt - initialized instance of Twixt"
-  [handler twixt]
+  [handler]
   (fn exception-catching-handler [request]
     (try
       (handler request)
       (catch Throwable t
-        ;; TODO: logging!
+        ;; TODO: logging?
         (->
-          (build-report twixt request t)
+          (build-report (:twixt request) request t)
           response
           (content-type "text/html")
           (status 500))))))
+
+(defn default-twixt-handler
+  "The default way to setup Twixt with exception reporting.
+
+  With just a handler, uses the default Twixt options and production mode.
+
+  Otherwise, specify alternate options and true or false for development mode."
+  ([handler]
+   (default-twixt-handler handler default-options false))
+  ([handler twixt-options development-mode]
+   (let [asset-pipeline (default-asset-pipeline twixt-options development-mode)]
+     (->
+       handler
+       wrap-with-twixt
+       wrap-with-exception-reporting
+       (wrap-with-twixt-setup twixt-options asset-pipeline)))))
