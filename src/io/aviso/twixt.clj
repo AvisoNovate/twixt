@@ -149,9 +149,9 @@
     (when (match? path-prefix path)
       (tracker/trace
         #(format "Handling asset request `%s'." path)
-        (let [resource-path (.substring path (.length path-prefix))
+        (let [asset-path (.substring path (.length path-prefix))
               asset-pipeline (-> request :twixt :asset-pipeline)]
-          (if-let [asset-map (asset-pipeline resource-path)]
+          (if-let [asset-map (asset-pipeline asset-path)]
             (-> asset-map
                 :content
                 io/input-stream
