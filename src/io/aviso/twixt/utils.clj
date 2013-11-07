@@ -67,8 +67,8 @@
   "Creates a handler for the asset pipeline that delegates to the provided handler, but passes
   the obtained asset through a transformer function if it matches the expected content type."
   [handler content-type transformer]
-  (fn [resource-path]
-    (if-let [asset (handler resource-path)]
+  (fn [asset-path]
+    (if-let [asset (handler asset-path)]
       (if (= content-type (:content-type asset))
         (transformer asset)
         asset))))
