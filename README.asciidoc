@@ -37,20 +37,15 @@ Twixt maps file extensions to MIME types; it then will transform certain MIME ty
 (ns example.app
   (:use compojure.core
         ring.adapter.jetty
-        [io.aviso.twixt :as t]
         [io.aviso.twixt.exceptions :as te))
 
 ;;; Use Compojure to map routes to handlers
 (defroutes app ...)
 
-;;; Create a twixt instance and a middleware to handle /asset/ URLs
+;;; Create twixt wrappers and handler to handle /asset/ URLs, in production mode
 (def app-handler
-  (let [twixt (t/new-twixt {:development-mode true})]
-    (->
-      app
-      (t/wrap-with-twixt twixt)
-      (te/wrap-with-exception-reporting twixt))))
-    
+  (te/default-twixt-handler app)
+
 ;;; Use the Ring Jetty adapter to serve your site
 (run-jetty app-handler)
 ----  
@@ -87,6 +82,8 @@ through Twixt to get URIs that will work in the browser:
         ...
 ----
 
+The twixt parameter is a map that is provided in the Ring request map under key +:twixt+.
+
 === Configuring Twixt
 
 You may pass any number of option maps to +new-twixt+; they are all recursively merged together.
@@ -101,30 +98,17 @@ The default options:
    :content-types (merge mime/default-mime-types {"coffee" "text/coffeescript"
                                                   "less" "text/less"
                                                   "jade" "text/jade"})
-   :transformers {"text/coffeescript" cs/coffee-script-compiler-factory
-                  "text/less" less/less-compiler-factory
-                  "text/jade" jade/jade-compiler-factory}
-   :development-mode false
-   :cache-enabled false ;; cache is always enabled in development mode
    :cache-folder (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))})
 ----
 
-You can override +root+ to change where assets are stored on the classpath, but there is rarely a need to do so. Changing
-root may break other libraries that depend on Twixt, such as Twixt's own exception reporting.
+You can override +root+ to change where assets are stored on the classpath, but there is rarely a need to do so.
+Changing root may break other libraries that depend on Twixt, such as Twixt's own exception reporting.
 
-You can override +:path-prefix+ to change the root URL for assets; +/+ is an acceptible value.
+You can override +:path-prefix+ to change the root URL for assets; +/+ is an acceptable value.
 
 The +:content-types+ key maps file extensions to MIME types.
 
-The +:transformers+ key maps selected MIME types to a transformer _factory_ for that MIME type.
-The transformer factory is passed the fully merged options for the Twixt instance,
-and returns a _transformer_. 
-The transformer is passed a Streamable, and returns a new Streamable.
-
-Future plugins may provide additional content types and transformers.
-
-File system caching is enabled when either +:development-mode+ or +:cache-enabled+ is set to true. 
-Running with caching enabled in production is not recommended ... there is no process to remove cached files, and an upgrade of Twixt may change the result of compiling source files, leading to inconsistent results if cached files from prior releases are present.
+File system caching is enabled normally only enabled in development mode.
 
 Twixt always caches the content of files in memory, after any transforming operations. In development mode, checks are enabled
 to refresh the cache when underlying files are modified; in production, no such checks occur as it is assumed that all such
