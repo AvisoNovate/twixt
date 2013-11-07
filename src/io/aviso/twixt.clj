@@ -95,13 +95,30 @@
                                                   "jade"   "text/jade"})
    :cache-folder  (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))})
 
+(defn- get-single-asset
+  [asset-pipeline asset-path]
+  (or (asset-pipeline asset-path)
+      (throw (IllegalArgumentException. (format "Asset path `%s' does not map to an available resource.")))))
+
 (defn get-asset-uris
   "Converts a number of asset paths into client URIs.
 
   twixt - the :twixt key, extracted from the Ring request map (as provided by the twixt-setup handler)
   paths - asset paths"
-  [twixt & paths]
-  #_ (map (partial get-asset-uri twixt) paths))
+  [{:keys [asset-pipeline path-prefix]} & paths]
+  (->> paths
+       (map (partial get-single-asset asset-pipeline))
+       (map :asset-path)
+       ;; This will get more complex in the future when we incorporate the asset's checksum into the URI.
+       ;; Also, there will be the question of raw assets vs. gzipped assets.
+       ;; In the future, we need the final content to generate the URL that includes a checksum; in
+       ;; the present, we are forcing the compilation of files now, rather than later.
+       (map #(str path-prefix %))))
+
+(defn get-asset-uri
+  "Uses get-asset-uris to get a single URI for a single asset path."
+  [twixt asset-path]
+  (first (get-asset-uris twixt asset-path)))
 
 (defn default-asset-pipeline
   "Sets up the default development-mode pipeline, which will ultimately include cross-execution file-system caching."
@@ -121,15 +138,15 @@
   [handler twixt-options asset-pipeline]
   (fn twixt-setup [request]
     (handler (assoc request :twixt {:asset-pipeline asset-pipeline
-                                    :options        twixt-options}))))
+                                    :path-prefix    (:path-prefix twixt-options)}))))
 
 (defn twixt-handler
   "A Ring request handler that identifies requests targetted for Twixt assets.  Returns a Ring response map
   if the request is for an existing asset, otherwise returns nil."
   [request]
-  (let [path-prefix (-> request :twixt :options :path-prefix)
-        path (-> request :uri)]
-    (when (match? path path-prefix)
+  (let [path-prefix (-> request :twixt :path-prefix)
+        path (:uri request)]
+    (when (match? path-prefix path)
       (tracker/trace
         #(format "Handling asset request `%s'." path)
         (let [resource-path (.substring path (.length path-prefix))
