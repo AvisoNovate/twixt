@@ -107,7 +107,7 @@
   (first (get-asset-uris twixt asset-path)))
 
 (defn default-asset-pipeline
-  "Sets up the default development-mode pipeline, which will ultimately include cross-execution file-system caching."
+  "Sets up the default pipeline in either development mode or production mode."
   [twixt-options development-mode]
   (let [resolver (make-asset-resolver twixt-options)
         production-mode (not development-mode)]

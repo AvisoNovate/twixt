@@ -1,5 +1,5 @@
 (ns io.aviso.twixt.jade
-  "Support for using Jade templates (using jade4j)."
+  "Provides asset pipeline middleware for compiling Jade templates to HTML using jade4j."
   (:import [de.neuland.jade4j Jade4J]
            [de.neuland.jade4j.exceptions JadeException])
   (:require [io.aviso.twixt

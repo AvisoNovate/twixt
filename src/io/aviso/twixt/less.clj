@@ -1,5 +1,5 @@
 (ns io.aviso.twixt.less
-  "Less to CSS compilation transformer."
+  "Provides asset pipeline middleware for compiling Less source files to CSS."
   (:import [com.github.sommeri.less4j LessSource LessSource$FileNotFound Less4jException LessCompiler$Problem]
            [com.github.sommeri.less4j.core DefaultLessCompiler])
   (:require [io.aviso.twixt

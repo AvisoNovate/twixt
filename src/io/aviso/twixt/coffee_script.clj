@@ -1,5 +1,5 @@
 (ns io.aviso.twixt.coffee-script
-  "Twixt transformer for compiling CoffeeScript to JavaScript."
+  "Provides asset pipeline middleware to perform CoffeeScript to JavaScript compilation."
   (:import [org.mozilla.javascript ScriptableObject])
   (:require [io.aviso.twixt
              [rhino :as rhino]

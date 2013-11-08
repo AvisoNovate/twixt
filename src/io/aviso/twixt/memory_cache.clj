@@ -1,5 +1,6 @@
 (ns io.aviso.twixt.memory-cache
-  "Provides an in-memory cache for assets that can be used to bypass the normal loading, compiling, and transforming
+  "Provides asset pipeline middleware implementing an in-memory cache for assets.
+  This cache is used to bypass the normal loading, compiling, and transforming
   steps."
   (:require [clojure.java.io :as io]
             #_ [clojure.tools.logging :as l]

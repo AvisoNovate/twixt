@@ -1,5 +1,6 @@
 (ns io.aviso.twixt.fs-cache
-  "Keeps a file-system cache that can persist between executions of the application; this is used in development to prevent
+  "Provide asset pipeline middleware that implements a file-system cache.
+  The cache will persist between executions of the application; this is used in development to prevent
   duplicated, expensive work from being performed after a restart."
   (:import [java.util UUID]
            [java.io PushbackReader File]
