@@ -1,15 +1,13 @@
 (ns io.aviso.twixt
   "Pipeline for accessing and transforming assets for streaming. Integrates with Ring."
-  (:import [java.io File]
-           [java.net URISyntaxException]
-           [java.util Date])
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.tools.logging :as l]
             [io.aviso.twixt
              [coffee-script :as cs]
-             [less :as less]
              [jade :as jade]
+             [less :as less]
+             [memory-cache :as mem]
              [utils :as utils]
              [tracker :as tracker]]
             [ring.util
@@ -23,18 +21,6 @@
 ;;; - caching of GZip compressed content
 ;;; - rewriting of url()'s in CSS files
 ;;; - multiple domains (the context, the file system, etc.)
-
-;; Not the same as io/file!
-(defn- as-file
-  [url]
-  (try
-    (-> url .toURI File.)
-    (catch URISyntaxException e
-      (-> url .getPath File.))))
-
-(defn- modified-at
-  [url]
-  (some-> url as-file .lastModified Date.))
 
 (defn- extract-file-extension [^String path]
   (let [dotx (.lastIndexOf path ".")]
@@ -54,8 +40,7 @@
      :content-type  (extract-content-type content-types resource-path)
      :size          (alength content)
      :checksum      (utils/compute-checksum content)
-     :modified-at   (modified-at url)
-     }))
+     :modified-at   (utils/modified-at url)}))
 
 (defn make-asset-resolver
   "Factory for the resolver function which converts a path into an asset map.
@@ -123,12 +108,14 @@
 (defn default-asset-pipeline
   "Sets up the default development-mode pipeline, which will ultimately include cross-execution file-system caching."
   [twixt-options development-mode]
-  (let [resolver (make-asset-resolver twixt-options)]
+  (let [production-mode (not development-mode)]
     (cond->
-      resolver
+      (make-asset-resolver twixt-options)
       true less/wrap-with-less-compilation
       true cs/wrap-with-coffee-script-compilation
-      true (jade/wrap-with-jade-compilation development-mode))))
+      true (jade/wrap-with-jade-compilation development-mode)
+      production-mode mem/wrap-with-production-cache
+      development-mode mem/wrap-with-development-cache)))
 
 
 (defn wrap-with-twixt-setup

@@ -1,10 +1,13 @@
 (ns io.aviso.twixt.utils
   "Some re-usable utilities. This namespace should be considered unsupported (subject to change at any time)."
-  (:import [java.io CharArrayWriter ByteArrayOutputStream]
+  (:import [java.io CharArrayWriter ByteArrayOutputStream File]
            [java.nio.charset Charset]
-           [java.util.zip Adler32])
+           [java.util.zip Adler32]
+           (java.net URISyntaxException)
+           (java.util Date))
   (:require [clojure.java.io :as io]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojure.pprint :as pp]))
 
 (defn transform-values
   "Transforms a map by passing each value through a provided function."
@@ -97,3 +100,19 @@
                           (recur (drop-last path-terms) remaining))
           :else (recur (conj path-terms term) remaining))))))
 
+;; Not the same as io/file!
+(defn- as-file
+  [url]
+  (try
+    (-> url .toURI File.)
+    (catch URISyntaxException e
+      (-> url .getPath File.))))
+
+(defn modified-at
+  [url]
+  (some-> url as-file .lastModified Date.))
+
+(defn pretty
+  "Pretty-prints a value, returning it as a string."
+  [value]
+  (pp/write value :length 20 :stream nil))
