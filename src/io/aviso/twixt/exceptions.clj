@@ -163,38 +163,38 @@ h
 (defn build-report
   "Builds an HTML exception report (as a string).
   
-  twixt - Twixt instance, used to resolve client URIs for assets
-  request - Ring request map
+  request - Ring request map, which must contain the :twixt key.
   exception - Exception to report"
-  [twixt request exception]
-  (html5
-    [:head
-     [:title "Exception"]
-     (apply include-css (get-asset-uris twixt
-                                        "bootstrap3/css/bootstrap.css"
-                                        "twixt/exception.less"))]
-    [:body.hide-filtered
-     [:div.container
-      [:div.panel.panel-danger
-       [:div.panel-heading
-        [:h3.panel-title "An unexpected exception has occurred."]]
-       [:div.panel-body
-        [:h3 (h (exception-message exception))]
+  [request exception]
+  (let [twixt (:twixt request)]
+    (html5
+      [:head
+       [:title "Exception"]
+       (apply include-css (get-asset-uris twixt
+                                          "bootstrap3/css/bootstrap.css"
+                                          "twixt/exception.less"))]
+      [:body.hide-filtered
+       [:div.container
+        [:div.panel.panel-danger
+         [:div.panel-heading
+          [:h3.panel-title "An unexpected exception has occurred."]]
+         [:div.panel-body
+          [:h3 (h (exception-message exception))]
+          ]
+         ]
+        (exception->markup exception)
+
+        [:h3 "Request"]
+
+        (to-markup request)
+
+        [:h3 "System Properties"]
+        (to-markup (System/getProperties))
         ]
-       ]
-      (exception->markup exception)
-
-      [:h3 "Request"]
-
-      (to-markup request)
-
-      [:h3 "System Properties"]
-      (to-markup (System/getProperties))
-      ]
-     (apply include-js (get-asset-uris twixt
-                                       "bootstrap3/js/jquery-2.0.3.js"
-                                       "twixt/exception.coffee"))
-     ]))
+       (apply include-js (get-asset-uris twixt
+                                         "bootstrap3/js/jquery-2.0.3.js"
+                                         "twixt/exception.coffee"))
+       ])))
 
 (defn wrap-with-exception-reporting
   "Wraps the handler to report any uncaught exceptions as an HTML exception report.  This wrapper
@@ -210,7 +210,7 @@ h
       (catch Throwable t
         ;; TODO: logging?
         (->
-          (build-report (:twixt request) request t)
+          (build-report request t)
           response
           (content-type "text/html")
           (status 500))))))
