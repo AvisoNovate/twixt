@@ -9,6 +9,7 @@
     [clojure.java.io :as io]
     [clojure
      [edn :as edn]
+     [pprint :as pp]
      [string :as s]]
     [clojure.tools.logging :as l]
     [io.aviso.twixt
@@ -66,7 +67,8 @@
         (.write writer (->
                          asset
                          (dissoc :content)
-                         utils/pretty))
+                         ;; Override *print-length* and *print-level* to ensure it is all written out.
+                         (pp/write :length nil :level nil :stream nil)))
         (.write writer "\n")))))
 
 (defn- delete-dir-and-contents

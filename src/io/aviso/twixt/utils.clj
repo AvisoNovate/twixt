@@ -6,8 +6,7 @@
            (java.net URISyntaxException)
            (java.util Date))
   (:require [clojure.java.io :as io]
-            [clojure.string :as str]
-            [clojure.pprint :as pp]))
+            [clojure.string :as str]))
 
 (defn as-string
   "Converts a source (compatible with clojure.java.io/IOFactory) into a String using the provided encoding.
@@ -87,8 +86,3 @@
 (defn modified-at
   [url]
   (some-> url as-file .lastModified Date.))
-
-(defn pretty
-  "Pretty-prints a value, returning it as a string."
-  [value]
-  (pp/write value :length 20 :stream nil))
