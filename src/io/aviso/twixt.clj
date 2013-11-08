@@ -5,6 +5,7 @@
             [clojure.tools.logging :as l]
             [io.aviso.twixt
              [coffee-script :as cs]
+             [fs-cache :as fs]
              [jade :as jade]
              [less :as less]
              [memory-cache :as mem]
@@ -114,6 +115,9 @@
       true less/wrap-with-less-compilation
       true cs/wrap-with-coffee-script-compilation
       true (jade/wrap-with-jade-compilation development-mode)
+      ;; The file system cache should only be used in development and should come after anything downstream
+      ;; that might compile.
+      development-mode (fs/wrap-with-filesystem-cache (:cache-folder twixt-options))
       production-mode mem/wrap-with-sticky-cache
       development-mode mem/wrap-with-invalidating-cache)))
 

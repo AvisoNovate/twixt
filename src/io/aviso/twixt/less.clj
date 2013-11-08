@@ -27,7 +27,7 @@
   [asset-pipeline asset]
   ;; Whenever a LessSource is created, associated the asset as a dependency; this includes the primary source
   ;; and all imported sources.
-  (swap! *dependencies* assoc (:resource-path asset) (select-keys asset [:checksum :modified-at]))
+  (swap! *dependencies* assoc (:resource-path asset) (select-keys asset [:checksum :modified-at :asset-path]))
   (proxy [LessSource] []
     (relativeSource [filename]
       (if-let [rel (find-relative asset-pipeline asset filename)]

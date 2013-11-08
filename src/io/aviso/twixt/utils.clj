@@ -61,7 +61,7 @@
     (assoc source-asset
       :compiled true
       :content-type content-type
-      :dependencies {(:resource-path source-asset) (select-keys source-asset [:checksum :modified-at])}
+      :dependencies {(:resource-path source-asset) (select-keys source-asset [:checksum :modified-at :asset-path])}
       :content content-bytes
       :size (alength content-bytes)
       :checksum (compute-checksum content-bytes))))
