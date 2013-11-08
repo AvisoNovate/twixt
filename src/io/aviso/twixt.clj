@@ -109,15 +109,16 @@
 (defn default-asset-pipeline
   "Sets up the default development-mode pipeline, which will ultimately include cross-execution file-system caching."
   [twixt-options development-mode]
-  (let [production-mode (not development-mode)]
+  (let [resolver (make-asset-resolver twixt-options)
+        production-mode (not development-mode)]
     (cond->
-      (make-asset-resolver twixt-options)
+      resolver
       true less/wrap-with-less-compilation
       true cs/wrap-with-coffee-script-compilation
       true (jade/wrap-with-jade-compilation development-mode)
       ;; The file system cache should only be used in development and should come after anything downstream
       ;; that might compile.
-      development-mode (fs/wrap-with-filesystem-cache (:cache-folder twixt-options))
+      development-mode (fs/wrap-with-filesystem-cache (:cache-folder twixt-options) resolver)
       production-mode mem/wrap-with-sticky-cache
       development-mode mem/wrap-with-invalidating-cache)))
 
