@@ -21,7 +21,7 @@
           (swap! cache assoc asset-path asset)
           asset)))))
 
-(defn check-validity
+(defn- modified-at-matches?
   "Returns true if the resource is valid (actual modified-at matches the provided value from the asset map).
 
   Also returns true if the modified-at is nil (meaning the file is inside a JAR, not on the filesystem)."
@@ -37,12 +37,12 @@
   (cond
     (nil? asset) false
     ;; Non-compiled assets may have no :dependencies key, so use the standard keys
-    (nil? (:dependencies asset)) (check-validity (:resource-path asset) (:modified-at asset))
+    (nil? (:dependencies asset)) (modified-at-matches? (:resource-path asset) (:modified-at asset))
     ;; Compiled assets will have :dependencies that include the original resource.
     ;; Keys are the resource path, values are a map with keys :modified-at and :checksum
     :else (every?
             (fn [[resource-path {:keys [modified-at]}]]
-              (check-validity resource-path modified-at))
+              (modified-at-matches? resource-path modified-at))
             (:dependencies asset))))
 
 (defn wrap-with-invalidating-cache
