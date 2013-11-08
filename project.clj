@@ -9,7 +9,7 @@
                  [org.mozilla/rhino "1.7R4"]
                  [com.github.sommeri/less4j "1.1.2"]
                  [de.neuland/jade4j "0.3.15"]
-                 [io.aviso/pretty "0.1.4"]
+                 [io.aviso/pretty "0.1.5"]
                  [hiccup "1.0.4"]]
   :repositories [["jade4j" "https://raw.github.com/neuland/jade4j/master/releases"]]
   :codox {:src-dir-uri               "https://github.com/AvisoNovate/twixt/blob/master/"
