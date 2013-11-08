@@ -54,7 +54,7 @@ Twixt maps file extensions to MIME types; it then will transform certain MIME ty
 The Twixt middleware intercepts requests for +/assets/+ that map to actual files; it returns nil on anything else so that downstream handlers can have their chance.
 
 In development mode, Twixt will write compiled files to the file system (you can configure where if you like). 
-On a restart of the application, it will use those cached files if the source files have not changed. Currently, this only applies to Jade and CoffeeScript source files.
+On a restart of the application, it will use those cached files if the source files have not changed. 
 
 === A question of URLs
 
