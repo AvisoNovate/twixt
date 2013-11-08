@@ -37,14 +37,15 @@ Twixt maps file extensions to MIME types; it then will transform certain MIME ty
 (ns example.app
   (:use compojure.core
         ring.adapter.jetty
+        [io.aviso.twixt :as t]
         [io.aviso.twixt.exceptions :as te))
 
 ;;; Use Compojure to map routes to handlers
 (defroutes app ...)
 
-;;; Create twixt wrappers and handler to handle /asset/ URLs, in production mode
+;;; Create twixt wrappers and handler to handle /asset/ URLs, in development mode
 (def app-handler
-  (te/default-twixt-handler app)
+  (te/wrap-with-twixt app t/default-options true)
 
 ;;; Use the Ring Jetty adapter to serve your site
 (run-jetty app-handler)
@@ -86,7 +87,9 @@ The twixt parameter is a map that is provided in the Ring request map under key 
 
 === Configuring Twixt
 
-You may pass any number of option maps to +new-twixt+; they are all recursively merged together.
+Twixt's configuration is used to determine where to locate asset resources on the classpath, 
+and what folder to serve them under. It also maps file name extensions to MIME types, and
+configures the file system cache.
 
 The default options:
 
@@ -108,11 +111,13 @@ You can override +:path-prefix+ to change the root URL for assets; +/+ is an acc
 
 The +:content-types+ key maps file extensions to MIME types.
 
-File system caching is enabled normally only enabled in development mode.
+File system caching is normally only enabled in development mode.
 
-Twixt always caches the content of files in memory, after any transforming operations. In development mode, checks are enabled
-to refresh the cache when underlying files are modified; in production, no such checks occur as it is assumed that all such
-assets are stable (until the entire application is re-deployed).
+Twixt always caches the content of files in memory, after any transforming operations (such as compiling CoffeeScript to
+JavaScript). 
+In development mode, checks are enabled to refresh the cache when underlying files are modified; 
+in production, no such checks occur as it is assumed that all such assets are stable
+(until the entire application is re-deployed).
 
 === Future Plans
 
