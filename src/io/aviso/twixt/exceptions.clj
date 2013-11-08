@@ -208,21 +208,20 @@ h
     (try
       (handler request)
       (catch Throwable t
-        ;; TODO: logging?
         (->
           (build-report request t)
           response
           (content-type "text/html")
           (status 500))))))
 
-(defn default-twixt-handler
+(defn wrap-with-twixt
   "The default way to setup Twixt with exception reporting.
 
   With just a handler, uses the default Twixt options and production mode.
 
   Otherwise, specify alternate options and true or false for development mode."
   ([handler]
-   (default-twixt-handler handler default-options false))
+   (wrap-with-twixt handler default-options false))
   ([handler twixt-options development-mode]
    (let [asset-pipeline (default-asset-pipeline twixt-options development-mode)]
      (->

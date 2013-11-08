@@ -154,7 +154,12 @@
             (l/warnf "Asset path `%s' in request does not match an available file." path)))))))
 
 (defn wrap-with-twixt
-  "Invokes the twixt-handler and delegates to the provided handler if twixt-handler returns nil."
+  "Invokes the twixt-handler and delegates to the provided handler if twixt-handler returns nil.
+
+  This assumes that the resulting handler will then be wrapped with the twixt setup.
+
+  In most cases, you will want to use the wrap-with-twixt function in the exceptions namespace.
+  "
   [handler]
   (fn twixt-wrapper [request]
     (or (twixt-handler request)

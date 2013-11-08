@@ -11,7 +11,7 @@
          (l/info (get-asset-uris (:twixt request) "invalid-coffeescript.coffee"))))
 
 (def app
-  (default-twixt-handler handler default-options true))
+  (wrap-with-twixt handler default-options true))
 
 (defn launch []
   (let [server (run-jetty app {:port 8888 :join? false})]
