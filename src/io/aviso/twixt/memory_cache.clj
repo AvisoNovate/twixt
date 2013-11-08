@@ -53,11 +53,12 @@
   A cached asset is invalid if any of its dependencies has changed (based on modified-at timestamp)."
   [handler]
   (let [cache (atom {})]
-    (fn development-cache [asset-path]
+    (fn invalidating-cache [asset-path]
       (let [asset (get @cache asset-path)]
         (if (is-valid? asset)
           asset
           (do
+            (swap! cache dissoc asset-path)
             (when-let [asset (handler asset-path)]
               (swap! cache assoc asset-path asset)
               asset)))))))
