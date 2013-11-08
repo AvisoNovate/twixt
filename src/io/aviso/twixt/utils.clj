@@ -59,7 +59,7 @@
   [source-asset content-type ^String content]
   (let [content-bytes (.getBytes content "UTF-8")]
     (assoc source-asset
-      :compile true
+      :compiled true
       :content-type content-type
       :dependencies {(:resource-path source-asset) (select-keys source-asset [:checksum :modified-at])}
       :content content-bytes
