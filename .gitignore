@@ -1,4 +1,5 @@
 target/
+doc
 .lein-failures
 .DS_Store
 twixt.sublime-*
