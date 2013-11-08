@@ -158,8 +158,7 @@
 
   This assumes that the resulting handler will then be wrapped with the twixt setup.
 
-  In most cases, you will want to use the wrap-with-twixt function in the exceptions namespace.
-  "
+  In most cases, you will want to use the wrap-with-twixt function in the exceptions namespace."
   [handler]
   (fn twixt-wrapper [request]
     (or (twixt-handler request)

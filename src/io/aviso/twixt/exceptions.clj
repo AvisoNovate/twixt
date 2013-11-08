@@ -2,13 +2,14 @@
   "Support for generating pretty and useful HTML reports when server-side exceptions occur."
   (:use hiccup.core
         hiccup.page
-        io.aviso.twixt
         ring.util.response)
   (:import [clojure.lang APersistentMap Sequential]
            [java.util Map])
   (:require [clojure.tools.logging :as l]
             [clojure.string :as s]
-            [io.aviso.exception :as exception]))
+            [io.aviso
+             [exception :as exception]
+             [twixt :as t]]))
 
 (defn- exception-message [exception]
   (or (.getMessage exception)
@@ -170,9 +171,9 @@ h
     (html5
       [:head
        [:title "Exception"]
-       (apply include-css (get-asset-uris twixt
-                                          "bootstrap3/css/bootstrap.css"
-                                          "twixt/exception.less"))]
+       (apply include-css (t/get-asset-uris twixt
+                                            "bootstrap3/css/bootstrap.css"
+                                            "twixt/exception.less"))]
       [:body.hide-filtered
        [:div.container
         [:div.panel.panel-danger
@@ -191,18 +192,15 @@ h
         [:h3 "System Properties"]
         (to-markup (System/getProperties))
         ]
-       (apply include-js (get-asset-uris twixt
-                                         "bootstrap3/js/jquery-2.0.3.js"
-                                         "twixt/exception.coffee"))
+       (apply include-js (t/get-asset-uris twixt
+                                           "bootstrap3/js/jquery-2.0.3.js"
+                                           "twixt/exception.coffee"))
        ])))
 
 (defn wrap-with-exception-reporting
   "Wraps the handler to report any uncaught exceptions as an HTML exception report.  This wrapper
   should wrap around other handlers (including the Twixt handler itself), but be nested within
-  the twixt-setup handler (which provides the :twixt request map key).
-  
-  handler - handler to wrap
-  twixt - initialized instance of Twixt"
+  the twixt-setup handler (which provides the :twixt request map key)."
   [handler]
   (fn exception-catching-handler [request]
     (try
@@ -221,11 +219,11 @@ h
 
   Otherwise, specify alternate options and true or false for development mode."
   ([handler]
-   (wrap-with-twixt handler default-options false))
+   (wrap-with-twixt handler t/default-options false))
   ([handler twixt-options development-mode]
-   (let [asset-pipeline (default-asset-pipeline twixt-options development-mode)]
+   (let [asset-pipeline (t/default-asset-pipeline twixt-options development-mode)]
      (->
        handler
-       wrap-with-twixt
+       t/wrap-with-twixt
        wrap-with-exception-reporting
-       (wrap-with-twixt-setup twixt-options asset-pipeline)))))
+       (t/wrap-with-twixt-setup twixt-options asset-pipeline)))))

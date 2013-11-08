@@ -1,14 +1,14 @@
 (ns user
-  (:use io.aviso.twixt
+  (:use [io.aviso.twixt :only [get-asset-uris default-options]]
         [io.aviso.twixt exceptions tracker]
-        ring.adapter.jetty)
-  (:require [clojure.tools.logging :as l]))
+        ring.adapter.jetty))
 
 (defn handler
   [request]
   (trace "Invoking handler (that throws exceptions)"
          ;; This will fail at some depth:
-         (l/info (get-asset-uris (:twixt request) "invalid-coffeescript.coffee"))))
+         (doall
+             (get-asset-uris (:twixt request) "invalid-coffeescript.coffee"))))
 
 (def app
   (wrap-with-twixt handler default-options true))
