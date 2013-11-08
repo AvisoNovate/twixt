@@ -71,15 +71,31 @@
     (not (or (= path path-prefix)
              (.endsWith path "/")))))
 
+(defn default-stack-frame-filter
+  "The default stack frame filter function, used by the HTML excepton report to identify frames that can be hidden
+  by default.
+
+  This implementation hides frames that:
+  - Are in the clojure.lang package
+  - Are in the sun.reflect package
+  - Do not have a line number."
+  [frame]
+  (not
+    (or
+      (nil? (:line frame))
+      (-> frame :package (= "clojure.lang"))
+      (-> frame :package (= "sun.reflect")))))
+
 (def default-options
   "Provides the default options when using Twixt; these rarely need to be changed except, perhaps, for :path-prefix
   or :cache-folder."
-  {:path-prefix   "/assets/"
-   :root          "META-INF/assets/"
-   :content-types (merge mime/default-mime-types {"coffee" "text/coffeescript"
-                                                  "less"   "text/less"
-                                                  "jade"   "text/jade"})
-   :cache-folder  (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))})
+  {:path-prefix        "/assets/"
+   :root               "META-INF/assets/"
+   :content-types      (merge mime/default-mime-types {"coffee" "text/coffeescript"
+                                                       "less"   "text/less"
+                                                       "jade"   "text/jade"})
+   :cache-folder       (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))
+   :stack-frame-filter default-stack-frame-filter})
 
 (defn- get-single-asset
   [asset-pipeline asset-path]
@@ -128,9 +144,12 @@
 
   This provides the information needed by the actual Twixt handler, as well as anything else downstream that needs to generate Twixt asset URIs."
   [handler twixt-options asset-pipeline]
-  (fn twixt-setup [request]
-    (handler (assoc request :twixt {:asset-pipeline asset-pipeline
-                                    :path-prefix    (:path-prefix twixt-options)}))))
+  (let [twixt (-> twixt-options
+                  ;; Pass down only what is needed to generate asset URIs, or to produce the HTML exception report.
+                  (select-keys [:path-prefix :stack-frame-filter])
+                  (assoc :asset-pipeline asset-pipeline))]
+    (fn twixt-setup [request]
+      (handler (assoc request :twixt twixt)))))
 
 (defn twixt-handler
   "A Ring request handler that identifies requests targetted for Twixt assets.  Returns a Ring response map

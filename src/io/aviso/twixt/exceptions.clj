@@ -104,11 +104,12 @@ h
     method))
 
 (defn- stack-trace-element->row-markup
-  [{:keys [file line names]
+  [stack-frame-filter
+   {:keys [file line names]
     :as   element}]
   (let [clojure? (-> names empty? not)
         java-name (element->java-name element)]
-    [:tr
+    [:tr (if (stack-frame-filter element) {} {:class :filtered})
      [:td.function-name
       (if clojure?
         (list
@@ -116,13 +117,14 @@ h
           [:div.filtered java-name])
         java-name)
       ]
-     [:td.source-location file]
+     [:td.source-location file (if line ":")]
      [:td (or line "")]
      ]))
 
 (defn- single-exception->markup
   "Given an analyzed exception, generate markup for it."
-  [{^Throwable e :exception
+  [twixt
+   {^Throwable e :exception
     :keys        [class-name message properties root]}]
   (html
     [:div.panel.panel-default
@@ -146,7 +148,7 @@ h
           (->>
             e
             exception/expand-stack-trace
-            (map stack-trace-element->row-markup))
+            (map (partial stack-trace-element->row-markup (:stack-frame-filter twixt))))
           ]))
      ]))
 
@@ -154,11 +156,11 @@ h
 (defn exception->markup
   "Returns the markup (as a string) for a root exception and its stack of causes,
   including a stack trace for the deepest exception."
-  [root-exception]
+  [twixt root-exception]
   (->>
     root-exception
     exception/analyze-exception
-    (map single-exception->markup)
+    (map (partial single-exception->markup twixt))
     (apply str)))
 
 (defn build-report
@@ -183,7 +185,7 @@ h
           [:h3 (h (exception-message exception))]
           ]
          ]
-        (exception->markup exception)
+        (exception->markup twixt exception)
 
         [:h3 "Request"]
 
