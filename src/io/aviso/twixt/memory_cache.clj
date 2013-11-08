@@ -5,15 +5,16 @@
             #_ [clojure.tools.logging :as l]
             [io.aviso.twixt.utils :as utils]))
 
-(defn wrap-with-production-cache
-  "A production cache is permanent; it does not check to see if the underlying files have changed (in production
-  the files are expected to be packaged into JARs, which would require an application restart anyway).
+(defn wrap-with-sticky-cache
+  "A sticky cache is permanent; it does not check to see if the underlying files have changed. This is generally
+   used only in production, where the files are expected to be packaged into JARs, which would
+   require an application restart anyway.
 
   Cached values are permanent; in even the largest web application, the amount of assets is relatively finite,
   so no attempt has been made to evict assets from the cache. "
   [handler]
   (let [cache (atom {})]
-    (fn production-cache [asset-path]
+    (fn sticky-cache [asset-path]
       (if-let [asset (get @cache asset-path)]
         asset
         (when-let [asset (handler asset-path)]
@@ -44,9 +45,10 @@
               (check-validity resource-path modified-at))
             (:dependencies asset))))
 
-(defn wrap-with-development-cache
-  "The development cache does more work than the production cache; values that are obtained from the cache
-  are checked to ensure they are still valid; invalid cached assets are discarded and re-fetched from downstream.
+(defn wrap-with-invalidating-cache
+  "An invalidating cache is generally used in development; it does more work than the sticky cache;
+  assets that are obtained from the cache are checked to ensure they are still valid;
+  invalid cached assets are discarded and re-fetched from downstream.
 
   A cached asset is invalid if any of its dependencies has changed (based on modified-at timestamp)."
   [handler]

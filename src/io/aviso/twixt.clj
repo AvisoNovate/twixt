@@ -114,8 +114,8 @@
       true less/wrap-with-less-compilation
       true cs/wrap-with-coffee-script-compilation
       true (jade/wrap-with-jade-compilation development-mode)
-      production-mode mem/wrap-with-production-cache
-      development-mode mem/wrap-with-development-cache)))
+      production-mode mem/wrap-with-sticky-cache
+      development-mode mem/wrap-with-invalidating-cache)))
 
 
 (defn wrap-with-twixt-setup
