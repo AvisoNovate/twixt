@@ -1,5 +1,6 @@
 (ns io.aviso.twixt
   "Pipeline for accessing and transforming assets for streaming. Integrates with Ring."
+  (:import [java.util Calendar TimeZone])
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.tools.logging :as l]
@@ -157,27 +158,53 @@
     [(.substring suffix 0 slashx)
      (.substring suffix (inc slashx))]))
 
+(def ^:private far-future (-> (doto (Calendar/getInstance (TimeZone/getTimeZone "UTC"))
+                                (.add Calendar/YEAR 10))
+                              .getTime))
+
+(defn- asset->ring-response
+  [asset]
+  (-> asset
+      :content
+      io/input-stream
+      r/response
+      (r/header "Content-Length" (:size asset))
+      ;; Because any change to the content will create a new checksum and a new URL, a change to the content
+      ;; is really an entirely new resource. The current resource is therefore immutable and can have a far-future expires
+      ;; header.
+      (r/header "Expires" far-future)
+      (r/content-type (:content-type asset))))
+
+(defn- asset->301-response
+  [path-prefix asset]
+  {
+    :status  301
+    :headers {"Location" (asset/asset->request-path path-prefix asset)}
+    :body    ""})
+
+(defn- create-asset-response
+  [path-prefix requested-checksum asset]
+  (cond
+    (nil? asset) nil
+    (= requested-checksum (:checksum asset)) (asset->ring-response asset)
+    :else (asset->301-response path-prefix asset)))
+
 (defn twixt-handler
   "A Ring request handler that identifies requests targetted for Twixt assets.  Returns a Ring response map
-  if the request is for an existing asset, otherwise returns nil."
+  if the request is for an existing asset, otherwise returns nil.
+
+  Asset URLs always include the intended asset's checksum; if the actual asset checksum does not match, then
+  a 301 (moved permanently) response is sent with the correct asset URL."
   [request]
   (let [path-prefix (-> request :twixt :path-prefix)
         path (:uri request)]
     (when (match? path-prefix path)
       (tracker/trace
         #(format "Handling asset request `%s'." path)
-        (let [[request-checksum asset-path] (parse-path path-prefix path)
+        (let [[requested-checksum asset-path] (parse-path path-prefix path)
               twixt (:twixt request)
               asset-pipeline (:asset-pipeline twixt)]
-          (if-let [asset-map (asset-pipeline asset-path twixt)]
-            (-> asset-map
-                :content
-                io/input-stream
-                r/response
-                ;; TODO: more headers, including ETags
-                (r/content-type (:content-type asset-map)))
-            ;; else - TODO, only if path-prefix is not ""
-            (l/warnf "Asset path `%s' in request does not match an available file." path)))))))
+          (create-asset-response path-prefix requested-checksum (asset-pipeline asset-path twixt)))))))
 
 (defn wrap-with-twixt
   "Invokes the twixt-handler and delegates to the provided handler if twixt-handler returns nil.
