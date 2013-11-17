@@ -21,7 +21,7 @@
   [asset-resolver asset-path cached-checksum]
   (->
     asset-path
-    asset-resolver
+    (asset-resolver nil)
     :checksum
     (= cached-checksum)))
 
