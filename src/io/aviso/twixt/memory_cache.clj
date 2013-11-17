@@ -15,10 +15,10 @@
   so no attempt has been made to evict assets from the cache. "
   [handler]
   (let [cache (atom {})]
-    (fn sticky-cache [asset-path]
+    (fn sticky-cache [asset-path context]
       (if-let [asset (get @cache asset-path)]
         asset
-        (when-let [asset (handler asset-path)]
+        (when-let [asset (handler asset-path context)]
           (swap! cache assoc asset-path asset)
           asset)))))
 
@@ -54,12 +54,12 @@
   A cached asset is invalid if any of its dependencies has changed (based on modified-at timestamp)."
   [handler]
   (let [cache (atom {})]
-    (fn invalidating-cache [asset-path]
+    (fn invalidating-cache [asset-path context]
       (let [asset (get @cache asset-path)]
         (if (is-valid? asset)
           asset
           (do
             (swap! cache dissoc asset-path)
-            (when-let [asset (handler asset-path)]
+            (when-let [asset (handler asset-path context)]
               (swap! cache assoc asset-path asset)
               asset)))))))

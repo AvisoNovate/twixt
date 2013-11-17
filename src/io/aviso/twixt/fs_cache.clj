@@ -95,14 +95,14 @@
   (let [cache-dir (io/file cache-dir-name "compiled")]
     (l/infof "Caching compiled assets to `%s'." cache-dir)
     (.mkdirs cache-dir)
-    (fn file-system-cache [asset-path]
+    (fn file-system-cache [asset-path context]
       (let [asset-cache-dir (io/file cache-dir asset-path)
             cached-asset (read-cached-asset asset-cache-dir)]
         (if (is-valid? asset-resolver cached-asset)
           cached-asset
           (do
             (delete-dir-and-contents asset-cache-dir)
-            (let [asset (handler asset-path)]
+            (let [asset (handler asset-path context)]
               (if (:compiled asset)
                 (write-cached-asset asset-cache-dir asset))
               asset)))))))

@@ -20,6 +20,10 @@
      (io/copy reader writer)
      (.toString writer))))
 
+(defn as-bytes [^String string]
+  "Converts a string to a byte array. The string should be UTF-8 encoded."
+  (.getBytes string "UTF-8"))
+
 (defn compute-checksum
   "Returns a hex string of the Adler32 checksum of the content."
   [^bytes content]
@@ -29,24 +33,32 @@
     .getValue
     Long/toHexString))
 
+(defn replace-asset-content
+  "Modifies an asset map with new content."
+  [asset content-type ^bytes content-bytes]
+  (assoc asset
+    :content-type content-type
+    :content content-bytes
+    :size (alength content-bytes)
+    :checksum (compute-checksum content-bytes)))
+
 (defn create-compiled-asset
   "Used to transform an asset map after it has been compiled from one form to another."
   [source-asset content-type ^String content]
-  (let [content-bytes (.getBytes content "UTF-8")]
-    (assoc source-asset
-      :compiled true
-      :content-type content-type
-      :dependencies {(:resource-path source-asset) (select-keys source-asset [:checksum :modified-at :asset-path])}
-      :content content-bytes
-      :size (alength content-bytes)
-      :checksum (compute-checksum content-bytes))))
+  (->
+    source-asset
+    (replace-asset-content content-type (as-bytes content))
+    (assoc
+        :compiled true
+                  :dependencies {(:resource-path source-asset)
+                                  (select-keys source-asset [:checksum :modified-at :asset-path])})))
 
 (defn content-type-matcher
   "Creates a handler for the asset pipeline that delegates to the provided handler, but passes
   the obtained asset through a transformer function if it matches the expected content type."
   [handler content-type transformer]
-  (fn [asset-path]
-    (if-let [asset (handler asset-path)]
+  (fn [asset-path context]
+    (if-let [asset (handler asset-path context)]
       (if (= content-type (:content-type asset))
         (transformer asset)
         asset))))

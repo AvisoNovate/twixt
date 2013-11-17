@@ -4,7 +4,9 @@
             [clojure.string :as str]
             [clojure.tools.logging :as l]
             [io.aviso.twixt
+             [asset :as asset]
              [coffee-script :as cs]
+             [css-rewrite :as rewrite]
              [fs-cache :as fs]
              [jade :as jade]
              [less :as less]
@@ -49,7 +51,8 @@
   The factory function is passed the twixt options, which defines the root resource folder
   for assets as well as content types.
 
-  The resolver function is passed an asset path, which is converted to a classpath resource
+  The resolver function is passed an asset path and a pipeline context (which is ignored);
+  The asset path is which is converted to a classpath resource
   via the configuration; if the resource exists, it is converted to an asset map.
 
   The asset map has the following keys:
@@ -60,7 +63,7 @@
   - :checksum Adler32 checksum of the content
   - :modified-at instant at which the file was last modified (not always trustworthy for files packaged in JARs)"
   [{:keys [root content-types]}]
-  (fn resolver [path]
+  (fn resolver [path context]
     (let [resource-path (str root path)]
       (if-let [url (io/resource resource-path)]
         (make-asset-map content-types path resource-path url)))))
@@ -98,8 +101,8 @@
    :stack-frame-filter default-stack-frame-filter})
 
 (defn- get-single-asset
-  [asset-pipeline asset-path]
-  (or (asset-pipeline asset-path)
+  [asset-pipeline asset-path context]
+  (or (asset-pipeline asset-path context)
       (throw (IllegalArgumentException. (format "Asset path `%s' does not map to an available resource.")))))
 
 (defn get-asset-uris
@@ -107,15 +110,10 @@
 
   twixt - the :twixt key, extracted from the Ring request map (as provided by the twixt-setup handler)
   paths - asset paths"
-  [{:keys [asset-pipeline path-prefix]} & paths]
+  [{:keys [asset-pipeline path-prefix] :as context} & paths]
   (->> paths
-       (map (partial get-single-asset asset-pipeline))
-       (map :asset-path)
-       ;; This will get more complex in the future when we incorporate the asset's checksum into the URI.
-       ;; Also, there will be the question of raw assets vs. gzipped assets.
-       ;; In the future, we need the final content to generate the URL that includes a checksum; in
-       ;; the present, we are forcing the compilation of files now, rather than later.
-       (map #(str path-prefix %))))
+       (map #(get-single-asset asset-pipeline % context))
+       (map (partial asset/asset->request-path path-prefix))))
 
 (defn get-asset-uri
   "Uses get-asset-uris to get a single URI for a single asset path."
@@ -132,12 +130,12 @@
       true less/wrap-with-less-compilation
       true cs/wrap-with-coffee-script-compilation
       true (jade/wrap-with-jade-compilation development-mode)
+      true rewrite/wrap-with-css-rewriting
       ;; The file system cache should only be used in development and should come after anything downstream
       ;; that might compile.
       development-mode (fs/wrap-with-filesystem-cache (:cache-folder twixt-options) resolver)
       production-mode mem/wrap-with-sticky-cache
       development-mode mem/wrap-with-invalidating-cache)))
-
 
 (defn wrap-with-twixt-setup
   "Wraps a handler with another handler that provides the :twixt key in the request object.
@@ -151,6 +149,14 @@
     (fn twixt-setup [request]
       (handler (assoc request :twixt twixt)))))
 
+(defn- parse-path
+  "Parses the complete request path into a checksum and asset path."
+  [path-prefix path]
+  (let [suffix (.substring path (.length path-prefix))
+        slashx (.indexOf suffix "/")]
+    [(.substring suffix 0 slashx)
+     (.substring suffix (inc slashx))]))
+
 (defn twixt-handler
   "A Ring request handler that identifies requests targetted for Twixt assets.  Returns a Ring response map
   if the request is for an existing asset, otherwise returns nil."
@@ -160,9 +166,10 @@
     (when (match? path-prefix path)
       (tracker/trace
         #(format "Handling asset request `%s'." path)
-        (let [asset-path (.substring path (.length path-prefix))
-              asset-pipeline (-> request :twixt :asset-pipeline)]
-          (if-let [asset-map (asset-pipeline asset-path)]
+        (let [[request-checksum asset-path] (parse-path path-prefix path)
+              twixt (:twixt request)
+              asset-pipeline (:asset-pipeline twixt)]
+          (if-let [asset-map (asset-pipeline asset-path twixt)]
             (-> asset-map
                 :content
                 io/input-stream
