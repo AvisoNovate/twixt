@@ -13,7 +13,7 @@
              [less :as less]
              [memory-cache :as mem]
              [utils :as utils]
-             [tracker :as tracker]]
+             [tracker :as t]]
             [ring.util
              [response :as r]
              [mime-type :as mime]]))
@@ -121,6 +121,14 @@
   [twixt asset-path]
   (first (get-asset-uris twixt asset-path)))
 
+(defn wrap-with-tracing
+  "The first middleware in the asset pipeline, used to trace the constuction of the asset."
+  [handler]
+  (fn tracer [asset-path context]
+    (t/trace
+      #(format "Accessing asset `%s'" asset-path)
+      (handler asset-path context))))
+
 (defn default-asset-pipeline
   "Sets up the default pipeline in either development mode or production mode."
   [twixt-options development-mode]
@@ -136,7 +144,8 @@
       ;; that might compile.
       development-mode (fs/wrap-with-filesystem-cache (:cache-folder twixt-options) resolver)
       production-mode mem/wrap-with-sticky-cache
-      development-mode mem/wrap-with-invalidating-cache)))
+      development-mode mem/wrap-with-invalidating-cache
+      true wrap-with-tracing)))
 
 (defn wrap-with-twixt-setup
   "Wraps a handler with another handler that provides the :twixt key in the request object.
@@ -199,7 +208,7 @@
   (let [path-prefix (-> request :twixt :path-prefix)
         path (:uri request)]
     (when (match? path-prefix path)
-      (tracker/trace
+      (t/trace
         #(format "Handling asset request `%s'." path)
         (let [[requested-checksum asset-path] (parse-path path-prefix path)
               twixt (:twixt request)
