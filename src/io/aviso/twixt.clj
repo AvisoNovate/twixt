@@ -130,7 +130,19 @@
       (handler asset-path context))))
 
 (defn default-asset-pipeline
-  "Sets up the default pipeline in either development mode or production mode."
+  "Sets up the default pipeline in either development mode or production mode.
+
+  The asset pipeline starts with a resolver, which is then intercepted using asset pipeline middleware.
+  As with Ring, middleware is a function that accepts a handler and returns a handler. The handler
+  is passed an asset path and a context. The initial context is the value of the :twixt key from the
+  Ring request map.
+
+  The context will contain a :asset-pipeline key whose value is the asset pipeline in use.
+  The context will contain a :path-prefix key, extracted from the twixt options.
+  The context may also be passed to `get-asset-uri`.
+
+  In some cases, middlware may modify the context before passing it forward to the next handler, typically
+  by adding additional keys."
   [twixt-options development-mode]
   (let [resolver (make-asset-resolver twixt-options)
         production-mode (not development-mode)]
@@ -150,7 +162,12 @@
 (defn wrap-with-twixt-setup
   "Wraps a handler with another handler that provides the :twixt key in the request object.
 
-  This provides the information needed by the actual Twixt handler, as well as anything else downstream that needs to generate Twixt asset URIs."
+  The :twixt key is the default asset pipeline context, which is needed by get-asset-uri in order to resolve asset paths
+  to an actual asset. It also contains the keys :asset-pipeline (the pipeline used to resolve assets) and
+  :stack-frame-filter (which is used by the HTML exception report).
+
+  This provides the information needed by the actual Twixt handler, as well as anything else downstream that needs to
+  generate Twixt asset URIs."
   [handler twixt-options asset-pipeline]
   (let [twixt (-> twixt-options
                   ;; Pass down only what is needed to generate asset URIs, or to produce the HTML exception report.
@@ -167,9 +184,10 @@
     [(.substring suffix 0 slashx)
      (.substring suffix (inc slashx))]))
 
-(def ^:private far-future (-> (doto (Calendar/getInstance (TimeZone/getTimeZone "UTC"))
-                                (.add Calendar/YEAR 10))
-                              .getTime))
+(def ^:private far-future
+  (-> (doto (Calendar/getInstance (TimeZone/getTimeZone "UTC"))
+        (.add Calendar/YEAR 10))
+      .getTime))
 
 (defn- asset->ring-response
   [asset]
