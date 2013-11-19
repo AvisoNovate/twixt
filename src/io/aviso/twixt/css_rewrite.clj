@@ -14,7 +14,7 @@
 (defn- rewrite-relative-url
   [asset-path context relative-url]
   (t/trace
-    #("Rewriting relative URL `%s'" relative-url)
+    #(format "Rewriting relative URL `%s'" relative-url)
     (let [referenced-path (utils/compute-relative-path asset-path relative-url)
           asset ((:asset-pipeline context) referenced-path context)]
       (if asset

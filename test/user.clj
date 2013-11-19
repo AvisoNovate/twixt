@@ -6,9 +6,10 @@
 (defn handler
   [request]
   (trace "Invoking handler (that throws exceptions)"
-         ;; This will fail at some depth:
-         (doall
-             (get-asset-uris (:twixt request) "invalid-coffeescript.coffee"))))
+         (if (= (:uri request) "/fail")
+           ;; This will fail at some depth:
+           (doall
+             (get-asset-uris (:twixt request) "invalid-coffeescript.coffee")))))
 
 (def app
   (wrap-with-twixt handler default-options true))

@@ -7,6 +7,7 @@
             [io.aviso.twixt
              [asset :as asset]
              [coffee-script :as cs]
+             [compress :as compress]
              [css-rewrite :as rewrite]
              [fs-cache :as fs]
              [jade :as jade]
@@ -37,14 +38,11 @@
 
 (defn- make-asset-map
   [content-types asset-path resource-path url]
-  (let [content (utils/read-content url)]
-    {:content       content
-     :asset-path    asset-path ; to compute relative assets
-     :resource-path resource-path
-     :content-type  (extract-content-type content-types resource-path)
-     :size          (alength content)
-     :checksum      (utils/compute-checksum content)
-     :modified-at   (utils/modified-at url)}))
+  (utils/replace-asset-content {:asset-path    asset-path ; to compute relative assets
+                                :resource-path resource-path
+                                :modified-at   (utils/modified-at url)}
+                               (extract-content-type content-types resource-path)
+                               (utils/read-content url)))
 
 (defn make-asset-resolver
   "Factory for the resolver function which converts a path into an asset map.
@@ -98,6 +96,8 @@
    :content-types      (merge mime/default-mime-types {"coffee" "text/coffeescript"
                                                        "less"   "text/less"
                                                        "jade"   "text/jade"})
+   ;; Identify which content types are compressable; all other content types are assumed to not be compressable.
+   :compressable       #{"text/*" "application/edn" "application/json"}
    :cache-folder       (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))
    :stack-frame-filter default-stack-frame-filter})
 
@@ -109,17 +109,19 @@
 (defn get-asset-uris
   "Converts a number of asset paths into client URIs.
 
-  twixt - the :twixt key, extracted from the Ring request map (as provided by the twixt-setup handler)
+  context - the :twixt key, extracted from the Ring request map (as provided by the twixt-setup handler)
   paths - asset paths"
   [{:keys [asset-pipeline path-prefix] :as context} & paths]
+  (if (nil? context)
+    (throw (IllegalArgumentException. "nil context provided to get-asset-uris")))
   (->> paths
        (map #(get-single-asset asset-pipeline % context))
        (map (partial asset/asset->request-path path-prefix))))
 
 (defn get-asset-uri
   "Uses get-asset-uris to get a single URI for a single asset path."
-  [twixt asset-path]
-  (first (get-asset-uris twixt asset-path)))
+  [context asset-path]
+  (first (get-asset-uris context asset-path)))
 
 (defn wrap-with-tracing
   "The first middleware in the asset pipeline, used to trace the constuction of the asset."
@@ -157,6 +159,11 @@
       development-mode (fs/wrap-with-filesystem-cache (:cache-folder twixt-options) resolver)
       production-mode mem/wrap-with-sticky-cache
       development-mode mem/wrap-with-invalidating-cache
+      true (compress/wrap-with-compression twixt-options)
+      ;; Currently don't bother with file system cache for compression; it's fast enough not
+      ;; to worry.
+      production-mode compress/wrap-with-sticky-compressed-caching
+      development-mode compress/wrap-with-invalidating-compressed-caching
       true wrap-with-tracing)))
 
 (defn wrap-with-twixt-setup
@@ -177,37 +184,48 @@
       (handler (assoc request :twixt twixt)))))
 
 (defn- parse-path
-  "Parses the complete request path into a checksum and asset path."
+  "Parses the complete request path into a checksum, compressed-flag, and asset path."
   [path-prefix path]
   (let [suffix (.substring path (.length path-prefix))
-        slashx (.indexOf suffix "/")]
-    [(.substring suffix 0 slashx)
-     (.substring suffix (inc slashx))]))
+        slashx (.indexOf suffix "/")
+        full-checksum (.substring suffix 0 slashx)
+        compressed? (.startsWith full-checksum "z")
+        checksum (if compressed? (.substring full-checksum 1) full-checksum)
+        asset-path (.substring suffix (inc slashx))]
+    [checksum
+     compressed?
+     asset-path]))
 
 (def ^:private far-future
   (-> (doto (Calendar/getInstance (TimeZone/getTimeZone "UTC"))
         (.add Calendar/YEAR 10))
       .getTime))
 
+;;; This has an issue, in that it is not extensible. So we end up with a special case for compression ... but
+;;; perhaps there are other cases. This may be the dual of the asset pipeline.
+
 (defn- asset->ring-response
   [asset]
-  (-> asset
-      :content
-      io/input-stream
-      r/response
-      (r/header "Content-Length" (:size asset))
-      ;; Because any change to the content will create a new checksum and a new URL, a change to the content
-      ;; is really an entirely new resource. The current resource is therefore immutable and can have a far-future expires
-      ;; header.
-      (r/header "Expires" far-future)
-      (r/content-type (:content-type asset))))
+  (cond->
+    ;; First the standard stuff ...
+    (-> asset
+        :content
+        io/input-stream
+        r/response
+        (r/header "Content-Length" (:size asset))
+        ;; Because any change to the content will create a new checksum and a new URL, a change to the content
+        ;; is really an entirely new resource. The current resource is therefore immutable and can have a far-future expires
+        ;; header.
+        (r/header "Expires" far-future)
+        (r/content-type (:content-type asset)))
+    ;; The optional extras ...
+    (:compressed asset) (r/header "Content-Encoding" "gzip")))
 
 (defn- asset->301-response
   [path-prefix asset]
-  {
-    :status  301
-    :headers {"Location" (asset/asset->request-path path-prefix asset)}
-    :body    ""})
+  {:status  301
+   :headers {"Location" (asset/asset->request-path path-prefix asset)}
+   :body    ""})
 
 (defn- create-asset-response
   [path-prefix requested-checksum asset]
@@ -228,10 +246,15 @@
     (when (match? path-prefix path)
       (t/trace
         #(format "Handling asset request `%s'." path)
-        (let [[requested-checksum asset-path] (parse-path path-prefix path)
-              twixt (:twixt request)
-              asset-pipeline (:asset-pipeline twixt)]
-          (create-asset-response path-prefix requested-checksum (asset-pipeline asset-path twixt)))))))
+        (let [[requested-checksum compressed? asset-path] (parse-path path-prefix path)
+              context (:twixt request)
+              ;; When actually servicing an asset request, we have to trust the data in the URL
+              ;; that determines whether to server the normal or gzip'ed resource.
+              context' (assoc context :gzip-enabled compressed?)
+              asset-pipeline (:asset-pipeline context)]
+          (create-asset-response path-prefix
+                                 requested-checksum
+                                 (asset-pipeline asset-path context')))))))
 
 (defn wrap-with-twixt
   "Invokes the twixt-handler and delegates to the provided handler if twixt-handler returns nil.

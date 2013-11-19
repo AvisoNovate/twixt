@@ -3,7 +3,6 @@
   This cache is used to bypass the normal loading, compiling, and transforming
   steps."
   (:require [clojure.java.io :as io]
-            #_ [clojure.tools.logging :as l]
             [io.aviso.twixt.utils :as utils]))
 
 (defn wrap-with-sticky-cache
@@ -12,15 +11,21 @@
    require an application restart anyway.
 
   Cached values are permanent; in even the largest web application, the amount of assets is relatively finite,
-  so no attempt has been made to evict assets from the cache. "
-  [handler]
-  (let [cache (atom {})]
-    (fn sticky-cache [asset-path context]
-      (if-let [asset (get @cache asset-path)]
-        asset
-        (when-let [asset (handler asset-path context)]
-          (swap! cache assoc asset-path asset)
-          asset)))))
+  so no attempt has been made to evict assets from the cache.
+
+  The optional store-in-cache? parameter is a function; it is passed an asset, and returns true
+  if the asset should be stored in the cache."
+  ([handler]
+   (wrap-with-sticky-cache handler (constantly true)))
+  ([handler store-in-cache?]
+   (let [cache (atom {})]
+     (fn sticky-cache [asset-path context]
+       (if-let [asset (get @cache asset-path)]
+         asset
+         (when-let [asset (handler asset-path context)]
+           (if (store-in-cache? asset)
+             (swap! cache assoc asset-path asset))
+           asset))))))
 
 (defn- modified-at-matches?
   "Returns true if the resource is valid (actual modified-at matches the provided value from the asset map).
@@ -52,14 +57,17 @@
   invalid cached assets are discarded and re-fetched from downstream.
 
   A cached asset is invalid if any of its dependencies has changed (based on modified-at timestamp)."
-  [handler]
-  (let [cache (atom {})]
-    (fn invalidating-cache [asset-path context]
-      (let [asset (get @cache asset-path)]
-        (if (is-valid? asset)
-          asset
-          (do
-            (swap! cache dissoc asset-path)
-            (when-let [asset (handler asset-path context)]
-              (swap! cache assoc asset-path asset)
-              asset)))))))
+  ([handler]
+   (wrap-with-invalidating-cache handler (constantly true)))
+  ([handler store-in-cache?]
+   (let [cache (atom {})]
+     (fn invalidating-cache [asset-path context]
+       (let [asset (get @cache asset-path)]
+         (if (is-valid? asset)
+           asset
+           (do
+             (swap! cache dissoc asset-path)
+             (when-let [asset (handler asset-path context)]
+               (if (store-in-cache? asset)
+                 (swap! cache assoc asset-path asset))
+               asset))))))))
