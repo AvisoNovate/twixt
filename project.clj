@@ -8,10 +8,9 @@
                  [ring/ring-core "1.2.0"]
                  [org.mozilla/rhino "1.7R4"]
                  [com.github.sommeri/less4j "1.2.1"]
-                 [de.neuland/jade4j "0.3.15"]
+                 [de.neuland-bfi/jade4j "0.4.0"]
                  [io.aviso/pretty "0.1.6"]
                  [hiccup "1.0.4"]]
-  :repositories [["jade4j" "https://raw.github.com/neuland/jade4j/master/releases"]]
   :codox {:src-dir-uri               "https://github.com/AvisoNovate/twixt/blob/master/"
           :src-linenum-anchor-prefix "L"}
   :profiles {:dev {:dependencies [[log4j "1.2.17"]
