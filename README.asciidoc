@@ -73,20 +73,20 @@ Ring middleware.
 
 === A question of URLs
 
-At its core, Twixt is a Ring middleware that maps certain URL patterns to matching files on the classpath,
+At its core, Twixt is a set of Ring middleware that maps certain URL patterns to matching files on the classpath,
 and does some transformations along the way.
 
 Currently, the mapping is very straightforward: the path +/assets/123abc/css/style.less+ is mapped to resource
-'+META-INF/assets/css/style.less+ and transformed from Less to CSS along the way.
-Embedded in in the middle is the checksum for the file.
++META-INF/assets/css/style.less+ and transformed from Less to CSS along the way.
+Embedded in in the middle is the content checksum for the file (+123abc+).
 
 In your application, assets will change during development, or between production deployments. The URIs provided to
 the client agent (the web browser) is a _resource_; resources are immutable.
 The checksum in the URI is based on the actual content of the file;
 if the underlying content changes, then a new checksum, new URI, and therefore, new resource will be referenced.
 
-Twixt sets headers to indicate a far-future expires header;
-the upshot of which is that, once the resource for an asset is downloaded to the client, it will not ask for it again.
+Twixt sets headers to indicate a far-future expiration date for the resource;
+the upshot of which is that, once the resource for an asset is downloaded to the client browser, the browser will not ask for it again.
 This is great for performance.
 
 The checksum has a optional "z" prefix; this indicates a GZip compressed resource.
