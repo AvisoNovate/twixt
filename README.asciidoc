@@ -1,6 +1,9 @@
 == Twixt
 
 Twixt is an extensible asset pipeline for use in Clojure web applications.
+It is designed to complement an application built using Ring and related libraries, such as Compojure.
+Twixt provides content transformation (such as Less to CSS), support for efficient immutable resources,
+and best-of-breed exception reporting.
 
 Twixt includes a very readable HTML exception report page, which displays:
 
@@ -18,6 +21,8 @@ Twixt currently supports:
 * CoffeeScript to JavaScript compilation (using Rhino)
 * Jade to HTML compilation (using https://github.com/neuland/jade4j[jade4j])
 * Less to CSS compilation (using https://github.com/SomMeri/less4j[less4j])
+* File system caching of compiled content
+* Automatic GZip compression
 
 Twixt is available under the terms of the Apache Sofware License 2.0.
 
@@ -29,6 +34,10 @@ http://howardlewisship.com/io.aviso/twixt/[API Documentation]
 
 By default, Twixt serves resources located on the classpath, in the +META-INF/assets/+ folder.
 The contents of this folder is accessible via the URL +/assets/+.
+
+By design, assets are segregated from the rest of your code.
+This prevents a malicious client from directly accessing your code or configuration files.
+Anything outside the +META-INF/assets/+ folder is inaccessible via Twixt.
 
 Twixt maps file extensions to MIME types; it then will transform certain MIME types; for example +.coffee+ files are compiled to JavaScript.
 
@@ -43,47 +52,73 @@ Twixt maps file extensions to MIME types; it then will transform certain MIME ty
 ;;; Use Compojure to map routes to handlers
 (defroutes app ...)
 
-;;; Create twixt wrappers and handler to handle /asset/ URLs, in development mode
+;;; Create twixt wrappers and handler to handle /asset/ URLs, in development (not production) mode
 (def app-handler
-  (te/wrap-with-twixt app t/default-options true)
+  (te/wrap-with-twixt app true)
 
 ;;; Use the Ring Jetty adapter to serve your site
 (run-jetty app-handler)
 ----  
 
-The Twixt middleware intercepts requests for +/assets/+ that map to actual files; it returns nil on anything else so that downstream handlers can have their chance.
+The Twixt middleware intercepts requests for +/assets/+ that map to actual files; non-matching requests, or
+requests for assets that do not exist, are delegated down to the wrapped handlers.
 
 In development mode, Twixt will write compiled files to the file system (you can configure where if you like). 
-On a restart of the application, it will use those cached files if the source files have not changed. 
+On a restart of the application, it will use those cached files if the source files have not changed.
+
+The Twixt API includes alternate way of constructing both the Ring middleware, and Twixt's own
+asset pipeline; this allows you to add new features, or eliminate unwanted features. Please reference the
+code to see how to assemble Twixt options, the Twixt pipeline, and finally, how to provide the necessary
+Ring middleware.
 
 === A question of URLs
 
-At its core, Twixt is a Ring middleware that maps certain URL patterns to matching files on the classpath, and does some transformations along the way.
+At its core, Twixt is a Ring middleware that maps certain URL patterns to matching files on the classpath,
+and does some transformations along the way.
 
-Currently, the mapping is very straightforward: the path +/assets/css/style.less+ is mapped to resource +META-INF/assets/css/style.less+ and transformed from Less to CSS along the way.
+Currently, the mapping is very straightforward: the path +/assets/123abc/css/style.less+ is mapped to resource
+'+META-INF/assets/css/style.less+ and transformed from Less to CSS along the way.
+Embedded in in the middle is the checksum for the file.
 
-In the future, the mapping will be more complex:
+In your application, assets will change during development, or between production deployments. The URIs provided to
+the client agent (the web browser) is a _resource_; resources are immutable.
+The checksum in the URI is based on the actual content of the file;
+if the underlying content changes, then a new checksum, new URI, and therefore, new resource will be referenced.
 
-* The URL will include a checksum of the resource's content, e.g., +/assets/32fec9/css/style.less+.
-* The URL may reflect the use of GZip compression, e.g., +/assets.gz/33839a/css/style.less+.
+Twixt sets headers to indicate a far-future expires header;
+the upshot of which is that, once the resource for an asset is downloaded to the client, it will not ask for it again.
+This is great for performance.
 
-Because of this, when referencing assets inside your templates, you must pass paths (relative to +META-INF/assets+) 
+The checksum has a optional "z" prefix; this indicates a GZip compressed resource.
+Twixt detects if the client agent supports GZip compression (via the +Accept-Encodings+ header).
+In addition, compression is only applied to specific content types, such as "text/html" and "application/edn".
+Most binary formats, including fonts and image formats, are already compressed.
+
+Because of this, when referencing assets inside your templates, you must pass paths (relative to +META-INF/assets+)
 through Twixt to get URIs that will work in the browser:
 
 [source,clojure]
 ----
 (defhtml index
-  [twixt]
+  [context]
   (html
     (doctype :html5
     [:html
       [:head
         [:title "My Clojure App"]
-        (include-css (get-asset-uri twixt "css/style.less"))
+        (include-css (get-asset-uri context "css/style.less"))
         ...
 ----
 
-The twixt parameter is a map that is provided in the Ring request map under key +:twixt+.
+The context parameter is a map that is provided in the Ring request map under key +:twixt+.
+
+Twixt must do all necessary compilations and other transformations, to arrive at final content for which a checksum
+can be generated. This is also good because any exceptions, such as compilation errors, will occur immediately, rather
+than when the asset's resource is accessed by the client.
+
+When a client requests an asset that exists, but supplies an incorrect checksum,
+Twixt will respond with a 301 HTTP response,
+directing the client to the correct resource (with the correct checksum).
 
 === Configuring Twixt
 
@@ -96,12 +131,13 @@ The default options:
 [source,clojure]
 ----
 (def default-options
-  {:path-prefix "/assets/"
-   :root "META-INF/assets/"
-   :content-types (merge mime/default-mime-types {"coffee" "text/coffeescript"
-                                                  "less" "text/less"
-                                                  "jade" "text/jade"})
-   :cache-folder (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))})
+  {:path-prefix        "/assets/"
+   :root               "META-INF/assets/"
+   :content-types      (merge mime/default-mime-types {"coffee" "text/coffeescript"
+                                                       "less"   "text/less"
+                                                       "jade"   "text/jade"})
+   :compressable       #{"text/*" "application/edn" "application/json"}
+   :cache-folder       (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))
 ----
 
 You can override +root+ to change where assets are stored on the classpath, but there is rarely a need to do so.
@@ -110,6 +146,9 @@ Changing root may break other libraries that depend on Twixt, such as Twixt's ow
 You can override +:path-prefix+ to change the root URL for assets; +/+ is an acceptable value.
 
 The +:content-types+ key maps file extensions to MIME types.
+
+The +:compressable+ key identifies which content types are compressable; note the use of the +/*+ suffix to indicate
+that all text content types are compressable.
 
 File system caching is normally only enabled in development mode.
 
@@ -124,19 +163,14 @@ in production, no such checks occur as it is assumed that all such assets are st
 The goal is to achieve at least parity with Apache Tapestry, plus some additional features specific to Clojure. This means:
 
 * E-Tags support
-* Content checksums as part of the asset URL
-* Far-future expires headers
 * ClojureScript compilation
-* Automatic GZip support
-* Caching of GZipped content
-* Separate URL for GZipped content
 * JavaScript minimization via https://developers.google.com/closure/compiler/[Google Closure]
 * CSS Minification
 * Aggregated JavaScript stacks
 * Aggregated CSS stacks
 * RequireJS support / modules
-* Leverage core.async
-* Break out the the Less, Jade, CoffeeScript, and exception reporting support into a-la-carte modules
+* Leverage core.async ?
+* Break out the the Les•s, Jade, CoffeeScript, and exception reporting support into a-la-carte modules
 
 === Stability
 
@@ -155,13 +189,11 @@ Twixt has a mechanism for tracking the operations it is attempting, to give you 
 is an error.  For example, (from the test suite):
 
 ----
-ERROR [     qtp199535055-16] io.aviso.twixt.coffee-script An exception has occurred:
-ERROR [     qtp199535055-16] io.aviso.twixt.coffee-script [  1] - Invoking handler (that throws exceptions)
-ERROR [     qtp199535055-16] io.aviso.twixt.coffee-script [  2] - Constructing URI for asset `invalid-coffeescript.coffee'
-ERROR [     qtp199535055-16] io.aviso.twixt.coffee-script [  3] - Constructing Streamable for `invalid-coffeescript.coffee'.
-ERROR [     qtp199535055-16] io.aviso.twixt.coffee-script [  4] - Checking file system cache for `META-INF/assets/invalid-coffeescript.coffee'.
-ERROR [     qtp199535055-16] io.aviso.twixt.coffee-script [  5] - Compiling `META-INF/assets/invalid-coffeescript.coffee' to JavaScript
-ERROR [     qtp199535055-16] io.aviso.twixt.coffee-script META-INF/assets/invalid-coffeescript.coffee:6:1: error: unexpected INDENT
+ERROR [       qtp2166970-29] io.aviso.twixt.coffee-script An exception has occurred:
+ERROR [       qtp2166970-29] io.aviso.twixt.coffee-script [  1] - Invoking handler (that throws exceptions)
+ERROR [       qtp2166970-29] io.aviso.twixt.coffee-script [  2] - Accessing asset `invalid-coffeescript.coffee'
+ERROR [       qtp2166970-29] io.aviso.twixt.coffee-script [  3] - Compiling `META-INF/assets/invalid-coffeescript.coffee' to JavaScript
+ERROR [       qtp2166970-29] io.aviso.twixt.coffee-script META-INF/assets/invalid-coffeescript.coffee:6:1: error: unexpected INDENT
       argument: dep2
 ^^^^^^
 java.lang.RuntimeException: META-INF/assets/invalid-coffeescript.coffee:6:1: error: unexpected INDENT
@@ -172,8 +204,8 @@ java.lang.RuntimeException: META-INF/assets/invalid-coffeescript.coffee:6:1: err
 
 In other words, when there's a failure, Twixt can tell you the steps that led up the failure, which is 90% of solving the problem in the first place.
 
-Twixt's exception wrapper now captures all of this and presents a quite readable exception report page. The exception report
-page also does a decent job of de-mangling Java class names to Clojure namespaces and function names. 
+Twixt's exception report captures all of this and presents it as readable HTML.
+The exception report page also does a decent job of de-mangling Java class names to Clojure namespaces and function names.
 
 === How does Twixt differ from Dieter?
 
