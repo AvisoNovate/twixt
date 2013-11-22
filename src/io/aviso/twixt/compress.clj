@@ -34,7 +34,7 @@
 (defn- is-gzip-supported?
   [request]
   (if-let [encodings (-> request :headers (get "accept-encoding"))]
-    (some #(.equalsIgnoreCase % "gzip")
+    (some #(.equalsIgnoreCase ^String % "gzip")
           (str/split encodings #","))))
 
 (defn wrap-with-compression

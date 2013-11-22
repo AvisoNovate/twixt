@@ -185,7 +185,7 @@
 
 (defn- parse-path
   "Parses the complete request path into a checksum, compressed-flag, and asset path."
-  [path-prefix path]
+  [^String path-prefix ^String path]
   (let [suffix (.substring path (.length path-prefix))
         slashx (.indexOf suffix "/")
         full-checksum (.substring suffix 0 slashx)

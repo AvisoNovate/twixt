@@ -3,8 +3,8 @@
   (:import [java.io CharArrayWriter ByteArrayOutputStream File]
            [java.nio.charset Charset]
            [java.util.zip Adler32]
-           (java.net URISyntaxException)
-           (java.util Date))
+           [java.net URISyntaxException URL]
+           [java.util Date])
   (:require [clojure.java.io :as io]
             [clojure.string :as str]))
 
@@ -88,8 +88,8 @@
           :else (recur (conj path-terms term) remaining))))))
 
 ;; Not the same as io/file!
-(defn- as-file
-  [url]
+(defn- ^File as-file
+  [^URL url]
   (try
     (-> url .toURI File.)
     (catch URISyntaxException e

@@ -22,11 +22,14 @@
     (some-> e ex-data :operation-trace) true
     :else (recur (.getCause e))))
 
+(defn- error [logger message]
+  (l/log* logger :error nil message))
+
 (defn- log-trace [logger trace-messages message e]
-  (.error logger "An exception has occurred:")
+  (error logger "An exception has occurred:")
   (doseq [[trace-message i] (map vector trace-messages (iterate inc 1))]
-    (.error logger (format "[%3d] - %s" i trace-message)))
-  (.error logger (format "%s%n%s" message (exception/format-exception e))))
+    (error logger (format "[%3d] - %s" i trace-message)))
+  (error logger (format "%s%n%s" message (exception/format-exception e))))
 
 (defn trace-function
   "Traces the execution of a function of no arguments. The trace macro converts into a call to track-function.

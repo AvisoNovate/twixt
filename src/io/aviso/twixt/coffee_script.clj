@@ -7,7 +7,7 @@
              [tracker :as tracker]
              [utils :as utils]]))
 
-(defn- extract-value [^Map object key]
+(defn- ^String extract-value [^Map object key]
   (str (.get object key)))
 
 (defn- coffee-script-compiler [asset context]
