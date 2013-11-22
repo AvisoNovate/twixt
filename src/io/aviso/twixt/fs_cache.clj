@@ -49,7 +49,7 @@
   [^File asset-cache-dir]
   (if (.exists asset-cache-dir)
     (t/trace
-      #(format "Reading from asset cache `%s'." asset-cache-dir)
+      #(format "Reading from asset cache `%s'" asset-cache-dir)
       (some->
         (io/file asset-cache-dir asset-file-name)
         read-cached-asset-data
@@ -57,7 +57,7 @@
 
 (defn- write-cached-asset [asset-cache-dir asset]
   (t/trace
-    #(format "Writing to asset cache `%s'." asset-cache-dir)
+    #(format "Writing to asset cache `%s'" asset-cache-dir)
     (.mkdirs asset-cache-dir)
     (let [content-file (io/file asset-cache-dir content-file-name)
           asset-file (io/file asset-cache-dir asset-file-name)]
@@ -75,7 +75,7 @@
   [^File dir]
   (when (.exists dir)
     (t/trace
-      #(format "Deleteing directory `%s.'" dir)
+      #(format "Deleteing directory `%s'" dir)
       (doseq [file (.listFiles dir)]
         (io/delete-file file))
       (io/delete-file dir))))

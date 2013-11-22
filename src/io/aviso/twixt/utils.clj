@@ -60,7 +60,7 @@
   (fn [asset-path context]
     (if-let [asset (handler asset-path context)]
       (if (= content-type (:content-type asset))
-        (transformer asset)
+        (transformer asset context)
         asset))))
 
 (defn read-content

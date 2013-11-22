@@ -7,12 +7,12 @@
              [utils :as utils]]
             [clojure.java.io :as io]))
 
-(defn- jade-compiler [pretty-print asset]
+(defn- jade-compiler [pretty-print asset context]
   (let [name (:resource-path asset)]
     (tracker/log-time
       #(format "Compiled `%s' to HTML in %.2f ms" name %)
       (tracker/trace
-        #(format "Compiling `%s' from Jade to HTML." name)
+        #(format "Compiling `%s' from Jade to HTML" name)
         (try
           (with-open [reader (-> asset :content io/reader)]
             (->>

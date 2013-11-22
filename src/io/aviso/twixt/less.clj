@@ -16,22 +16,23 @@
 
 ;; Putting this logic inside the (proxy) call causes some really awful Clojure compiler problems.
 ;; This shim seems to defuse that.
-(defn- find-relative [asset-pipeline asset relative-path]
+(defn- find-relative
+  [asset-resolver asset relative-path context]
   (->
     asset
     :asset-path
     (utils/compute-relative-path relative-path)
-    asset-pipeline))
+    (asset-resolver context)))
 
 (defn- create-less-source
-  [asset-pipeline asset]
+  [handler asset context]
   ;; Whenever a LessSource is created, associated the asset as a dependency; this includes the primary source
   ;; and all imported sources.
   (swap! *dependencies* assoc (:resource-path asset) (select-keys asset [:checksum :modified-at :asset-path]))
   (proxy [LessSource] []
     (relativeSource [filename]
-      (if-let [rel (find-relative asset-pipeline asset filename)]
-        (create-less-source asset-pipeline rel)
+      (if-let [rel (find-relative handler asset filename context)]
+        (create-less-source handler rel context)
         (throw (new LessSource$FileNotFound))))
 
     (toString [] (:resource-path asset))
@@ -63,15 +64,15 @@
 
 
 (defn compile-less
-  [less-compiler asset-pipeline asset]
+  [less-compiler handler asset context]
   (let [name (:resource-path asset)]
     (tracker/log-time
       #(format "Compiled `%s' to CSS in %.2f ms" name %)
       (tracker/trace
-        #(format "Compiling `%s' from Less to CSS." name)
+        #(format "Compiling `%s' from Less to CSS" name)
         (binding [*dependencies* (atom {})]
           (try
-            (let [root-source (create-less-source asset-pipeline asset)
+            (let [root-source (create-less-source handler asset context)
                   output (.compile less-compiler root-source)]
               (->
                 (utils/create-compiled-asset asset "text/css" (.getCss output))

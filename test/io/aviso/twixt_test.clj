@@ -22,25 +22,26 @@
 
 (def cache-folder (format "%s/%x" (System/getProperty "java.io.tmpdir") (System/nanoTime)))
 
-(def development-mode-pipeline (default-asset-pipeline
-                                 (assoc default-options :cache-folder cache-folder)
-                                 true))
+(def options (assoc default-options :cache-folder cache-folder))
+
+(def pipeline (default-asset-pipeline options true))
+
+(def context (assoc options :asset-pipeline pipeline))
 
 (deftest asset-pipeline
-  (let [resolver (make-asset-resolver default-options)]
-    (testing "asset not found"
-      (is (nil? (resolver "does/not/exist.gif"))))
+  (testing "asset not found"
+    (is (nil? (pipeline "does/not/exist.gif" options))))
 
-    (testing "asset found"
-      (let [asset (resolver "coffeescript-source.coffee")]
-        (is (not (nil? asset)))
-        (is (-> asset :modified-at nil? not))
-        (are [key value] (= (key asset) value)
-                         :resource-path "META-INF/assets/coffeescript-source.coffee"
-                         :asset-path "coffeescript-source.coffee"
-                         :content-type "text/coffeescript"
-                         :size 30
-                         :checksum "adbe0aaf")))))
+  (testing "asset found"
+    (let [asset (pipeline "coffeescript-source.coffee" context)]
+      (is (not (nil? asset)))
+      (is (-> asset :modified-at nil? not))
+      (are [key value] (= (key asset) value)
+                       :resource-path "META-INF/assets/coffeescript-source.coffee"
+                       :asset-path "coffeescript-source.coffee"
+                       :content-type "text/javascript"
+                       :size 100
+                       :checksum "5f181fb6"))))
 
 
 #_ (deftest uri-generation
@@ -50,7 +51,7 @@
 
 (deftest coffeescript-compilation
 
-  (let [asset (development-mode-pipeline "coffeescript-source.coffee")]
+  (let [asset (pipeline "coffeescript-source.coffee" context)]
     (is (= (-> asset :content-type) "text/javascript"))
     (is (= (-> asset :checksum) "5f181fb6"))
     (is (= (read-asset-content asset)
@@ -69,11 +70,11 @@
 
     (is (thrown-with-msg? Exception
                           #"META-INF/assets/invalid-coffeescript.coffee:6:1: error: unexpected INDENT"
-                          (development-mode-pipeline "invalid-coffeescript.coffee")))))
+                          (pipeline "invalid-coffeescript.coffee" context)))))
 
 (deftest jade-compilation
 
-  (let [asset (development-mode-pipeline "jade-source.jade")]
+  (let [asset (pipeline "jade-source.jade" context)]
     (is (= (:content-type asset) "text/html"))
     (is (= (read-asset-content asset)
            (read-resource-content "assets/compiled-jade-source.html")))))
@@ -82,7 +83,7 @@
 
 (deftest less-compilation
 
-  (let [asset (development-mode-pipeline "sample.less")
+  (let [asset (pipeline "sample.less" context)
         expected (read-resource-content "assets/compiled-sample.css")]
 
     (is (= (:content-type asset) "text/css"))
@@ -92,4 +93,4 @@
 
     (is (thrown-with-msg? Exception
                           #"META-INF/assets/invalid-less.less:3:5: no viable alternative at input 'p'"
-                          (development-mode-pipeline "invalid-less.less")))))
+                          (pipeline "invalid-less.less" context)))))

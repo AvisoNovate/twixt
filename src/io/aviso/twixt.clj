@@ -245,7 +245,7 @@
         path (:uri request)]
     (when (match? path-prefix path)
       (t/trace
-        #(format "Handling asset request `%s'." path)
+        #(format "Handling asset request `%s'" path)
         (let [[requested-checksum compressed? asset-path] (parse-path path-prefix path)
               context (:twixt request)
               ;; When actually servicing an asset request, we have to trust the data in the URL
