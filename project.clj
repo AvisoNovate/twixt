@@ -5,11 +5,11 @@
             :url  "http://www.apache.org/licenses/LICENSE-2.0.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.logging "0.2.6"]
-                 [ring/ring-core "1.2.0"]
+                 [ring/ring-core "1.2.1"]
                  [org.mozilla/rhino "1.7R4"]
                  [com.github.sommeri/less4j "1.2.1"]
                  [de.neuland-bfi/jade4j "0.4.0"]
-                 [io.aviso/pretty "0.1.6"]
+                 [io.aviso/pretty "0.1.8"]
                  [hiccup "1.0.4"]]
   :codox {:src-dir-uri               "https://github.com/AvisoNovate/twixt/blob/master/"
           :src-linenum-anchor-prefix "L"}
