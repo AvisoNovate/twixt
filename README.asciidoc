@@ -47,7 +47,7 @@ Twixt maps file extensions to MIME types; it then will transform certain MIME ty
   (:use compojure.core
         ring.adapter.jetty
         [io.aviso.twixt :as t]
-        [io.aviso.twixt.exceptions :as te))
+        [io.aviso.twixt.exceptions :as te]))
 
 ;;; Use Compojure to map routes to handlers
 (defroutes app ...)
