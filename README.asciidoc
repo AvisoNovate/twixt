@@ -78,7 +78,7 @@ and does some transformations along the way.
 
 Currently, the mapping is very straightforward: the path +/assets/123abc/css/style.less+ is mapped to resource
 +META-INF/assets/css/style.less+ and transformed from Less to CSS along the way.
-Embedded in in the middle is the content checksum for the file (+123abc+).
+Embedded in the middle is the content checksum for the file (+123abc+).
 
 In your application, assets will change during development, or between production deployments. The URIs provided to
 the client agent (the web browser) is a _resource_; resources are immutable.
