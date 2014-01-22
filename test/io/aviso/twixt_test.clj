@@ -43,6 +43,17 @@
                        :size 100
                        :checksum "5f181fb6"))))
 
+(deftest get-missing-asset-is-an-exception
+  (is (thrown?
+        Exception
+        (get-asset-uri context "does/not/exist.png"))))
+
+(deftest find-an-asset
+  (is (not (nil? (find-asset-uri context "coffeescript-source.coffee"))))
+
+  (is (nil? (find-asset-uri context "does/not/exist.png"))))
+
+
 
 #_ (deftest uri-generation
 

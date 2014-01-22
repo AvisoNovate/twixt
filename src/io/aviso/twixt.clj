@@ -19,13 +19,11 @@
              [response :as r]
              [mime-type :as mime]]))
 
-;;; Lots of stuff from Tapestry 5.4 is not yet implemented; probably won't be until this is spun off as an open-source
-;;; GitHub project.
-;;; - content checksum in URL
-;;; - optional GZip compression
-;;; - caching of GZip compressed content
-;;; - rewriting of url()'s in CSS files
+;;; Lots of stuff from Tapestry 5.4 is not yet implemented
 ;;; - multiple domains (the context, the file system, etc.)
+;;; - JavaScript aggregation
+;;; - JavaScript minification
+;;; - CSS minification
 
 (defn- extract-file-extension [^String path]
   (let [dotx (.lastIndexOf path ".")]
@@ -107,7 +105,7 @@
       (throw (IllegalArgumentException. (format "Asset path `%s' does not map to an available resource.")))))
 
 (defn get-asset-uris
-  "Converts a number of asset paths into client URIs.
+  "Converts a number of asset paths into client URIs. Each path must exist.
 
   context - the :twixt key, extracted from the Ring request map (as provided by the twixt-setup handler)
   paths - asset paths"
@@ -119,9 +117,14 @@
        (map (partial asset/asset->request-path path-prefix))))
 
 (defn get-asset-uri
-  "Uses get-asset-uris to get a single URI for a single asset path."
+  "Uses get-asset-uris to get a single URI for a single asset path. The resource must exist."
   [context asset-path]
   (first (get-asset-uris context asset-path)))
+
+(defn find-asset-uri
+  "Returns the URI for an asset, if it exists. If not, returns nil."
+  [{:keys [asset-pipeline] :as context} asset-path]
+  (asset-pipeline asset-path context))
 
 (defn wrap-with-tracing
   "The first middleware in the asset pipeline, used to trace the constuction of the asset."
@@ -130,6 +133,40 @@
     (t/trace
       #(format "Accessing asset `%s'" asset-path)
       (handler asset-path context))))
+
+(defn default-wrap-pipeline-with-compilation
+  "Used when constructing the asset pipeline, wraps a handler (normally, the asset resolver)
+  with additional pipeline handlers for Less, CoffeeScript, and Jade compilation as well as CSS URL Rewriting."
+  [handler development-mode]
+  (->
+    handler
+    less/wrap-with-less-compilation
+    cs/wrap-with-coffee-script-compilation
+    (jade/wrap-with-jade-compilation development-mode)
+    rewrite/wrap-with-css-rewriting))
+
+(defn default-wrap-pipeline-with-caching
+  "Used when constructing the asset pipeline to wrap the handler with production-mode or development-mode
+  caching. This is invoked before adding support for compression."
+  [handler twixt-options asset-resolver development-mode]
+  (cond->
+    handler
+    ;; The file system cache should only be used in development and should come after anything downstream
+    ;; that might compile.
+    development-mode (fs/wrap-with-filesystem-cache (:cache-folder twixt-options) asset-resolver)
+    (not development-mode) mem/wrap-with-sticky-cache
+    development-mode mem/wrap-with-invalidating-cache))
+
+(defn default-wrap-pipeline-with-compressed-caching
+  "Used when constructing the asset pipeline, after compression has been enabled, to cache the
+  compressed version of assets."
+  [handler development-mode]
+  (cond->
+    handler
+    ;; Currently don't bother with file system cache for compression; it's fast enough not
+    ;; to worry.
+    (not development-mode) compress/wrap-with-sticky-compressed-caching
+    development-mode compress/wrap-with-invalidating-compressed-caching))
 
 (defn default-asset-pipeline
   "Sets up the default pipeline in either development mode or production mode.
@@ -141,30 +178,20 @@
 
   The context will contain a :asset-pipeline key whose value is the asset pipeline in use.
   The context will contain a :path-prefix key, extracted from the twixt options.
-  The context may also be passed to `get-asset-uri`.
+  The context may also be passed to `get-asset-uri` (and related functions).
 
   In some cases, middlware may modify the context before passing it forward to the next handler, typically
   by adding additional keys."
   [twixt-options development-mode]
   (let [resolver (make-asset-resolver twixt-options)
         production-mode (not development-mode)]
-    (cond->
+    (->
       resolver
-      true less/wrap-with-less-compilation
-      true cs/wrap-with-coffee-script-compilation
-      true (jade/wrap-with-jade-compilation development-mode)
-      true rewrite/wrap-with-css-rewriting
-      ;; The file system cache should only be used in development and should come after anything downstream
-      ;; that might compile.
-      development-mode (fs/wrap-with-filesystem-cache (:cache-folder twixt-options) resolver)
-      production-mode mem/wrap-with-sticky-cache
-      development-mode mem/wrap-with-invalidating-cache
-      true (compress/wrap-with-compression twixt-options)
-      ;; Currently don't bother with file system cache for compression; it's fast enough not
-      ;; to worry.
-      production-mode compress/wrap-with-sticky-compressed-caching
-      development-mode compress/wrap-with-invalidating-compressed-caching
-      true wrap-with-tracing)))
+      (default-wrap-pipeline-with-compilation development-mode)
+      (default-wrap-pipeline-with-caching twixt-options resolver development-mode)
+      (compress/wrap-with-compression twixt-options)
+      (default-wrap-pipeline-with-compressed-caching development-mode)
+      wrap-with-tracing)))
 
 (defn wrap-with-twixt-setup
   "Wraps a handler with another handler that provides the :twixt key in the request object.
