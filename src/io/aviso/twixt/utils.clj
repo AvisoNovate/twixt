@@ -3,7 +3,7 @@
   (:import [java.io CharArrayWriter ByteArrayOutputStream File]
            [java.nio.charset Charset]
            [java.util.zip Adler32]
-           [java.net URISyntaxException URL]
+           [java.net URISyntaxException URL URI]
            [java.util Date])
   (:require [clojure.java.io :as io]
             [clojure.string :as str]))
@@ -87,13 +87,27 @@
                           (recur (drop-last path-terms) remaining))
           :else (recur (conj path-terms term) remaining))))))
 
+(defn- url-to-file
+  [^URL url]
+  (-> url .toURI File.))
+
+(defn- jar-to-file
+  "For a URL that points to a file inside a jar, this returns the JAR file itself."
+  [^URL url]
+  (-> url
+      .getPath
+      (str/split #"!")
+      first
+      URI.
+      File.))
+
 ;; Not the same as io/file!
 (defn- ^File as-file
+  "Locates a file from which a last modified date can be extracted."
   [^URL url]
-  (try
-    (-> url .toURI File.)
-    (catch URISyntaxException e
-      (-> url .getPath File.))))
+  (cond
+    (= "jar" (.getProtocol url)) (jar-to-file url)
+    :else (url-to-file url)))
 
 (defn modified-at
   [url]
