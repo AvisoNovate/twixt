@@ -49,7 +49,9 @@
         (get-asset-uri context "does/not/exist.png"))))
 
 (deftest find-an-asset
-  (is (not (nil? (find-asset-uri context "coffeescript-source.coffee"))))
+  (let [asset-uri (find-asset-uri context "coffeescript-source.coffee")]
+    (is (not (nil? asset-uri)))
+    (is (= asset-uri "/assets/5f181fb6/coffeescript-source.coffee")))
 
   (is (nil? (find-asset-uri context "does/not/exist.png"))))
 
@@ -105,3 +107,13 @@
     (is (thrown-with-msg? Exception
                           #"META-INF/assets/invalid-less.less:3:5: no viable alternative at input 'p'"
                           (pipeline "invalid-less.less" context)))))
+
+(deftest asset-redirector
+  (let [wrapped (wrap-with-asset-redirector nil)
+        request {:uri "/sample.less" :twixt context}
+        response (wrapped request)]
+
+    (is (= (:status response) 302))
+    (is (= (:body response) ""))
+    ;; Don't want false failures if the checksum doesn't match (perhaps due to platform issues).
+    (is (re-matches #"/assets/.*/sample.less" (get-in response [:headers "Location"])))))

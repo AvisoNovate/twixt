@@ -123,8 +123,9 @@
 
 (defn find-asset-uri
   "Returns the URI for an asset, if it exists. If not, returns nil."
-  [{:keys [asset-pipeline] :as context} asset-path]
-  (asset-pipeline asset-path context))
+  [{:keys [asset-pipeline path-prefix] :as context} asset-path]
+  (if-let [asset (asset-pipeline asset-path context)]
+    (asset/asset->request-path path-prefix asset)))
 
 (defn wrap-with-tracing
   "The first middleware in the asset pipeline, used to trace the constuction of the asset."
@@ -248,11 +249,13 @@
     ;; The optional extras ...
     (:compressed asset) (r/header "Content-Encoding" "gzip")))
 
-(defn- asset->301-response
-  [path-prefix asset]
-  {:status  301
+(defn- asset->redirect-response
+  [status path-prefix asset]
+  {:status  status
    :headers {"Location" (asset/asset->request-path path-prefix asset)}
    :body    ""})
+
+(def ^:private asset->301-response (partial asset->redirect-response 301))
 
 (defn- create-asset-response
   [path-prefix requested-checksum asset]
@@ -282,6 +285,26 @@
           (create-asset-response path-prefix
                                  requested-checksum
                                  (asset-pipeline asset-path context')))))))
+
+(defn wrap-with-asset-redirector
+  "In some cases, it is not possible for the client to know what the full asset URI will be, such as when the
+  URL is composed on the client (in which case, the asset checksum will not be known). The redirector accepts
+  any request path that maps to an asset and returns a redirect to the asset's true URL. Non-matching
+  requests are passed through to the provided handler.
+
+  For a file under `META-INF/assets`, such as `META-INF/assets/myapp/icon.png`, the redirector will match
+  the URI `/myapp/icon.png` and send a redirect to `/assets/123abc/myapp/icon.png`.
+
+  This middleware is not applied by default."
+  [handler]
+  (fn asset-redirector [{path    :uri
+                         context :twixt
+                         :as     request}]
+    (let [{:keys [asset-pipeline path-prefix]} context
+          asset-path (.substring path 1)]
+      (if-let [asset (asset-pipeline asset-path context)]
+        (asset->redirect-response 302 path-prefix asset)
+        (handler request)))))
 
 (defn wrap-with-twixt
   "Invokes the twixt-handler and delegates to the provided handler if twixt-handler returns nil.
