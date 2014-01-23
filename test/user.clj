@@ -1,6 +1,6 @@
 (ns user
   (:use [io.aviso.twixt :only [get-asset-uris default-options]]
-        [io.aviso.twixt exceptions tracker]
+        [io.aviso.twixt startup tracker]
         ring.adapter.jetty))
 
 (defn handler

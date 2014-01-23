@@ -46,29 +46,30 @@ Twixt maps file extensions to MIME types; it then will transform certain MIME ty
 (ns example.app
   (:use compojure.core
         ring.adapter.jetty
-        [io.aviso.twixt :as t]
-        [io.aviso.twixt.exceptions :as te]))
+        [io.aviso.twixt.setup :as setup]))
 
 ;;; Use Compojure to map routes to handlers
 (defroutes app ...)
 
-;;; Create twixt wrappers and handler to handle /asset/ URLs, in development (not production) mode
+;;; Create twixt wrappers and handler to handle /asset/ URLs, in development (vs. production) mode
 (def app-handler
-  (te/wrap-with-twixt app true)
+  (setup/wrap-with-twixt app true)
 
 ;;; Use the Ring Jetty adapter to serve your site
 (run-jetty app-handler)
 ----  
 
-The Twixt middleware intercepts requests for +/assets/+ that map to actual files; non-matching requests, or
+The Twixt middleware intercepts requests for the +/assets/+ URI that map to actual files; non-matching requests, or
 requests for assets that do not exist, are delegated down to the wrapped handlers.
 
 In development mode, Twixt will write compiled files to the file system (you can configure where if you like). 
-On a restart of the application, it will use those cached files if the source files have not changed.
+On a restart of the application, it will use those cached files if the source files have not changed. This is important,
+as compilation of some resources, such as CoffeeScript, can take several seconds (due to the speed, or lack thereof, of
+the Rhino JavaScript engine).
 
-The Twixt API includes alternate way of constructing both the Ring middleware, and Twixt's own
+The Twixt API includes alternate functions for constructing both the Ring middleware, and Twixt's own
 asset pipeline; this allows you to add new features, or eliminate unwanted features. Please reference the
-code to see how to assemble Twixt options, the Twixt pipeline, and finally, how to provide the necessary
+code to see how to configure Twixt options, assemble the Twixt asset pipeline, and finally, provide the necessary
 Ring middleware.
 
 === A question of URLs
@@ -110,7 +111,9 @@ through Twixt to get URIs that will work in the browser:
         ...
 ----
 
-The context parameter is a map that is provided in the Ring request map under key +:twixt+.
++get-asset-uri+ is defined in the +io.aviso.twixt+ namespace.
+
+The +context+ parameter is a map that is provided in the Ring request map under key +:twixt+.
 
 Twixt must do all necessary compilations and other transformations, to arrive at final content for which a checksum
 can be generated. This is also good because any exceptions, such as compilation errors, will occur immediately, rather
