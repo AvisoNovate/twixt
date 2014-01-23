@@ -286,6 +286,15 @@
                                  requested-checksum
                                  (asset-pipeline asset-path context')))))))
 
+(defn- handle-asset-redirect
+  [uri context]
+  ;; This may be too specific, may need to find a better way to differentiate between a "folder" and a file.
+  (if (not (= uri "/"))
+    (let [{:keys [asset-pipeline path-prefix]} context
+          asset-path (.substring uri 1)]
+      (if-let [asset (asset-pipeline asset-path context)]
+        (asset->redirect-response 302 path-prefix asset)))))
+
 (defn wrap-with-asset-redirector
   "In some cases, it is not possible for the client to know what the full asset URI will be, such as when the
   URL is composed on the client (in which case, the asset checksum will not be known). The redirector accepts
@@ -297,14 +306,12 @@
 
   This middleware is not applied by default."
   [handler]
-  (fn asset-redirector [{path    :uri
+  (fn asset-redirector [{uri     :uri
                          context :twixt
                          :as     request}]
-    (let [{:keys [asset-pipeline path-prefix]} context
-          asset-path (.substring path 1)]
-      (if-let [asset (asset-pipeline asset-path context)]
-        (asset->redirect-response 302 path-prefix asset)
-        (handler request)))))
+    (or
+      (handle-asset-redirect uri context)
+      (handler request))))
 
 (defn wrap-with-twixt
   "Invokes the twixt-handler and delegates to the provided handler if twixt-handler returns nil.
