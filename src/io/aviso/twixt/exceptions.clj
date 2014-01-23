@@ -218,7 +218,7 @@ h
 (defn wrap-with-twixt
   "The default way to setup Twixt with exception reporting. This wires up
   the following stack:
-  - twixt setup
+  - twixt setup (adds :twixt key to the request)
   - exception reporting
   - compression analyzer (does the client support GZip encoding?)
   - asset request handling
