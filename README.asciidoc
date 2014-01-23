@@ -117,8 +117,19 @@ can be generated. This is also good because any exceptions, such as compilation 
 than when the asset's resource is accessed by the client.
 
 When a client requests an asset that exists, but supplies an incorrect checksum,
-Twixt will respond with a 301 HTTP response,
+Twixt will respond with a 301 redirect HTTP response,
 directing the client to the correct resource (with the correct checksum).
+
+=== Direct asset URLs
+
+Sometimes it is not possible to determine the full asset URL ahead of time; a common example would be a client-side
+framework, such as http://angularjs.org[AngularJS] that wants to load HTML templates dynamically, at runtime.
+
+In this case, an optional Ring middleware can be used: +wrap-with-asset-redirector+.
+
+This middleware identifies requests that match existing assets and responds with a 302 redirect to the proper asset URL.
+For example, the asset stored as +META-INF/assets/blueant/cla.html+ can be accessed as +/blueant/cla.html+, and will be sent a redirect
+to +/assets/123abc/blueant/cla.html+.
 
 === Configuring Twixt
 
