@@ -116,12 +116,14 @@ The parameter to +defhtml+ is the Ring request map; Twixt has injected middlewar
 +get-asset-uri+ is defined in the +io.aviso.twixt+ namespace.
 
 Twixt must do all necessary compilations and other transformations, to arrive at final content for which a checksum
-can be generated. This is also good because any exceptions, such as compilation errors, will occur immediately, rather
-than when the asset's resource is accessed by the client.
+can be computed.
+This is also good because any exceptions, such as compilation errors, will occur immediately (when
+initially rendering the page), rather than when the asset's content is later retrieved by the client.
 
 When a client requests an asset that exists, but supplies an incorrect checksum,
 Twixt will respond with a 301 redirect HTTP response,
-directing the client to the correct resource (with the correct checksum).
+directing the client to the correct resource (with the correct checksum). 
+This is an extremely unlikely scenario that would involve a running client in a race with a redeployed application.
 
 === Direct asset URLs
 
