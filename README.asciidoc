@@ -101,7 +101,7 @@ through Twixt to get URIs that will work in the browser:
 [source,clojure]
 ----
 (defhtml index
-  [context]
+  [{context :twixt :as request}]
   (html
     (doctype :html5
     [:html
@@ -111,9 +111,9 @@ through Twixt to get URIs that will work in the browser:
         ...
 ----
 
-+get-asset-uri+ is defined in the +io.aviso.twixt+ namespace.
+The parameter to +defhtml+ is the Ring request map; Twixt has injected middleware that provides the +:twixt+ key.
 
-The +context+ parameter is a map that is provided in the Ring request map under key +:twixt+.
++get-asset-uri+ is defined in the +io.aviso.twixt+ namespace.
 
 Twixt must do all necessary compilations and other transformations, to arrive at final content for which a checksum
 can be generated. This is also good because any exceptions, such as compilation errors, will occur immediately, rather
