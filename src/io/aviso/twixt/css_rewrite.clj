@@ -28,11 +28,11 @@
   (let [url (nth match 2)
         parameters (nth match 3)]
     (str "url(\""
-      (if (re-matches complete-url-pattern url)
-        (str url parameters)
-        (str (rewrite-relative-url asset-path context url)
-             parameters))
-      "\")")))
+         (if (re-matches complete-url-pattern url)
+           (str url parameters)
+           (str (rewrite-relative-url asset-path context url)
+                parameters))
+         "\")")))
 
 (defn- rewrite-css
   [asset context]
@@ -46,7 +46,7 @@
 
 (defn wrap-with-css-rewriting
   [handler]
-  (fn css-rewriter [asset-path context]
+  (fn [asset-path context]
     (let [asset (handler asset-path context)]
       (if (= "text/css" (:content-type asset))
         (rewrite-css asset context)

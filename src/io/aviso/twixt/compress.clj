@@ -41,7 +41,7 @@
   "Asset pipeline middleware for detecting if asset content is compressable, and compressing
   the asset when necessary."
   [handler {compressable-types :compressable}]
-  (fn asset-compressor [asset-path options]
+  (fn [asset-path options]
     (let [asset (handler asset-path options)]
       (if (and asset
                (:gzip-enabled options)
@@ -51,7 +51,7 @@
 
 (defn- with-cache-delegation
   [handler cache]
-  (fn delegator [asset-path options]
+  (fn [asset-path options]
     (let [delegate (if (:gzip-enabled options) cache handler)]
       (delegate asset-path options))))
 
@@ -73,5 +73,5 @@
   "Ring middleware that analyzes the incoming request to determine if the
   client can accept compressed streams."
   [handler]
-  (fn compression-analyzer [request]
+  (fn [request]
     (handler (assoc-in request [:twixt :gzip-enabled] (is-gzip-supported? request)))))

@@ -203,7 +203,7 @@ h
   should wrap around other handlers (including the Twixt handler itself), but be nested within
   the twixt-setup handler (which provides the :twixt request map key)."
   [handler]
-  (fn exception-catching-handler [request]
+  (fn [request]
     (try
       (handler request)
       (catch Throwable t

@@ -60,7 +60,7 @@
   - :checksum Adler32 checksum of the content
   - :modified-at instant at which the file was last modified (not always trustworthy for files packaged in JARs)"
   [{:keys [root content-types]}]
-  (fn resolver [path context]
+  (fn [path context]
     (let [resource-path (str root path)]
       (if-let [url (io/resource resource-path)]
         (make-asset-map content-types path resource-path url)))))
@@ -130,7 +130,7 @@
 (defn wrap-with-tracing
   "The first middleware in the asset pipeline, used to trace the constuction of the asset."
   [handler]
-  (fn tracer [asset-path context]
+  (fn [asset-path context]
     (t/trace
       #(format "Accessing asset `%s'" asset-path)
       (handler asset-path context))))
@@ -208,7 +208,7 @@
                   ;; Pass down only what is needed to generate asset URIs, or to produce the HTML exception report.
                   (select-keys [:path-prefix :stack-frame-filter])
                   (assoc :asset-pipeline asset-pipeline))]
-    (fn twixt-setup [request]
+    (fn [request]
       (handler (assoc request :twixt twixt)))))
 
 (defn- parse-path
@@ -306,9 +306,9 @@
 
   This middleware is not applied by default."
   [handler]
-  (fn asset-redirector [{uri     :uri
-                         context :twixt
-                         :as     request}]
+  (fn [{uri     :uri
+        context :twixt
+        :as     request}]
     (or
       (handle-asset-redirect uri context)
       (handler request))))
@@ -320,6 +320,6 @@
 
   In most cases, you will want to use the wrap-with-twixt function in the exceptions namespace."
   [handler]
-  (fn twixt-wrapper [request]
+  (fn [request]
     (or (twixt-handler request)
         (handler request))))

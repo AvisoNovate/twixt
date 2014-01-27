@@ -19,7 +19,7 @@
    (wrap-with-sticky-cache handler (constantly true)))
   ([handler store-in-cache?]
    (let [cache (atom {})]
-     (fn sticky-cache [asset-path context]
+     (fn [asset-path context]
        (if-let [asset (get @cache asset-path)]
          asset
          (when-let [asset (handler asset-path context)]
@@ -61,7 +61,7 @@
    (wrap-with-invalidating-cache handler (constantly true)))
   ([handler store-in-cache?]
    (let [cache (atom {})]
-     (fn invalidating-cache [asset-path context]
+     (fn [asset-path context]
        (let [asset (get @cache asset-path)]
          (if (is-valid? asset)
            asset

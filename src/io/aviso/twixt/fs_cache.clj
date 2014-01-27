@@ -76,7 +76,7 @@
     (t/trace
       #(format "Deleteing directory `%s'" dir)
       (doseq [file (.listFiles dir)]
-             (io/delete-file file))
+        (io/delete-file file))
       (io/delete-file dir))))
 
 (defn wrap-with-filesystem-cache
@@ -94,7 +94,7 @@
   (let [cache-dir (io/file cache-dir-name "compiled")]
     (l/infof "Caching compiled assets to `%s'." cache-dir)
     (.mkdirs cache-dir)
-    (fn file-system-cache [asset-path context]
+    (fn [asset-path context]
       (let [asset-cache-dir (io/file cache-dir asset-path)
             cached-asset (read-cached-asset asset-cache-dir)]
         (if (is-valid? asset-resolver cached-asset)
