@@ -6,13 +6,14 @@
              [compress :as compress]
              [exceptions :as te]
              [jade :as jade]
-             [less :as less]]))
+             [less :as less]
+             [ring :as ring]]))
 
 (defn wrap-with-twixt
   "The default way to setup Twixt, with exception reporting. This (currently)
   enables support for CoffeeScript, Less, and Jade.
 
-  The provided handler is wrapped in the following stack:
+  The provided Ring request handler is wrapped in the following stack:
   - twixt setup (adds :twixt key to the request)
   - exception reporting
   - compression analyzer (does the client support GZip encoding?)
@@ -29,14 +30,14 @@
   ([handler development-mode]
    (wrap-with-twixt handler t/default-options development-mode))
   ([handler twixt-options development-mode]
-   (let [full-options (-> twixt-options
-                          cs/register-coffee-script
-                          (jade/register-jade development-mode)
-                          less/register-less)
-         asset-pipeline (t/default-asset-pipeline full-options development-mode)]
+   (let [twixt-options' (-> twixt-options
+                      cs/register-coffee-script
+                      (jade/register-jade development-mode)
+                      less/register-less)
+         asset-pipeline (t/default-asset-pipeline twixt-options' development-mode)]
      (->
        handler
-       t/wrap-with-twixt
+       ring/wrap-with-twixt
        te/wrap-with-exception-reporting
        compress/wrap-with-compression-analyzer
-       (t/wrap-with-twixt-setup full-options asset-pipeline)))))
+       (ring/wrap-with-twixt-setup twixt-options' asset-pipeline)))))

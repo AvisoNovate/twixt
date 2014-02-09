@@ -6,7 +6,8 @@
             [io.aviso.twixt
              [coffee-script :as cs]
              [jade :as jade]
-             [less :as less]]))
+             [less :as less]
+             [ring :as ring]]))
 
 (defn read-asset-content [asset]
   (->
@@ -131,7 +132,7 @@
                           (pipeline "invalid-less.less" context)))))
 
 (deftest asset-redirector
-  (let [wrapped (wrap-with-asset-redirector nil)
+  (let [wrapped (ring/wrap-with-asset-redirector nil)
         request {:uri "/sample.less" :twixt context}
         response (wrapped request)]
 
