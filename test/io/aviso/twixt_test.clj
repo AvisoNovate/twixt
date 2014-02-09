@@ -102,6 +102,12 @@
     (is (= (:content-type asset) "text/css"))
     (is (= (read-asset-content asset) expected)))
 
+
+  (testing "data-uri function, getData method"
+    (let [asset (pipeline "logo.less" context)
+          expected (read-resource-content "assets/compiled-logo.css")]
+      (is (= (read-asset-content asset) expected))))
+
   (testing "compilation failure"
 
     (is (thrown-with-msg? Exception

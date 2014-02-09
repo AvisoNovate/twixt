@@ -13,16 +13,18 @@
 
 (defn- rewrite-relative-url
   [asset-path context relative-url]
-  (t/trace
-    #(format "Rewriting relative URL `%s'" relative-url)
-    (let [referenced-path (utils/compute-relative-path asset-path relative-url)
-          asset ((:asset-pipeline context) referenced-path context)]
-      (if asset
-        (asset/asset->request-path (:path-prefix context) asset)
-        (throw (ex-info
-                 (format "Unable to locate asset `%s'." referenced-path)
-                 {:source-asset asset-path
-                  :relative-url relative-url}))))))
+  (if (.startsWith relative-url "data:")
+    relative-url
+    (t/trace
+      #(format "Rewriting relative URL `%s'" relative-url)
+      (let [referenced-path (utils/compute-relative-path asset-path relative-url)
+            asset ((:asset-pipeline context) referenced-path context)]
+        (if asset
+          (asset/asset->request-path (:path-prefix context) asset)
+          (throw (ex-info
+                   (format "Unable to locate asset `%s'." referenced-path)
+                   {:source-asset asset-path
+                    :relative-url relative-url})))))))
 
 (defn- css-url-match-handler [asset-path context match]
   (let [url (nth match 2)
