@@ -78,8 +78,8 @@ At its core, Twixt is a set of Ring middleware that maps certain URL patterns to
 and does some transformations along the way.
 
 Currently, the mapping is very straightforward: the path +/assets/123abc/css/style.less+ is mapped to resource
-+META-INF/assets/css/style.less+ and transformed from Less to CSS along the way.
-Embedded in the middle is the content checksum for the file (+123abc+).
++META-INF/assets/css/style.less+ which is read into memory and transformed from Less to CSS.
+Embedded in the middle of the URL is the content checksum for the file (+123abc+).
 
 In your application, assets will change during development, or between production deployments. The URIs provided to
 the client agent (the web browser) is a _resource_; resources are immutable.
@@ -93,7 +93,7 @@ This is great for performance.
 The checksum has a optional "z" prefix; this indicates a GZip compressed resource.
 Twixt detects if the client agent supports GZip compression (via the +Accept-Encodings+ header).
 In addition, compression is only applied to specific content types, such as "text/html" and "application/edn".
-Most binary formats, including fonts and image formats, are already compressed.
+Most binary formats, including fonts and images, are already compressed.
 
 Because of this, when referencing assets inside your templates, you must pass paths (relative to +META-INF/assets+)
 through Twixt to get URIs that will work in the browser:
@@ -149,9 +149,8 @@ The default options:
 (def default-options
   {:path-prefix        "/assets/"
    :root               "META-INF/assets/"
-   :content-types      (merge mime/default-mime-types {"coffee" "text/coffeescript"
-                                                       "less"   "text/less"
-                                                       "jade"   "text/jade"})
+   :content-types      mime/default-mime-types
+   :content-transformers {}
    :compressable       #{"text/*" "application/edn" "application/json"}
    :cache-folder       (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))
 ----
@@ -163,13 +162,14 @@ You can override +:path-prefix+ to change the root URL for assets; +/+ is an acc
 
 The +:content-types+ key maps file extensions to MIME types.
 
++:content-transformers:+ maps content types to a transformation function; The CoffeeScript, Jade, and Less compilers operate by adding entries to +:content-types+ and :content-transformers+.
+
 The +:compressable+ key identifies which content types are compressable; note the use of the +/*+ suffix to indicate
 that all text content types are compressable.
 
 File system caching is normally only enabled in development mode.
 
-Twixt always caches the content of files in memory, after any transforming operations (such as compiling CoffeeScript to
-JavaScript). 
+Twixt always caches the content of files in memory, after any transforming operations. 
 In development mode, checks are enabled to refresh the cache when underlying files are modified; 
 in production, no such checks occur as it is assumed that all such assets are stable
 (until the entire application is re-deployed).
@@ -184,8 +184,7 @@ The goal is to achieve at least parity with Apache Tapestry, plus some additiona
 * CSS Minification
 * Aggregated JavaScript stacks
 * Aggregated CSS stacks
-* RequireJS support / modules
-* Leverage core.async ?
+* RequireJS support and AMD modules
 * Break out the the Less, Jade, CoffeeScript, and exception reporting support into a-la-carte modules
 
 === Stability
