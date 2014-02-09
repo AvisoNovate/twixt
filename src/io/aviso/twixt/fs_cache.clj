@@ -11,9 +11,8 @@
      [pprint :as pp]
      [string :as s]]
     [clojure.tools.logging :as l]
-    [io.aviso.twixt
-     [tracker :as t]
-     [utils :as utils]]))
+    [io.aviso.tracker :as t]
+    [io.aviso.twixt.utils :as utils]))
 
 
 (defn- checksum-matches?
@@ -47,7 +46,7 @@
   asset-cache-dir is the directory containing the two files (asset.edn and content)."
   [^File asset-cache-dir]
   (if (.exists asset-cache-dir)
-    (t/trace
+    (t/track
       #(format "Reading from asset cache `%s'" asset-cache-dir)
       (some->
         (io/file asset-cache-dir asset-file-name)
@@ -55,7 +54,7 @@
         (assoc :content (io/file asset-cache-dir content-file-name))))))
 
 (defn- write-cached-asset [^File asset-cache-dir asset]
-  (t/trace
+  (t/track
     #(format "Writing to asset cache `%s'" asset-cache-dir)
     (.mkdirs asset-cache-dir)
     (let [content-file (io/file asset-cache-dir content-file-name)
@@ -73,7 +72,7 @@
 (defn- delete-dir-and-contents
   [^File dir]
   (when (.exists dir)
-    (t/trace
+    (t/track
       #(format "Deleteing directory `%s'" dir)
       (doseq [file (.listFiles dir)]
         (io/delete-file file))

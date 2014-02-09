@@ -3,9 +3,9 @@
   files will become invalid due to the inclusion of the individual asset's checksum in the
   asset request path."
   (:require [clojure.string :as str]
+            [io.aviso.tracker :as t]
             [io.aviso.twixt
              [asset :as asset]
-             [tracker :as t]
              [utils :as utils]]))
 
 (def ^:private url-pattern #"url\(\s*(['\"]?)(.+?)([\#\?].*?)?\1\s*\)")
@@ -15,7 +15,7 @@
   [asset-path context relative-url]
   (if (.startsWith relative-url "data:")
     relative-url
-    (t/trace
+    (t/track
       #(format "Rewriting relative URL `%s'" relative-url)
       (let [referenced-path (utils/compute-relative-path asset-path relative-url)
             asset ((:asset-pipeline context) referenced-path context)]
@@ -38,7 +38,7 @@
 
 (defn- rewrite-css
   [asset context]
-  (t/trace
+  (t/track
     #(format "Rewriting URLs in `%s'" (:asset-path asset))
     (let [content (utils/as-string (:content asset))
           content' (str/replace content

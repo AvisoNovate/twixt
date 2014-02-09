@@ -4,6 +4,7 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.tools.logging :as l]
+            [io.aviso.tracker :as t]
             [io.aviso.twixt
              [asset :as asset]
              [coffee-script :as cs]
@@ -13,8 +14,7 @@
              [jade :as jade]
              [less :as less]
              [memory-cache :as mem]
-             [utils :as utils]
-             [tracker :as t]]
+             [utils :as utils]]
             [ring.util
              [response :as r]
              [mime-type :as mime]]))
@@ -131,7 +131,7 @@
   "The first middleware in the asset pipeline, used to trace the constuction of the asset."
   [handler]
   (fn [asset-path context]
-    (t/trace
+    (t/track
       #(format "Accessing asset `%s'" asset-path)
       (handler asset-path context))))
 
@@ -274,7 +274,7 @@
   (let [path-prefix (-> request :twixt :path-prefix)
         path (:uri request)]
     (when (match? path-prefix path)
-      (t/trace
+      (t/track
         #(format "Handling asset request `%s'" path)
         (let [[requested-checksum compressed? asset-path] (parse-path path-prefix path)
               context (:twixt request)

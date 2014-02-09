@@ -2,9 +2,9 @@
   "Provides asset pipeline middleware to perform CoffeeScript to JavaScript compilation."
   (:import [org.mozilla.javascript ScriptableObject]
            [java.util Map])
-  (:require [io.aviso.twixt
+  (:require [io.aviso.tracker :as t]
+            [io.aviso.twixt
              [rhino :as rhino]
-             [tracker :as tracker]
              [utils :as utils]]))
 
 (defn- ^String extract-value [^Map object key]
@@ -12,9 +12,9 @@
 
 (defn- coffee-script-compiler [asset context]
   (let [name (:resource-path asset)]
-    (tracker/log-time
+    (t/timer
       #(format "Compiled `%s' to JavaScript in %.2f ms" name %)
-      (tracker/trace
+      (t/track
         #(format "Compiling `%s' to JavaScript" name)
         (let [^Map result
               (rhino/invoke-javascript ["META-INF/twixt/coffee-script-1.6.3.js" "META-INF/twixt/invoke-coffeescript.js"]

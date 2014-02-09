@@ -3,13 +3,13 @@
   ;; Liberally borrowing from Dieter!
   (:import [org.mozilla.javascript Context NativeObject])
   (:require [clojure.java.io :as io]
-            [io.aviso.twixt.tracker :as tracker]))
+            [io.aviso.tracker :as t]))
 
 
 (defn- load-script [context scope file]
   (with-open [content-reader (-> file io/resource io/reader)]
-    (tracker/trace
-      (str "Loading JavaScript from " file)
+    (t/track
+      #(str "Loading JavaScript from " file)
       (.evaluateReader context scope content-reader file 1 nil))))
 
 (defn- invoke-function [context scope function-name arguments]

@@ -1,11 +1,12 @@
 (ns user
-  (:use [io.aviso.twixt :only [get-asset-uris default-options]]
-        [io.aviso.twixt startup tracker]
+  (:use io.aviso.tracker
+        [io.aviso.twixt :only [get-asset-uris default-options]]
+        io.aviso.twixt.startup
         ring.adapter.jetty))
 
 (defn handler
   [request]
-  (trace "Invoking handler (that throws exceptions)"
+  (track "Invoking handler (that throws exceptions)"
          (if (= (:uri request) "/fail")
            ;; This will fail at some depth:
            (doall

@@ -2,10 +2,10 @@
   "Provides asset pipeline middleware for compiling Less source files to CSS."
   (:import [com.github.sommeri.less4j LessSource LessSource$FileNotFound Less4jException LessCompiler$Problem]
            [com.github.sommeri.less4j.core DefaultLessCompiler])
-  (:require [io.aviso.twixt
-             [tracker :as tracker]
-             [utils :as utils]]
-            [clojure.string :as str]))
+  (:require [clojure.java.io :as io]
+            [clojure.string :as str]
+            [io.aviso.tracker :as t]
+            [io.aviso.twixt.utils :as utils]))
 
 (def
   ^:private
@@ -68,9 +68,9 @@
 (defn compile-less
   [less-compiler handler asset context]
   (let [name (:resource-path asset)]
-    (tracker/log-time
+    (t/timer
       #(format "Compiled `%s' to CSS in %.2f ms" name %)
-      (tracker/trace
+      (t/track
         #(format "Compiling `%s' from Less to CSS" name)
         (binding [*dependencies* (atom {})]
           (try
