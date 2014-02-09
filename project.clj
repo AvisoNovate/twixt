@@ -7,7 +7,7 @@
                  [org.clojure/tools.logging "0.2.6"]
                  [ring/ring-core "1.2.1"]
                  [org.mozilla/rhino "1.7R4"]
-                 [com.github.sommeri/less4j "1.2.1"]
+                 [com.github.sommeri/less4j "1.2.4"]
                  [de.neuland-bfi/jade4j "0.4.0"]
                  [io.aviso/pretty "0.1.8"]
                  [hiccup "1.0.4"]]

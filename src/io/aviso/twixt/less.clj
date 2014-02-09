@@ -42,7 +42,9 @@
         asset
         :content
         utils/as-string
-        (.replace "\r\n" "\n")))))
+        (.replace "\r\n" "\n")))
+
+    (getBytes [] (:content asset))))
 
 (defn- problem-to-string [^LessCompiler$Problem problem]
   (let [source (-> problem .getSource .toString)
