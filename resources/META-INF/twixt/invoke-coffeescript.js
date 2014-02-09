@@ -6,9 +6,9 @@
 // Returns { output: <compiled JavaScript> } or { exception: <exception message> }
 function compileCoffeeScriptSource(input, filename) {
   try {
-    return { output: CoffeeScript.compile(input, {header: true}) };
+    return { output: CoffeeScript.compile(input, {header: true, filename: filename}) };
   }
   catch (err) {
-    return { exception: CoffeeScript.helpers.prettyErrorMessage(err, filename, input, false) };
+    return { exception: err.toString() };
   }
 }

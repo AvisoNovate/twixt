@@ -28,6 +28,11 @@
 
 (def context (assoc options :asset-pipeline pipeline))
 
+;; Note: updating the CoffeeScript compiler will often change the outputs, including checksums, not least because
+;; the compiler injects a comment with the compiler version.
+
+(def compiled-coffeescript-checksum "5ed71fb5")
+
 (deftest asset-pipeline
   (testing "asset not found"
     (is (nil? (pipeline "does/not/exist.gif" options))))
@@ -41,7 +46,7 @@
                        :asset-path "coffeescript-source.coffee"
                        :content-type "text/javascript"
                        :size 100
-                       :checksum "5f181fb6"))))
+                       :checksum compiled-coffeescript-checksum))))
 
 (deftest get-missing-asset-is-an-exception
   (is (thrown?
@@ -51,7 +56,7 @@
 (deftest find-an-asset
   (let [asset-uri (find-asset-uri context "coffeescript-source.coffee")]
     (is (not (nil? asset-uri)))
-    (is (= asset-uri "/assets/5f181fb6/coffeescript-source.coffee")))
+    (is (= asset-uri (str "/assets/" compiled-coffeescript-checksum "/coffeescript-source.coffee"))))
 
   (is (nil? (find-asset-uri context "does/not/exist.png"))))
 
@@ -66,7 +71,7 @@
 
   (let [asset (pipeline "coffeescript-source.coffee" context)]
     (is (= (-> asset :content-type) "text/javascript"))
-    (is (= (-> asset :checksum) "5f181fb6"))
+    (is (= (-> asset :checksum) compiled-coffeescript-checksum))
     (is (= (read-asset-content asset)
            (read-resource-content "assets/compiled-coffeescript-source.js"))))
 
@@ -82,7 +87,7 @@
   (testing "compilation failure"
 
     (is (thrown-with-msg? Exception
-                          #"META-INF/assets/invalid-coffeescript.coffee:6:1: error: unexpected INDENT"
+                          #"META-INF/assets/invalid-coffeescript.coffee:6:1: error: unexpected indentation"
                           (pipeline "invalid-coffeescript.coffee" context)))))
 
 (deftest jade-compilation

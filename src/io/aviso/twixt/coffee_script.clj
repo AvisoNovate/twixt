@@ -17,7 +17,7 @@
       (t/track
         #(format "Compiling `%s' to JavaScript" name)
         (let [^Map result
-              (rhino/invoke-javascript ["META-INF/twixt/coffee-script-1.6.3.js" "META-INF/twixt/invoke-coffeescript.js"]
+              (rhino/invoke-javascript ["META-INF/twixt/coffee-script.js" "META-INF/twixt/invoke-coffeescript.js"]
                                        "compileCoffeeScriptSource"
                                        (-> asset :content utils/as-string)
                                        name)]
