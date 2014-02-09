@@ -37,12 +37,12 @@
     (some #(.equalsIgnoreCase ^String % "gzip")
           (str/split encodings #","))))
 
-(defn wrap-with-compression
+(defn wrap-pipeline-with-compression
   "Asset pipeline middleware for detecting if asset content is compressable, and compressing
   the asset when necessary."
-  [handler {compressable-types :compressable}]
+  [asset-handler {compressable-types :compressable}]
   (fn [asset-path options]
-    (let [asset (handler asset-path options)]
+    (let [asset (asset-handler asset-path options)]
       (if (and asset
                (:gzip-enabled options)
                (is-compressable-mime-type? compressable-types (:content-type asset)))
@@ -50,24 +50,24 @@
         asset))))
 
 (defn- with-cache-delegation
-  [handler cache]
+  [asset-handler cache]
   (fn [asset-path options]
-    (let [delegate (if (:gzip-enabled options) cache handler)]
+    (let [delegate (if (:gzip-enabled options) cache asset-handler)]
       (delegate asset-path options))))
 
 (defn wrap-with-sticky-compressed-caching
   "Adds sticky in-memory caching of just compressed assets.
   The cache is only used when the :gzip-enabled options key is true."
-  [handler]
-  (with-cache-delegation handler
-                         (mem/wrap-with-sticky-cache handler :compressed)))
+  [asset-handler]
+  (with-cache-delegation asset-handler
+                         (mem/wrap-with-sticky-cache asset-handler :compressed)))
 
 (defn wrap-with-invalidating-compressed-caching
   "Adds an in-memory development cache that includes invalidation checks.
   The cache is only consulted if the :gzip-enabled options key is true."
-  [handler]
-  (with-cache-delegation handler
-                         (mem/wrap-with-invalidating-cache handler :compressed)))
+  [asset-handler]
+  (with-cache-delegation asset-handler
+                         (mem/wrap-with-invalidating-cache asset-handler :compressed)))
 
 (defn wrap-with-compression-analyzer
   "Ring middleware that analyzes the incoming request to determine if the

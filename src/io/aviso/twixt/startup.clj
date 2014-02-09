@@ -2,12 +2,17 @@
   "Breaks out the default logic for initializing Twixt's handlers and middleware."
   (:require [io.aviso.twixt :as t]
             [io.aviso.twixt
+             [coffee-script :as cs]
              [compress :as compress]
-             [exceptions :as te]]))
+             [exceptions :as te]
+             [jade :as jade]
+             [less :as less]]))
 
 (defn wrap-with-twixt
-  "The default way to setup Twixt, with exception reporting. This wires up
-  the following stack:
+  "The default way to setup Twixt, with exception reporting. This (currently)
+  enables support for CoffeeScript, Less, and Jade.
+
+  The provided handler is wrapped in the following stack:
   - twixt setup (adds :twixt key to the request)
   - exception reporting
   - compression analyzer (does the client support GZip encoding?)
@@ -24,10 +29,14 @@
   ([handler development-mode]
    (wrap-with-twixt handler t/default-options development-mode))
   ([handler twixt-options development-mode]
-   (let [asset-pipeline (t/default-asset-pipeline twixt-options development-mode)]
+   (let [full-options (-> twixt-options
+                          cs/register-coffee-script
+                          (jade/register-jade development-mode)
+                          less/register-less)
+         asset-pipeline (t/default-asset-pipeline full-options development-mode)]
      (->
        handler
        t/wrap-with-twixt
        te/wrap-with-exception-reporting
        compress/wrap-with-compression-analyzer
-       (t/wrap-with-twixt-setup twixt-options asset-pipeline)))))
+       (t/wrap-with-twixt-setup full-options asset-pipeline)))))

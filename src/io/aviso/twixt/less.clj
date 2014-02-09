@@ -25,14 +25,14 @@
     (asset-resolver context)))
 
 (defn- create-less-source
-  [handler asset context]
+  [asset-resolver asset context]
   ;; Whenever a LessSource is created, associated the asset as a dependency; this includes the primary source
   ;; and all imported sources.
   (swap! *dependencies* assoc (:resource-path asset) (select-keys asset [:checksum :modified-at :asset-path]))
   (proxy [LessSource] []
     (relativeSource [filename]
-      (if-let [rel (find-relative handler asset filename context)]
-        (create-less-source handler rel context)
+      (if-let [rel (find-relative asset-resolver asset filename context)]
+        (create-less-source asset-resolver rel context)
         (throw (new LessSource$FileNotFound))))
 
     (toString [] (:resource-path asset))
@@ -65,8 +65,8 @@
       (str/join "\n" problems))))
 
 
-(defn compile-less
-  [less-compiler handler asset context]
+(defn- compile-less
+  [less-compiler asset {:keys [asset-resolver] :as context}]
   (let [name (:resource-path asset)]
     (t/timer
       #(format "Compiled `%s' to CSS in %.2f ms" name %)
@@ -74,7 +74,7 @@
         #(format "Compiling `%s' from Less to CSS" name)
         (binding [*dependencies* (atom {})]
           (try
-            (let [root-source (create-less-source handler asset context)
+            (let [root-source (create-less-source asset-resolver asset context)
                   output (.compile less-compiler root-source)]
               (->
                 (utils/create-compiled-asset asset "text/css" (.getCss output))
@@ -83,6 +83,9 @@
             (catch Less4jException e
               (throw (RuntimeException. (format-less-exception e) e)))))))))
 
-(defn wrap-with-less-compilation
-  [handler]
-  (utils/content-type-matcher handler "text/less" (partial compile-less (DefaultLessCompiler.) handler)))
+(defn register-less
+  "Updates the Twixt options with support for compiling Less into CSS."
+  [options]
+  (-> options
+      (assoc-in [:content-types "less"] "text/less")
+      (assoc-in [:content-transformers "text/less"] (partial compile-less (DefaultLessCompiler.)))))

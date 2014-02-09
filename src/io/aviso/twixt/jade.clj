@@ -24,7 +24,9 @@
                              (or (.getMessage e) (-> e .getClass .getName)))
                      e))))))))
 
-(defn wrap-with-jade-compilation
-  [handler pretty-print]
-  (utils/content-type-matcher handler "text/jade" (partial jade-compiler pretty-print)))
-
+(defn register-jade
+  "Updates the Twixt options with support for compiling Jade into HTML."
+  [options pretty-print]
+  (-> options
+      (assoc-in [:content-types "jade"] "text/jade")
+      (assoc-in [:content-transformers "text/jade"] (partial jade-compiler pretty-print))))

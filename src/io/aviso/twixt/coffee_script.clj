@@ -28,7 +28,9 @@
 
           (utils/create-compiled-asset asset "text/javascript" (extract-value result "output")))))))
 
-(defn wrap-with-coffee-script-compilation
-  "Wraps an asset pipeline handler such that CoffeeScript source is compiled."
-  [handler]
-  (utils/content-type-matcher handler "text/coffeescript" coffee-script-compiler))
+(defn register-coffee-script
+  "Updates the Twixt options with support for compiling CoffeeScript into JavaScript."
+  [options]
+  (-> options
+      (assoc-in [:content-types "coffee"] "text/coffeescript")
+      (assoc-in [:content-transformers "text/coffeescript"] coffee-script-compiler)))

@@ -2,7 +2,11 @@
   (:use clojure.test
         io.aviso.twixt
         io.aviso.twixt.utils)
-  (:require [clojure.java.io :as io]))
+  (:require [clojure.java.io :as io]
+            [io.aviso.twixt
+             [coffee-script :as cs]
+             [jade :as jade]
+             [less :as less]]))
 
 (defn read-asset-content [asset]
   (->
@@ -22,7 +26,14 @@
 
 (def cache-folder (format "%s/%x" (System/getProperty "java.io.tmpdir") (System/nanoTime)))
 
-(def options (assoc default-options :cache-folder cache-folder))
+(def options
+  (->
+    default-options
+    (assoc  :cache-folder cache-folder)
+    ;; This is usually done by the startup namespace:
+    cs/register-coffee-script
+    (jade/register-jade true)
+    (less/register-less)))
 
 (def pipeline (default-asset-pipeline options true))
 

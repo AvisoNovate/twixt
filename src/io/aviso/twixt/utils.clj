@@ -53,16 +53,6 @@
                   :dependencies {(:resource-path source-asset)
                                   (select-keys source-asset [:checksum :modified-at :asset-path])})))
 
-(defn content-type-matcher
-  "Creates a handler for the asset pipeline that delegates to the provided handler, but passes
-  the obtained asset through a transformer function if it matches the expected content type."
-  [handler content-type transformer]
-  (fn [asset-path context]
-    (if-let [asset (handler asset-path context)]
-      (if (= content-type (:content-type asset))
-        (transformer asset context)
-        asset))))
-
 (defn read-content
   "Reads the content of a provided source (compatible with clojure.java.io/input-stream) as a byte array."
   [source]

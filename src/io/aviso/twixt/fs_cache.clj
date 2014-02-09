@@ -86,21 +86,20 @@
   Only assets that have truthy value for :compiled key will be file-system cached. This is set by the various
   compiler and transformers, such as the CoffeeScript to JavaScript transformer.
 
-  - handler - to be wrapped
-  - cache-dir-name - name of root folder to store cache in (from the Twixt options); the directory will be created as necessary
-  - asset-resolver - used to directly resolve an asset path to an asset, bypassing any compilation"
-  [handler cache-dir-name asset-resolver]
+  - asset-handler - to be wrapped
+  - cache-dir-name - name of root folder to store cache in (from the Twixt options); the directory will be created as necessary"
+  [asset-handler cache-dir-name]
   (let [cache-dir (io/file cache-dir-name "compiled")]
     (l/infof "Caching compiled assets to `%s'." cache-dir)
     (.mkdirs cache-dir)
-    (fn [asset-path context]
+    (fn [asset-path {:keys [asset-resolver] :as context}]
       (let [asset-cache-dir (io/file cache-dir asset-path)
             cached-asset (read-cached-asset asset-cache-dir)]
         (if (is-valid? asset-resolver cached-asset)
           cached-asset
           (do
             (delete-dir-and-contents asset-cache-dir)
-            (let [asset (handler asset-path context)]
+            (let [asset (asset-handler asset-path context)]
               (if (:compiled asset)
                 (write-cached-asset asset-cache-dir asset))
               asset)))))))
