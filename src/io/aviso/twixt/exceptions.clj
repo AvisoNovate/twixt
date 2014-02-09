@@ -194,7 +194,7 @@ h
         (to-markup (System/getProperties))
         ]
        (apply include-js (t/get-asset-uris twixt
-                                           "bootstrap3/js/jquery-2.0.3.js"
+                                           "bootstrap3/js/jquery.js"
                                            "twixt/exception.coffee"))
        ])))
 
