@@ -26,11 +26,12 @@ Twixt currently supports:
 
 Twixt is available under the terms of the Apache Sofware License 2.0.
 
-Twixt is downloadable from the https://clojars.org/io.aviso/twixt[Clojars Repository].
+Twixt is available from the Clojars artifact repository as `io.aviso:twixt`.
+Follow [these instructions](https://clojars.org/io.aviso/twixt) to configure the dependency in your build tool.
 
 http://howardlewisship.com/io.aviso/twixt/[API Documentation]
 
-=== Usage
+== Usage
 
 By default, Twixt serves resources located on the classpath, in the +META-INF/assets/+ folder.
 The contents of this folder is accessible via the URL +/assets/+.
@@ -72,7 +73,7 @@ asset pipeline; this allows you to add new features, or eliminate unwanted featu
 code to see how to configure Twixt options, assemble the Twixt asset pipeline, and finally, provide the necessary
 Ring middleware.
 
-=== A question of URLs
+== A question of URLs
 
 At its core, Twixt is a set of Ring middleware that maps certain URL patterns to matching files on the classpath,
 and does some transformations along the way.
@@ -125,7 +126,7 @@ Twixt will respond with a 301 redirect HTTP response,
 directing the client to the correct resource (with the correct checksum). 
 This is an extremely unlikely scenario that would involve a running client in a race with a redeployed application.
 
-=== Direct asset URLs
+== Direct asset URLs
 
 Sometimes it is not possible to determine the full asset URL ahead of time; a common example would be a client-side
 framework, such as http://angularjs.org[AngularJS] that wants to load HTML templates dynamically, at runtime.
@@ -136,7 +137,7 @@ This middleware identifies requests that match existing assets and responds with
 For example, the asset stored as +META-INF/assets/blueant/cla.html+ can be accessed as +/blueant/cla.html+, and will be sent a redirect
 to +/assets/123abc/blueant/cla.html+.
 
-=== Configuring Twixt
+== Configuring Twixt
 
 Twixt's configuration is used to determine where to locate asset resources on the classpath, 
 and what folder to serve them under. It also maps file name extensions to MIME types, and
@@ -167,14 +168,37 @@ The +:content-types+ key maps file extensions to MIME types.
 The +:compressable+ key identifies which content types are compressable; note the use of the +/*+ suffix to indicate
 that all text content types are compressable.
 
-File system caching is normally only enabled in development mode.
+== Caching
 
-Twixt always caches the content of files in memory, after any transforming operations. 
-In development mode, checks are enabled to refresh the cache when underlying files are modified; 
-in production, no such checks occur as it is assumed that all such assets are stable
-(until the entire application is re-deployed).
+It is desirable to have Twixt be able to serve-up files quickly, especially in production.
+However, that is counter-balanced by the need to ensure the *correct* content is served.
 
-=== Future Plans
+=== Development Mode
+
+Twixt will cache the results of compilations to the file system; the cache persists between executions.
+This means that on restart, the application will normally start right up, since the compiled files
+will be accessed from the file system cache.
+
+Whenever a source file changes, the corresponding compiled file is rebuilt (and then the file system cache is updated).
+This is great for development, as you will frequently be changing your source files.
+
+Twixt doesn't bother to cache the GZip compressed versions of assets to the file system; it is relatively quick
+to rebuild the compressed byte stream. There's an in-memory cache of the compressed assets, but each request includes
+checks to see if the compiled output itself must be updated.
+
+You may need to manually clear out the file system cache after upgrading to a new version of Twixt, or any other
+configuration change that can affect the compiled output.
+
+=== Production Mode
+
+In production mode, Twixt starts from a clean slate; it does not use a file system cache. However, all assets
+are cached in memory; Twixt also caches the compressed versions of assets, to save the cost of repeatedly compressing
+them on the fly.
+
+In production mode, there are no checks to see if the in-memory cache is valid; if a source file is changed, it is assumed
+that the entire application will be re-deployed and re-started.
+
+== Future Plans
 
 The goal is to achieve at least parity with Apache Tapestry, plus some additional features specific to Clojure. This means:
 
@@ -186,13 +210,14 @@ The goal is to achieve at least parity with Apache Tapestry, plus some additiona
 * Aggregated CSS stacks
 * RequireJS support and AMD modules
 * Break out the the Less, Jade, CoffeeScript, and exception reporting support into a-la-carte modules
+* "Warm up" the cache at startup (in production)
 
-=== Stability
+== Stability
 
 *Alpha*: Most features are not yet implemented and the code is likely to change in many ways going forward ... but still very
 useful!
 
-=== A note about feedback
+== A note about feedback
 
 http://tapestryjava.blogspot.com/2013/05/once-more-feedback-please.html[Feedback] is very important to me; I often find
 Clojure just a bit frustrating, because if there is an error in your code, it can be a bit of a challenge to track the problem
@@ -222,7 +247,7 @@ In other words, when there's a failure, Twixt can tell you the steps that led up
 Twixt's exception report captures all of this and presents it as readable HTML.
 The exception report page also does a decent job of de-mangling Java class names to Clojure namespaces and function names.
 
-=== How does Twixt differ from Dieter?
+== How does Twixt differ from Dieter?
 
 On the application I was building, I had a requirement to deploy as a JAR; Dieter expects all the assets to be on the filesystem; I spent some time attempting to hack the Dieter code to allow resources on the classpath as well.
 When that proved unsuccessful, I decided to build out something a bit more ambitious, that would support the features that have accumulated in Tapestry over the last few years.
