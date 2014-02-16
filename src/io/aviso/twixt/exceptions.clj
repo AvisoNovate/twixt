@@ -136,8 +136,8 @@ h
       (when-not (empty? properties)
         [:dl
          (apply concat
-                (for [k (-> properties keys sort)]
-                  [[:dt (-> k name h)] [:dd (-> (get properties k) to-markup)]]))
+                (for [[k v] (sort-by str properties)]
+                  [[:dt (-> k h)] [:dd (to-markup v)]]))
          ])]
      (if root
        (list
