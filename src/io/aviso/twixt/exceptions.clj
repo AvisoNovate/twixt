@@ -3,7 +3,7 @@
   (:use hiccup.core
         hiccup.page
         ring.util.response)
-  (:import [clojure.lang APersistentMap Sequential]
+  (:import [clojure.lang APersistentMap Sequential PersistentHashMap$ArrayNode$Seq PersistentHashMap]
            [java.util Map])
   (:require [clojure.string :as s]
             [io.aviso
@@ -43,8 +43,8 @@ h
         [:em "empty map"]
         [:dl
          (apply concat
-                (for [k (-> m keys sort)]
-                  [[:dt (to-markup k)] [:dd (-> (get m k) to-markup)]]
+                (for [[k v] (sort-by str m)]
+                  [[:dt (to-markup k)] [:dd (to-markup v)]]
                   ))
          ]))))
 
@@ -72,16 +72,8 @@ h
 (extend-type Map
   MarkupGeneration
   (to-markup
-    [m]
-    (html
-      (if (.isEmpty m)
-        [:em "empty map"]
-        [:dl
-         (apply concat
-                (for [k (-> m .keySet sort)]
-                  [[:dt (to-markup k)] [:dd (-> (.get m k) to-markup)]]
-                  ))
-         ]))))
+    [^Map m]
+    (to-markup (PersistentHashMap/create m))))
 
 (defn- element->clojure-name [element]
   (let [names (:names element)]
