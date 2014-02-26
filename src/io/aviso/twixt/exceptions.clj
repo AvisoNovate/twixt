@@ -4,11 +4,14 @@
         hiccup.page
         ring.util.response)
   (:import [clojure.lang APersistentMap Sequential PersistentHashMap$ArrayNode$Seq PersistentHashMap]
-           [java.util Map])
+           [java.util Map]
+           (java.util.regex Pattern))
   (:require [clojure.string :as s]
             [io.aviso
              [exception :as exception]
              [twixt :as t]]))
+
+(def ^:private path-separator (System/getProperty "path.separator"))
 
 (defn- exception-message [exception]
   (or (.getMessage exception)
@@ -154,6 +157,29 @@ h
     (map (partial single-exception->markup twixt))
     (apply str)))
 
+(defn- is-path?
+  [^String k ^String v]
+  (and (.endsWith k ".path")
+       (.contains v path-separator)))
+
+(defn- split-string [^String s ^String sep]
+  (s/split s (-> sep Pattern/quote Pattern/compile)))
+
+(defn- path->markup [^String path]
+  `[:ul
+    ~@(for [v (.split path path-separator)]
+        [:li v])])
+
+(defn- sysproperties->markup
+  []
+  (let [props (System/getProperties)]
+    [:dl
+     (apply concat
+            (for [k (-> props keys sort)
+                  :let [v (.get props k)]]
+              [[:dt k]
+               [:dd (if (is-path? k v) (path->markup v) v)]]))]))
+
 (defn build-report
   "Builds an HTML exception report (as a string).
   
@@ -183,7 +209,7 @@ h
         (to-markup request)
 
         [:h3 "System Properties"]
-        (to-markup (System/getProperties))
+        (sysproperties->markup)
         ]
        (apply include-js (t/get-asset-uris twixt
                                            "bootstrap3/js/jquery.js"
