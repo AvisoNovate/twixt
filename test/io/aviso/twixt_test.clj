@@ -30,7 +30,7 @@
 (def options
   (->
     default-options
-    (assoc  :cache-folder cache-folder)
+    (assoc :cache-folder cache-folder)
     ;; This is usually done by the startup namespace:
     cs/register-coffee-script
     (jade/register-jade true)
@@ -133,11 +133,21 @@
                           (pipeline "invalid-less.less" context)))))
 
 (deftest asset-redirector
-  (let [wrapped (ring/wrap-with-asset-redirector nil)
+  (let [wrapped (ring/wrap-with-asset-redirector (constantly nil))
         request {:uri "/sample.less" :twixt context}
         response (wrapped request)]
 
     (is (= (:status response) 302))
     (is (= (:body response) ""))
     ;; Don't want false failures if the checksum doesn't match (perhaps due to platform issues).
-    (is (re-matches #"/assets/.*/sample.less" (get-in response [:headers "Location"])))))
+    (is (re-matches #"/assets/.*/sample.less" (get-in response [:headers "Location"])))
+
+    ;; Ensure that folder paths are not matched.
+
+    (are [path]
+      (-> {:uri path :twixt context} wrapped nil?)
+
+      "/"
+      "/a-folder"
+      "/another/folder/"
+      )))

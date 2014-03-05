@@ -86,13 +86,21 @@
                                  requested-checksum
                                  (asset-pipeline asset-path context')))))))
 
+;;; It's really difficult to start with a path, convert it to a resource, and figure out if it is a folder
+;;; or a file on the classpath. Instead, we just assume that anything that doesn't look like a path that
+;;; ends with a file extension can be ignored.
+
 (defn- handle-asset-redirect
   [uri context]
   ;; This may be too specific, may need to find a better way to differentiate between a "folder" and a file.
-  (if (not (= uri "/"))
+  ;; This just checks to see if the path ends with something that looks like an extension. We just have to
+  ;; assume that none of the folders on classpath look like that! This is also a bit restrictive; it assumes
+  ;; the extension consists of word characters, or the dash.
+  (if (re-find #"\.[\w-]+$" uri)
     (let [{:keys [asset-pipeline path-prefix]} context
           asset-path (.substring uri 1)]
       (if-let [asset (asset-pipeline asset-path context)]
+
         (asset->redirect-response 302 path-prefix asset)))))
 
 (defn wrap-with-asset-redirector
