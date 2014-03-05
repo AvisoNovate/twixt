@@ -11,8 +11,7 @@
      [pprint :as pp]
      [string :as s]]
     [clojure.tools.logging :as l]
-    [io.aviso.tracker :as t]
-    [io.aviso.twixt.utils :as utils]))
+    [io.aviso.tracker :as t]))
 
 
 (defn- checksum-matches?
@@ -73,9 +72,11 @@
   [^File dir]
   (when (.exists dir)
     (t/track
-      #(format "Deleteing directory `%s'" dir)
+      #(format "Deleting directory `%s'" dir)
       (doseq [file (.listFiles dir)]
-        (io/delete-file file))
+        (t/track
+          #(format "Deleting file `%s'" file)
+          (io/delete-file file)))
       (io/delete-file dir))))
 
 (defn wrap-with-filesystem-cache
