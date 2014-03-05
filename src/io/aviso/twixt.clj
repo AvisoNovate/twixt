@@ -98,7 +98,8 @@
 (defn- get-single-asset
   [asset-pipeline asset-path context]
   (or (asset-pipeline asset-path context)
-      (throw (IllegalArgumentException. (format "Asset path `%s' does not map to an available resource.")))))
+      (throw (IllegalArgumentException. (format "Asset path `%s' does not map to an available resource."
+                                                asset-path)))))
 
 (defn get-asset-uris
   "Converts a number of asset paths into client URIs. Each path must exist.

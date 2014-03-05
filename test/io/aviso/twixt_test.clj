@@ -61,8 +61,9 @@
                        :checksum compiled-coffeescript-checksum))))
 
 (deftest get-missing-asset-is-an-exception
-  (is (thrown?
-        Exception
+  (is (thrown-with-msg?
+        IllegalArgumentException
+        #"Asset path `does/not/exist\.png' does not map to an available resource\."
         (get-asset-uri context "does/not/exist.png"))))
 
 (deftest find-an-asset
