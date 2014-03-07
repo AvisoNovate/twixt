@@ -103,3 +103,9 @@
 (defn modified-at
   [url]
   (some-> url as-file .lastModified Date.))
+
+(defn nil-check
+  [value message]
+  (or
+    value
+    (throw (NullPointerException. message))))

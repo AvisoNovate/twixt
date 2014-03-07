@@ -10,6 +10,7 @@
              [ring :as ring]]))
 
 (defn read-asset-content [asset]
+  (asset asset "Can't read content from nil asset.")
   (->
     asset
     :content
@@ -108,8 +109,16 @@
   (let [asset (pipeline "jade-source.jade" context)]
     (is (= (:content-type asset) "text/html"))
     (is (= (read-asset-content asset)
-           (read-resource-content "assets/compiled-jade-source.html")))))
+           (read-resource-content "assets/compiled-jade-source.html"))))
 
+  )
+
+(deftest jade-includes
+
+  (let [asset (pipeline "sub/jade-include.jade" context)]
+
+    (is (= (read-asset-content asset)
+           (read-resource-content "assets/compiled-jade-include.html")))))
 
 
 (deftest less-compilation
