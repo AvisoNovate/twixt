@@ -4,6 +4,7 @@
   :license {:name "Apache Sofware Licencse 2.0"
             :url  "http://www.apache.org/licenses/LICENSE-2.0.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]
+                 [io.aviso/pretty "0.1.10-SNAPSHOT"]
                  [io.aviso/tracker "0.1.0"]
                  [ring/ring-core "1.2.1"]
                  [org.mozilla/rhino "1.7R4"]
