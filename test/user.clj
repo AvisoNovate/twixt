@@ -1,8 +1,12 @@
 (ns user
-  (:use io.aviso.tracker
-        [io.aviso.twixt :only [get-asset-uris default-options]]
-        io.aviso.twixt.startup
-        ring.adapter.jetty))
+  (:use
+    io.aviso.tracker
+    io.aviso.repl
+    [io.aviso.twixt :only [get-asset-uris default-options]]
+    io.aviso.twixt.startup
+    ring.adapter.jetty))
+
+(install-pretty-exceptions)
 
 (defn handler
   [request]
