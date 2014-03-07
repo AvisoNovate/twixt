@@ -27,7 +27,7 @@ Twixt currently supports:
 Twixt is available under the terms of the Apache Sofware License 2.0.
 
 Twixt is available from the Clojars artifact repository as `io.aviso:twixt`.
-Follow [these instructions](https://clojars.org/io.aviso/twixt) to configure the dependency in your build tool.
+Follow https://clojars.org/io.aviso/twixt[these instructions] to configure the dependency in your build tool.
 
 http://howardlewisship.com/io.aviso/twixt/[API Documentation]
 
@@ -40,7 +40,7 @@ By design, assets are segregated from the rest of your code.
 This prevents a malicious client from directly accessing your code or configuration files.
 Anything outside the +META-INF/assets/+ folder is inaccessible via Twixt.
 
-Twixt maps file extensions to MIME types; it then will transform certain MIME types; for example +.coffee+ files are compiled to JavaScript.
+Twixt maps file extensions to MIME types; it will then transform certain MIME types; for example +.coffee+ files are compiled to JavaScript.
 
 [source,clojure]
 ----
@@ -118,8 +118,8 @@ The parameter to +defhtml+ is the Ring request map; Twixt has injected middlewar
 
 Twixt must do all necessary compilations and other transformations, to arrive at final content for which a checksum
 can be computed.
-This is also good because any exceptions, such as compilation errors, will occur immediately (when
-initially rendering the page), rather than when the asset's content is later retrieved by the client.
+Although this can slow the initial HTML render, it is also good because any exceptions, such as compilation errors, will occur immediately,
+rather than when the asset's content is later retrieved by the client.
 
 When a client requests an asset that exists, but supplies an incorrect checksum,
 Twixt will respond with a 301 redirect HTTP response,
@@ -129,9 +129,10 @@ This is an extremely unlikely scenario that would involve a running client in a 
 == Direct asset URLs
 
 Sometimes it is not possible to determine the full asset URL ahead of time; a common example would be a client-side
-framework, such as http://angularjs.org[AngularJS] that wants to load HTML templates dynamically, at runtime.
+framework, such as http://angularjs.org[AngularJS] that wants to load HTML templates dynamically, at runtime.  It will know
+the path to the asset, but will not know the checksum.
 
-In this case, an optional Ring middleware can be used: +wrap-with-asset-redirector+.
+In this case, an *optional* Ring middleware can be used: +wrap-with-asset-redirector+.
 
 This middleware identifies requests that match existing assets and responds with a 302 redirect to the proper asset URL.
 For example, the asset stored as +META-INF/assets/blueant/cla.html+ can be accessed as +/blueant/cla.html+, and will be sent a redirect
@@ -214,7 +215,7 @@ The goal is to achieve at least parity with Apache Tapestry, plus some additiona
 
 == Stability
 
-*Alpha*: Most features are not yet implemented and the code is likely to change in many ways going forward ... but still very
+*Alpha*: Many features are not yet implemented and the code is likely to change in many ways going forward ... but still very
 useful!
 
 == A note about feedback
