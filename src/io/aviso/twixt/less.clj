@@ -4,15 +4,9 @@
            [com.github.sommeri.less4j.core DefaultLessCompiler])
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
+            [io.aviso.twixt.asset :as asset]
             [io.aviso.tracker :as t]
             [io.aviso.twixt.utils :as utils]))
-
-(def
-  ^:private
-  ^:dynamic
-  *dependencies*
-  "A per-thread scratch pad to assemble dependencies."
-  nil)
 
 ;; Putting this logic inside the (proxy) call causes some really awful Clojure compiler problems.
 ;; This shim seems to defuse that.
@@ -25,14 +19,14 @@
     (asset-resolver context)))
 
 (defn- create-less-source
-  [asset-resolver asset context]
+  [asset-resolver dependencies asset context]
   ;; Whenever a LessSource is created, associated the asset as a dependency; this includes the primary source
   ;; and all imported sources.
-  (swap! *dependencies* assoc (:resource-path asset) (select-keys asset [:checksum :modified-at :asset-path]))
+  (swap! dependencies assoc (:resource-path asset) (asset/dependencies asset))
   (proxy [LessSource] []
     (relativeSource [filename]
       (if-let [rel (find-relative asset-resolver asset filename context)]
-        (create-less-source asset-resolver rel context)
+        (create-less-source asset-resolver dependencies rel context)
         (throw (new LessSource$FileNotFound))))
 
     (toString [] (:resource-path asset))
@@ -72,16 +66,13 @@
       #(format "Compiled `%s' to CSS in %.2f ms" name %)
       (t/track
         #(format "Compiling `%s' from Less to CSS" name)
-        (binding [*dependencies* (atom {})]
-          (try
-            (let [root-source (create-less-source asset-resolver asset context)
-                  output (.compile less-compiler root-source)]
-              (->
-                (utils/create-compiled-asset asset "text/css" (.getCss output))
-                ;; But override the single dependency with the collected set of dependencies.
-                (assoc :dependencies @*dependencies*)))
-            (catch Less4jException e
-              (throw (RuntimeException. (format-less-exception e) e)))))))))
+        (try
+          (let [dependencies (atom {})
+                root-source (create-less-source asset-resolver dependencies asset context)
+                output (.compile less-compiler root-source)]
+            (utils/create-compiled-asset asset "text/css" (.getCss output) @dependencies))
+          (catch Less4jException e
+            (throw (RuntimeException. (format-less-exception e) e))))))))
 
 (defn register-less
   "Updates the Twixt options with support for compiling Less into CSS."

@@ -1,12 +1,15 @@
 (ns io.aviso.twixt.utils
   "Some re-usable utilities. This namespace should be considered unsupported (subject to change at any time)."
-  (:import [java.io CharArrayWriter ByteArrayOutputStream File]
-           [java.nio.charset Charset]
-           [java.util.zip Adler32]
-           [java.net URISyntaxException URL URI]
-           [java.util Date])
-  (:require [clojure.java.io :as io]
-            [clojure.string :as str]))
+  (:import
+    [java.io CharArrayWriter ByteArrayOutputStream File]
+    [java.nio.charset Charset]
+    [java.util.zip Adler32]
+    [java.net URISyntaxException URL URI]
+    [java.util Date])
+  (:require
+    [clojure.java.io :as io]
+    [io.aviso.twixt.asset :as asset]
+    [clojure.string :as str]))
 
 (defn as-string
   "Converts a source (compatible with clojure.java.io/IOFactory) into a String using the provided encoding.
@@ -43,15 +46,16 @@
     :checksum (compute-checksum content-bytes)))
 
 (defn create-compiled-asset
-  "Used to transform an asset map after it has been compiled from one form to another."
-  [source-asset content-type ^String content]
-  (->
-    source-asset
-    (replace-asset-content content-type (as-bytes content))
-    (assoc
-        :compiled true
-                  :dependencies {(:resource-path source-asset)
-                                  (select-keys source-asset [:checksum :modified-at :asset-path])})))
+  "Used to transform an asset map after it has been compiled from one form to another. Dependencies
+  is a map of resource path to source asset details, used to check cache validity. The source asset's
+  dependencies are merged into any provided dependencies to form the :dependencies entry of the asset."
+  [{:keys [resource-path] :as source-asset} content-type ^String content dependencies]
+  (let [source-dependencies (asset/dependencies source-asset)
+        all-dependencies (merge {resource-path source-dependencies} dependencies)]
+    (->
+      source-asset
+      (replace-asset-content content-type (as-bytes content))
+      (assoc :compiled true :dependencies all-dependencies))))
 
 (defn read-content
   "Reads the content of a provided source (compatible with clojure.java.io/input-stream) as a byte array."

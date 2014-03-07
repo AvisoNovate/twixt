@@ -5,9 +5,11 @@
            [de.neuland.jade4j.template TemplateLoader])
   (:require [clojure.java.io :as io]
             [io.aviso.tracker :as t]
-            [io.aviso.twixt.utils :as utils]))
+            [io.aviso.twixt
+             [asset :as asset]
+             [utils :as utils]]))
 
-(defn- create-template-loader [root-asset asset-resolver]
+(defn- create-template-loader [root-asset asset-resolver dependencies]
   (reify TemplateLoader
     ;; getLastModified is only needed for caching, and we disable Jade's caching
     ;; in favor of Twixt's.
@@ -17,20 +19,20 @@
         (-> root-asset :content io/reader)
         (t/track
           #(format "Including Jade source from asset `%s'." name)
-          (-> name
-              ;; The asset resolver does nothing with the options passed to it
-              (asset-resolver nil)
-              (utils/nil-check "Included asset does not exist.")
-              :content
-              ;; We have to trust that Jade will close the reader.
-              io/reader))))))
+          (let [included (asset-resolver name nil)]
+            (utils/nil-check included "Included asset does not exist.")
+            (swap! dependencies assoc (:resource-path included) (asset/dependencies included))
+            (-> included
+                :content
+                ;; We have to trust that Jade will close the reader.
+                io/reader)))))))
 
 (defn- create-configuration
-  [pretty-print asset asset-resolver]
+  [pretty-print asset asset-resolver dependencies]
   (doto (JadeConfiguration.)
     (.setPrettyPrint pretty-print)
     (.setCaching false)
-    (.setTemplateLoader (create-template-loader asset asset-resolver))))
+    (.setTemplateLoader (create-template-loader asset asset-resolver dependencies))))
 
 (defn- jade-compiler [pretty-print asset {:keys [asset-resolver] :as context}]
   (let [name (:resource-path asset)]
@@ -39,10 +41,13 @@
       (t/track
         #(format "Compiling `%s' from Jade to HTML" name)
         (try
-          (let [configuration (create-configuration pretty-print asset asset-resolver)
+          ;; Seed the dependencies with the Jade source file. Any included
+          ;; sources will be added to dependencies.
+          (let [dependencies (atom {name (asset/dependencies asset)})
+                configuration (create-configuration pretty-print asset asset-resolver dependencies)
                 template (.getTemplate configuration (:asset-path asset))
                 compiled-output (.renderTemplate configuration template {})]
-            (utils/create-compiled-asset asset "text/html" compiled-output))
+            (utils/create-compiled-asset asset "text/html" compiled-output @dependencies))
           (catch JadeException e
             (throw (RuntimeException.
                      (format "Jade Compilation exception on line %d: %s"

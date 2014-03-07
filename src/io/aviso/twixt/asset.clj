@@ -12,3 +12,7 @@
        "/"
        (:asset-path asset)))
 
+(defn dependencies
+  "Extracts from the asset the keys needed to track dependencies (used by caching logic)."
+  [asset]
+  (select-keys asset [:checksum :modified-at :asset-path]))

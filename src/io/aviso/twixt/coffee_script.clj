@@ -26,7 +26,7 @@
           (when (.containsKey result "exception")
             (throw (RuntimeException. (extract-value result "exception"))))
 
-          (utils/create-compiled-asset asset "text/javascript" (extract-value result "output")))))))
+          (utils/create-compiled-asset asset "text/javascript" (extract-value result "output") nil))))))
 
 (defn register-coffee-script
   "Updates the Twixt options with support for compiling CoffeeScript into JavaScript."

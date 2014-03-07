@@ -1,13 +1,15 @@
 (ns io.aviso.twixt-test
-  (:use clojure.test
-        io.aviso.twixt
-        io.aviso.twixt.utils)
-  (:require [clojure.java.io :as io]
-            [io.aviso.twixt
-             [coffee-script :as cs]
-             [jade :as jade]
-             [less :as less]
-             [ring :as ring]]))
+  (:use
+    clojure.test
+    io.aviso.twixt
+    io.aviso.twixt.utils)
+  (:require
+    [clojure.java.io :as io]
+    [io.aviso.twixt
+     [coffee-script :as cs]
+     [jade :as jade]
+     [less :as less]
+     [ring :as ring]]))
 
 (defn read-asset-content [asset]
   (asset asset "Can't read content from nil asset.")
@@ -25,6 +27,10 @@
     read-content
     String.
     .trim))
+
+(defn- sorted-dependencies
+  [asset]
+  (->> asset :dependencies vals (map :asset-path) sort))
 
 (def cache-folder (format "%s/%x" (System/getProperty "java.io.tmpdir") (System/nanoTime)))
 
@@ -87,7 +93,9 @@
     (is (= (-> asset :content-type) "text/javascript"))
     (is (= (-> asset :checksum) compiled-coffeescript-checksum))
     (is (= (read-asset-content asset)
-           (read-resource-content "assets/compiled-coffeescript-source.js"))))
+           (read-resource-content "assets/compiled-coffeescript-source.js")))
+    (is (:compiled asset))
+    (is (= (sorted-dependencies asset) ["coffeescript-source.coffee"])))
 
   #_ (deftest compiled-results-are-cached
     (let [v1 (get-streamable twixt "coffeescript-source.coffee")
@@ -107,18 +115,22 @@
 (deftest jade-compilation
 
   (let [asset (pipeline "jade-source.jade" context)]
+    (is (:compiled asset))
     (is (= (:content-type asset) "text/html"))
     (is (= (read-asset-content asset)
-           (read-resource-content "assets/compiled-jade-source.html"))))
-
-  )
+           (read-resource-content "assets/compiled-jade-source.html")))))
 
 (deftest jade-includes
 
-  (let [asset (pipeline "sub/jade-include.jade" context)]
+  (let [asset (pipeline "sub/jade-include.jade" context)
+        dependencies (:dependencies asset)]
 
     (is (= (read-asset-content asset)
-           (read-resource-content "assets/compiled-jade-include.html")))))
+           (read-resource-content "assets/compiled-jade-include.html")))
+
+    ;; Ensure that dependencies were found for the source and all includes
+    (= ["common.jade" "sub/jade-include.jade" "sub/samedir.jade"]
+       (sorted-dependencies asset))))
 
 
 (deftest less-compilation
@@ -127,8 +139,10 @@
         expected (read-resource-content "assets/compiled-sample.css")]
 
     (is (= (:content-type asset) "text/css"))
-    (is (= (read-asset-content asset) expected)))
+    (is (= (read-asset-content asset) expected))
 
+    (is (:compiled asset))
+    (is (= (sorted-dependencies asset) ["colors.less" "sample.less"])))
 
   (testing "data-uri function, getData method"
     (let [asset (pipeline "logo.less" context)
