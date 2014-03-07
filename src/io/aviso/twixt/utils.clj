@@ -56,6 +56,7 @@
 (defn read-content
   "Reads the content of a provided source (compatible with clojure.java.io/input-stream) as a byte array."
   [source]
+  (assert source "Unable to read content from nil.")
   (with-open [bos (ByteArrayOutputStream.)
               in (io/input-stream source)]
     (io/copy in bos)
