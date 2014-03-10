@@ -45,17 +45,26 @@
     :size (alength content-bytes)
     :checksum (compute-checksum content-bytes)))
 
+(defn extract-dependency
+  "Extracts from the asset the keys needed to track dependencies (used by caching logic)."
+  [asset]
+  (select-keys asset [:checksum :modified-at :asset-path]))
+
+(defn add-asset-as-dependency
+  "Adds the asset to a dependency map."
+  [dependencies asset]
+  (assoc dependencies (:resource-path asset) (extract-dependency asset)))
+
 (defn create-compiled-asset
   "Used to transform an asset map after it has been compiled from one form to another. Dependencies
   is a map of resource path to source asset details, used to check cache validity. The source asset's
   dependencies are merged into any provided dependencies to form the :dependencies entry of the asset."
-  [{:keys [resource-path] :as source-asset} content-type ^String content dependencies]
-  (let [source-dependencies (asset/dependencies source-asset)
-        all-dependencies (merge {resource-path source-dependencies} dependencies)]
+  [source-asset content-type ^String content dependencies]
+  (let [merged-dependencies (add-asset-as-dependency dependencies source-asset)]
     (->
       source-asset
       (replace-asset-content content-type (as-bytes content))
-      (assoc :compiled true :dependencies all-dependencies))))
+      (assoc :compiled true :dependencies merged-dependencies))))
 
 (defn read-content
   "Reads the content of a provided source (compatible with clojure.java.io/input-stream) as a byte array."
@@ -113,3 +122,4 @@
   (or
     value
     (throw (NullPointerException. message))))
+

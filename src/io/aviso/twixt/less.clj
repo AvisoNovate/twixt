@@ -4,7 +4,6 @@
            [com.github.sommeri.less4j.core DefaultLessCompiler])
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
-            [io.aviso.twixt.asset :as asset]
             [io.aviso.tracker :as t]
             [io.aviso.twixt.utils :as utils]))
 
@@ -22,7 +21,7 @@
   [asset-resolver dependencies asset context]
   ;; Whenever a LessSource is created, associated the asset as a dependency; this includes the primary source
   ;; and all imported sources.
-  (swap! dependencies assoc (:resource-path asset) (asset/dependencies asset))
+  (swap! dependencies utils/add-asset-as-dependency asset)
   (proxy [LessSource] []
     (relativeSource [filename]
       (if-let [rel (find-relative asset-resolver asset filename context)]

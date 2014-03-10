@@ -5,9 +5,7 @@
            [de.neuland.jade4j.template TemplateLoader])
   (:require [clojure.java.io :as io]
             [io.aviso.tracker :as t]
-            [io.aviso.twixt
-             [asset :as asset]
-             [utils :as utils]]))
+            [io.aviso.twixt.utils :as utils]))
 
 (defn- create-template-loader [root-asset asset-resolver dependencies]
   (reify TemplateLoader
@@ -21,7 +19,7 @@
           #(format "Including Jade source from asset `%s'." name)
           (let [included (asset-resolver name nil)]
             (utils/nil-check included "Included asset does not exist.")
-            (swap! dependencies assoc (:resource-path included) (asset/dependencies included))
+            (swap! dependencies utils/add-asset-as-dependency included)
             (-> included
                 :content
                 ;; We have to trust that Jade will close the reader.
@@ -43,7 +41,7 @@
         (try
           ;; Seed the dependencies with the Jade source file. Any included
           ;; sources will be added to dependencies.
-          (let [dependencies (atom {name (asset/dependencies asset)})
+          (let [dependencies (atom {name (utils/extract-dependency asset)})
                 configuration (create-configuration pretty-print asset asset-resolver dependencies)
                 template (.getTemplate configuration (:asset-path asset))
                 compiled-output (.renderTemplate configuration template {})]
