@@ -45,11 +45,10 @@
 (defn make-asset-resolver
   "Factory for the resolver function which converts a path into an asset map.
 
-  The factory function is passed the twixt options, which defines the root resource folder
-  for assets as well as content types.
+  The factory function is passed the twixt options, which defines content types mappings.
 
   The resolver function is passed an asset path and a pipeline context (which is ignored);
-  The asset path is which is converted to a classpath resource
+  The asset path is converted to a classpath resource
   via the configuration; if the resource exists, it is converted to an asset map. If the asset
   does not exist, the resolver returns nil.
 
@@ -60,9 +59,9 @@
   - :size size of the asset in bytes
   - :checksum Adler32 checksum of the content
   - :modified-at instant at which the file was last modified (not always trustworthy for files packaged in JARs)"
-  [{:keys [root content-types]}]
+  [{:keys [content-types]}]
   (fn [asset-path context]
-    (let [resource-path (str root asset-path)]
+    (let [resource-path (str "META-INF/assets/" asset-path)]
       (if-let [url (io/resource resource-path)]
         (make-asset-map content-types asset-path resource-path url)))))
 
@@ -85,7 +84,6 @@
   "Provides the default options when using Twixt; these rarely need to be changed except, perhaps, for :path-prefix
   or :cache-folder, or by plugins."
   {:path-prefix          "/assets/"
-   :root                 "META-INF/assets/"
    :content-types        mime/default-mime-types
    ;; Content transformer, e.g., compilers (such as CoffeeScript to JavaScript). Key is a content type,
    ;; value is a function passed an asset and Twixt context, and returns a new asset.

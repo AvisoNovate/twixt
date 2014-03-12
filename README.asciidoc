@@ -150,15 +150,11 @@ The default options:
 ----
 (def default-options
   {:path-prefix        "/assets/"
-   :root               "META-INF/assets/"
    :content-types      mime/default-mime-types
    :content-transformers {}
    :compressable       #{"text/*" "application/edn" "application/json"}
    :cache-folder       (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))
 ----
-
-You can override +root+ to change where assets are stored on the classpath, but there is rarely a need to do so.
-Changing root may break other libraries that depend on Twixt, such as Twixt's own exception reporting.
 
 You can override +:path-prefix+ to change the root URL for assets; +/+ is an acceptable value.
 
