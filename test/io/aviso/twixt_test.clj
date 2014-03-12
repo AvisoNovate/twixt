@@ -1,6 +1,7 @@
 (ns io.aviso.twixt-test
   (:use
     clojure.test
+    clojure.pprint
     io.aviso.twixt
     io.aviso.twixt.utils)
   (:require
@@ -122,16 +123,31 @@
 
 (deftest jade-includes
 
-  (let [asset (pipeline "sub/jade-include.jade" context)
-        dependencies (:dependencies asset)]
+  (let [asset (pipeline "sub/jade-include.jade" context)]
 
     (is (= (read-asset-content asset)
            (read-resource-content "assets/compiled-jade-include.html")))
 
     ;; Ensure that dependencies were found for the source and all includes
-    (= ["common.jade" "sub/jade-include.jade" "sub/samedir.jade"]
-       (sorted-dependencies asset))))
+    (is (= ["common.jade" "sub/jade-include.jade" "sub/samedir.jade"]
+           (sorted-dependencies asset)))))
 
+(deftest jade-helpers
+
+  (let [context' (->
+                   context
+                   ;; The merge is normally part of the Ring code.
+                   (merge (:twixt-template options))
+                   ;; This could be done by Ring middleware, or by
+                   ;; modifying the :twixt-template as well.
+                   (assoc-in [:jade :variables "logoTitle"] "Our Logo"))
+        asset (pipeline "jade-helper.jade" context')]
+
+    (is (= (read-asset-content asset)
+           (read-resource-content "assets/compiled-jade-helper.html")))
+
+    (is (= ["aviso-logo.png" "jade-helper.jade"]
+           (sorted-dependencies asset)))))
 
 (deftest less-compilation
 

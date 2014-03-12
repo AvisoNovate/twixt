@@ -145,6 +145,7 @@
   (let [twixt (-> twixt-options
                   ;; Pass down only what is needed to generate asset URIs, or to produce the HTML exception report.
                   (select-keys [:path-prefix :stack-frame-filter])
-                  (assoc :asset-pipeline asset-pipeline))]
+                  (assoc :asset-pipeline asset-pipeline)
+                  (merge (:twixt-template twixt-options)))]
     (fn [request]
       (handler (assoc request :twixt twixt)))))

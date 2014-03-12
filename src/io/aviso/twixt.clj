@@ -102,17 +102,19 @@
 (defn get-asset-uris
   "Converts a number of asset paths into client URIs. Each path must exist.
 
+  An asset path does not start with a leading slash. The default asset resolver locates
+  each asset on the classpath under META-INF/assets/.
+
   context - the :twixt key, extracted from the Ring request map (as provided by the twixt-setup handler)
   paths - asset paths"
   [{:keys [asset-pipeline path-prefix] :as context} & paths]
-  (if (nil? context)
-    (throw (IllegalArgumentException. "nil context provided to get-asset-uris")))
+  (utils/nil-check context "nil context provided to get-asset-uris")
   (->> paths
        (map #(get-single-asset asset-pipeline % context))
        (map (partial asset/asset->request-path path-prefix))))
 
 (defn get-asset-uri
-  "Uses get-asset-uris to get a single URI for a single asset path. The resource must exist."
+  "Uses get-asset-uris to get a single URI for a single asset path. The resource must exist. "
   [context asset-path]
   (first (get-asset-uris context asset-path)))
 

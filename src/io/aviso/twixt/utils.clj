@@ -123,3 +123,8 @@
     value
     (throw (NullPointerException. message))))
 
+(defn map-values
+  "Applies a function to each value in the source map, The target map contains the resulting values."
+  [m f]
+  (reduce (fn [output [k v]] (assoc output k (f v))) {} m))
+
