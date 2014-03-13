@@ -18,8 +18,8 @@
   (reify TemplateLoader
     ;; getLastModified is only needed for caching, and we disable Jade's caching
     ;; in favor of Twixt's.
-    (getLastModified [this name] -1)
-    (getReader [this name]
+    (getLastModified [_ name] -1)
+    (getReader [_ name]
       (if (= name (:asset-path root-asset))
         (-> root-asset :content io/reader)
         (let [full-name (add-missing-extension name ".jade")]
