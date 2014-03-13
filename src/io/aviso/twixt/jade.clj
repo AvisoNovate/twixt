@@ -8,6 +8,12 @@
             [io.aviso.tracker :as t]
             [io.aviso.twixt.utils :as utils]))
 
+(defn- add-missing-extension
+  [name ext]
+  (if (.endsWith name ext)
+    name
+    (str name ext)))
+
 (defn- create-template-loader [root-asset asset-resolver dependencies]
   (reify TemplateLoader
     ;; getLastModified is only needed for caching, and we disable Jade's caching
@@ -16,15 +22,16 @@
     (getReader [this name]
       (if (= name (:asset-path root-asset))
         (-> root-asset :content io/reader)
-        (t/track
-          #(format "Including Jade source from asset `%s'." name)
-          (let [included (asset-resolver name nil)]
-            (utils/nil-check included "Included asset does not exist.")
-            (swap! dependencies utils/add-asset-as-dependency included)
-            (-> included
-                :content
-                ;; We have to trust that Jade will close the reader.
-                io/reader)))))))
+        (let [full-name (add-missing-extension name ".jade")]
+          (t/track
+            #(format "Including Jade source from asset `%s'." full-name)
+            (let [included (asset-resolver full-name nil)]
+              (utils/nil-check included "Included asset does not exist.")
+              (swap! dependencies utils/add-asset-as-dependency included)
+              (-> included
+                  :content
+                  ;; We have to trust that Jade will close the reader.
+                  io/reader))))))))
 
 (defn- wrap-asset-pipeline-with-dependency-tracker
   [asset-pipeline dependencies]
