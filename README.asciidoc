@@ -47,14 +47,14 @@ Twixt maps file extensions to MIME types; it will then transform certain MIME ty
 (ns example.app
   (:use compojure.core
         ring.adapter.jetty
-        [io.aviso.twixt.setup :as setup]))
+        [io.aviso.twixt.startup :as startup]))
 
 ;;; Use Compojure to map routes to handlers
 (defroutes app ...)
 
 ;;; Create twixt wrappers and handler to handle /asset/ URLs, in development (vs. production) mode
 (def app-handler
-  (setup/wrap-with-twixt app true)
+  (startup/wrap-with-twixt app true)
 
 ;;; Use the Ring Jetty adapter to serve your site
 (run-jetty app-handler)
