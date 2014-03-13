@@ -25,6 +25,8 @@
         (let [full-name (add-missing-extension name ".jade")]
           (t/track
             #(format "Including Jade source from asset `%s'." full-name)
+            ;; Use the asset-resolver, not the asset pipeline, because we need
+            ;; the un-compiled version of the asset.
             (let [included (asset-resolver full-name nil)]
               (utils/nil-check included "Included asset does not exist.")
               (swap! dependencies utils/add-asset-as-dependency included)
