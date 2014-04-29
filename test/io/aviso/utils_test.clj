@@ -13,6 +13,8 @@
 
                                  "foo/bar.gif" "../zip.zap" "zip.zap"
 
+                                 "foo/bar/baz/biff.gif" "../gnip/zip.zap" "foo/bar/gnip/zip.zap"
+
                                  "foo/bar/gif" "../frozz/pugh.pdf" "foo/frozz/pugh.pdf")
 
   (is (thrown? IllegalArgumentException (compute-relative-path "foo/bar.png" "../../too-high.pdf"))))
@@ -35,3 +37,5 @@
   (is (-> "META-INF/leiningen/io.aviso/pretty/LICENSE"
           get-modified-at
           pos?)))
+
+(run-tests)
