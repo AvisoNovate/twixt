@@ -77,18 +77,18 @@
 
 (defn compute-relative-path
   [^String start ^String relative]
-  (loop [path-terms (-> (.split start "/") seq drop-last vec) ; Drop the "file" part of the path, leaving the "folders" list
-         terms (.split relative "/")]
-    (if (empty? terms)
-      (str/join path-terms "/")
-      (let [[term & remaining] terms]
-        (cond
-          (or (= term ".") (= term "")) (recur path-terms remaining)
-          (= term "..") (if (empty? path-terms)
-                          ;; You could rewrite this with reduce, but then generating this exception would be more difficult:
-                          (throw (IllegalArgumentException. (format "Relative path `%s' for `%s' would go above root." relative start)))
-                          (recur (-> path-terms drop-last vec) remaining))
-          :else (recur (conj path-terms term) remaining))))))
+  ;; Convert the start path into a stack of just the folders
+  (loop [path-terms (-> (.split start "/") reverse rest)
+         terms (-> relative (.split "/"))]
+    (let [[term & remaining] terms]
+      (cond
+        (empty? terms) (->> path-terms reverse (str/join "/"))
+        (or (= term ".") (= term "")) (recur path-terms remaining)
+        (= term "..") (if (empty? path-terms)
+                        ;; You could rewrite this with reduce, but then generating this exception would be more difficult:
+                        (throw (IllegalArgumentException. (format "Relative path `%s' for `%s' would go above root." relative start)))
+                        (recur (rest path-terms) remaining))
+        :else (recur (cons term path-terms) remaining)))))
 
 (defn- url-to-file
   [^URL url]
