@@ -53,7 +53,7 @@
 (defn- read-cached-asset
   "Attempt to read the cached asset, if it exists.
 
-  asset-cache-dir is the directory containing the two files (asset.edn and content)."
+  `asset-cache-dir` is the directory containing the two files (asset.edn and content)."
   [^File asset-cache-dir]
   (if (.exists asset-cache-dir)
     (t/track
@@ -66,7 +66,7 @@
 
 
 (defn- write-attachment
-  "Writes the attachment's content to a file, returns the attachment with :content modified
+  "Writes the attachment's content to a file, returns the attachment with `:content` modified
   to be the simple name of the file written."
   [asset-cache-dir name attachment]
   (let [file-name (str (UUID/randomUUID) "-" name)
@@ -75,7 +75,7 @@
     (assoc attachment :content file-name)))
 
 (defn- write-attachments
-  "Writes attachments as files in the cache dir, updating each's :content key into a simple file name."
+  "Writes attachments as files in the cache dir, updating each's `:content` key into a simple file name."
   [asset asset-cache-dir]
   (if (-> asset :attachments empty?)
     asset
@@ -86,7 +86,8 @@
                               [name (write-attachment asset-cache-dir name attachment)])
                             attachments))))))
 
-(defn- write-cached-asset [^File asset-cache-dir asset]
+(defn- write-cached-asset
+  [^File asset-cache-dir asset]
   (t/track
     #(format "Writing to asset cache `%s'" asset-cache-dir)
     (.mkdirs asset-cache-dir)
@@ -123,8 +124,8 @@
   Only assets that have truthy value for :compiled key will be file-system cached. This is set by the various
   compiler and transformers, such as the CoffeeScript to JavaScript transformer.
 
-  - asset-handler - to be wrapped
-  - cache-dir-name - name of root folder to store cache in (from the Twixt options); the directory will be created as necessary"
+  - `asset-handler` - to be wrapped
+  - `cache-dir-name` - name of root folder to store cache in (from the Twixt options); the directory will be created as necessary"
   [asset-handler cache-dir-name]
   (let [cache-dir (io/file cache-dir-name "compiled")]
     (l/infof "Caching compiled assets to `%s'." cache-dir)

@@ -12,7 +12,9 @@
     [clojure.string :as str]))
 
 (defn as-string
-  "Converts a source (compatible with clojure.java.io/IOFactory) into a String using the provided encoding.
+  "Converts a source (compatible with `clojure.java.io/IOFactory`) into a String using the provided encoding.
+
+  The source is typically a byte array, or a `File`.
 
   The default charset is UTF-8."
   ([source]
@@ -75,7 +77,9 @@
                                        :size         (alength content)}))
 
 (defn read-content
-  "Reads the content of a provided source (compatible with clojure.java.io/input-stream) as a byte array."
+  "Reads the content of a provided source (compatible with `clojure.java.io/input-stream`) as a byte array
+
+  The content is usually a URI or URL."
   [source]
   (assert source "Unable to read content from nil.")
   (with-open [bos (ByteArrayOutputStream.)

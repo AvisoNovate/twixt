@@ -1,20 +1,19 @@
 (ns io.aviso.twixt.memory-cache
   "Provides asset pipeline middleware implementing an in-memory cache for assets.
-  This cache is used to bypass the normal loading, compiling, and transforming
-  steps."
+  This cache is used to bypass the normal loading, compiling, and transforming steps."
   (:require [clojure.java.io :as io]
             [io.aviso.twixt.utils :as utils]))
 
 (defn wrap-with-sticky-cache
-  "A sticky cache is permanent; it does not check to see if the underlying files have changed. This is generally
-   used only in production, where the files are expected to be packaged into JARs, which would
+  "A sticky cache is permanent; it does not check to see if the underlying files have changed.
+   This is generally used only in production, where the files are expected to be packaged into JARs, which would
    require an application restart anyway.
 
-  Cached values are permanent; in even the largest web application, the amount of assets is relatively finite,
-  so no attempt has been made to evict assets from the cache.
+   Cached values are permanent; in even the largest web application, the amount of assets is relatively finite,
+   so no attempt has been made to evict assets from the cache.
 
-  The optional store-in-cache? parameter is a function; it is passed an asset, and returns true
-  if the asset should be stored in the cache."
+   The optional store-in-cache? parameter is a function; it is passed an asset, and returns true
+   if the asset should be stored in the cache."
   ([asset-handler]
    (wrap-with-sticky-cache asset-handler (constantly true)))
   ([asset-handler store-in-cache?]
@@ -28,9 +27,9 @@
            asset))))))
 
 (defn- modified-at-matches?
-  "Returns true if the resource is valid (actual modified-at matches the provided value from the asset map).
+  "Returns true if the resource is valid (actual `modified-at` matches the provided value from the asset map).
 
-  Also returns true if the modified-at is nil (meaning the file is inside a JAR, not on the filesystem)."
+  Also returns true if the `modified-at` is nil (meaning the file is inside a JAR, not on the filesystem)."
   [resource-path modified-at]
   ;; For resources inside JARs, we may not have a modified time, and that's OK,
   ;; because those don't change.

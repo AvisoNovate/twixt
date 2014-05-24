@@ -1,9 +1,11 @@
 (ns io.aviso.twixt.rhino
   "Code to execute Rhino for purposes such as compiling CoffeeScript to JavaScript."
   ;; Liberally borrowing from Dieter!
-  (:import [org.mozilla.javascript Context NativeObject])
-  (:require [clojure.java.io :as io]
-            [io.aviso.tracker :as t]))
+  (:import
+    [org.mozilla.javascript Context NativeObject])
+  (:require
+    [clojure.java.io :as io]
+    [io.aviso.tracker :as t]))
 
 
 (defn- load-script [context scope file]

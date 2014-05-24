@@ -1,12 +1,14 @@
 (ns io.aviso.twixt.compress
   "Asset pipeline middleware for handling compressable assets."
-  (:import [java.io ByteArrayOutputStream]
-           [java.util.zip GZIPOutputStream])
-  (require [clojure.string :as str]
-           [clojure.java.io :as io]
-           [io.aviso.twixt
-            [memory-cache :as mem]
-            [utils :as utils]]))
+  (:import
+    [java.io ByteArrayOutputStream]
+    [java.util.zip GZIPOutputStream])
+  (:require
+    [clojure.string :as str]
+    [clojure.java.io :as io]
+    [io.aviso.twixt
+     [memory-cache :as mem]
+     [utils :as utils]]))
 
 (defn- make-wildcard [^String mime-type]
   (->
@@ -57,14 +59,14 @@
 
 (defn wrap-with-sticky-compressed-caching
   "Adds sticky in-memory caching of just compressed assets.
-  The cache is only used when the :gzip-enabled options key is true."
+  The cache is only used when the `:gzip-enabled` options key is true."
   [asset-handler]
   (with-cache-delegation asset-handler
                          (mem/wrap-with-sticky-cache asset-handler :compressed)))
 
 (defn wrap-with-invalidating-compressed-caching
   "Adds an in-memory development cache that includes invalidation checks.
-  The cache is only consulted if the :gzip-enabled options key is true."
+  The cache is only consulted if the `:gzip-enabled` options key is true."
   [asset-handler]
   (with-cache-delegation asset-handler
                          (mem/wrap-with-invalidating-cache asset-handler :compressed)))

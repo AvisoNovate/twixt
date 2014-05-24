@@ -1,15 +1,18 @@
 (ns io.aviso.twixt.exceptions
   "Support for generating pretty and useful HTML reports when server-side exceptions occur."
-  (:use hiccup.core
-        hiccup.page
-        ring.util.response)
-  (:import [clojure.lang APersistentMap Sequential PersistentHashMap$ArrayNode$Seq PersistentHashMap]
-           [java.util Map]
-           (java.util.regex Pattern))
-  (:require [clojure.string :as s]
-            [io.aviso
-             [exception :as exception]
-             [twixt :as t]]))
+  (:use
+    hiccup.core
+    hiccup.page
+    ring.util.response)
+  (:import
+    [clojure.lang APersistentMap Sequential PersistentHashMap$ArrayNode$Seq PersistentHashMap]
+    [java.util Map]
+    [java.util.regex Pattern])
+  (:require
+    [clojure.string :as s]
+    [io.aviso
+     [exception :as exception]
+     [twixt :as t]]))
 
 (def ^:private path-separator (System/getProperty "path.separator"))
 
@@ -20,7 +23,7 @@
 (defprotocol MarkupGeneration
   "Used to convert arbitrary values into markup strings.
 
-  Extended onto nil, String, APersistentMap, Sequential and Object."
+  Extended onto nil, `String`, `APersistentMap`, `Sequential` and `Object`."
   (to-markup
     [value]
     "Returns HTML markup representing the value."))
@@ -183,8 +186,8 @@ h
 (defn build-report
   "Builds an HTML exception report (as a string).
   
-  request - Ring request map, which must contain the :twixt key.
-  exception - Exception to report"
+  - `request` - Ring request map, which must contain the `:twixt` key.
+  - `exception` - Exception to report"
   [request exception]
   (let [twixt (:twixt request)]
     (html5
@@ -217,9 +220,9 @@ h
        ])))
 
 (defn wrap-with-exception-reporting
-  "Wraps the handler to report any uncaught exceptions as an HTML exception report.  This wrapper
-  should wrap around other handlers (including the Twixt handler itself), but be nested within
-  the twixt-setup handler (which provides the :twixt request map key)."
+  "Wraps the handler to report any uncaught exceptions as an HTML exception report.
+  This wrapper should wrap around other handlers (including the Twixt handler itself), but be nested within
+  the twixt-setup handler (which provides the `:twixt` request map key)."
   [handler]
   (fn [request]
     (try

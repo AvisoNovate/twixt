@@ -1,12 +1,17 @@
 (ns io.aviso.twixt.coffee-script
-  "Provides asset pipeline middleware to perform CoffeeScript to JavaScript compilation."
-  (:import [org.mozilla.javascript ScriptableObject]
-           [java.util Map])
-  (:require [io.aviso.tracker :as t]
-            [io.aviso.twixt
-             [rhino :as rhino]
-             [utils :as utils]]
-            [clojure.string :as str]))
+  "Provides asset pipeline middleware to perform CoffeeScript to JavaScript compilation.
+
+  CoffeeScript assets include a source map as an attachment.
+  The compiled JavaScript includes the directive for the browser to load the map."
+  (:import
+    [org.mozilla.javascript ScriptableObject]
+    [java.util Map])
+  (:require
+    [io.aviso.tracker :as t]
+    [io.aviso.twixt
+     [rhino :as rhino]
+     [utils :as utils]]
+    [clojure.string :as str]))
 
 (defn- ^String extract-value [^Map object key]
   (str (.get object key)))

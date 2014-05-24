@@ -12,6 +12,7 @@
                  [de.neuland-bfi/jade4j "0.4.0"]
                  [hiccup "1.0.4"]]
   :codox {:src-dir-uri               "https://github.com/AvisoNovate/twixt/blob/master/"
-          :src-linenum-anchor-prefix "L"}
+          :src-linenum-anchor-prefix "L"
+          :defaults                  {:doc/format :markdown}}
   :profiles {:dev {:dependencies [[log4j "1.2.17"]
                                   [ring/ring-jetty-adapter "1.2.0"]]}})

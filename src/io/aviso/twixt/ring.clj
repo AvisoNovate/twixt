@@ -1,6 +1,7 @@
 (ns io.aviso.twixt.ring
   "Support needed to use Twixt inside a Ring handler pipeline."
-  (:import [java.util Calendar TimeZone])
+  (:import
+    [java.util Calendar TimeZone])
   (:require
     [clojure.java.io :as io]
     [io.aviso.tracker :as t]
@@ -105,14 +106,14 @@
 
 (defn wrap-with-asset-redirector
   "In some cases, it is not possible for the client to know what the full asset URI will be, such as when the
-  URL is composed on the client (in which case, the asset checksum will not be known). The redirector accepts
-  any request path that maps to an asset and returns a redirect to the asset's true URL. Non-matching
-  requests are passed through to the provided handler.
+   URL is composed on the client (in which case, the asset checksum will not be known).
+   The redirector accepts any request path that maps to an asset and returns a redirect to the asset's true URL.
+   Non-matching requests are passed through to the provided handler.
 
-  For a file under `META-INF/assets`, such as `META-INF/assets/myapp/icon.png`, the redirector will match
-  the URI `/myapp/icon.png` and send a redirect to `/assets/123abc/myapp/icon.png`.
+   For a file under `META-INF/assets`, such as `META-INF/assets/myapp/icon.png`, the redirector will match
+   the URI `/myapp/icon.png` and send a redirect to `/assets/123abc/myapp/icon.png`.
 
-  This middleware is not applied by default."
+   This middleware is __not__ applied by default."
   [handler]
   (fn [{uri     :uri
         context :twixt
@@ -126,18 +127,19 @@
 
   This assumes that the resulting handler will then be wrapped with the twixt setup.
 
-  In most cases, you will want to use the wrap-with-twixt function in the startup namespace."
+  In most cases, you will want to use the [[wrap-with-twixt]] function in the startup namespace."
   [handler]
   (fn [request]
     (or (twixt-handler request)
         (handler request))))
 
 (defn wrap-with-twixt-setup
-  "Wraps a Ring handler with another Ring handler that provides the :twixt key in the request object.
+  "Wraps a Ring handler with another Ring handler that provides the `:twixt` key in the request object.
 
-  The :twixt key is the default asset pipeline context, which is needed by get-asset-uri in order to resolve asset paths
-  to an actual asset. It also contains the keys :asset-pipeline (the pipeline used to resolve assets) and
-  :stack-frame-filter (which is used by the HTML exception report).
+  The `:twixt` key is the default asset pipeline context, which is needed by [[get-asset-uri]] in order to resolve asset paths
+  to an actual asset.
+  It also contains the keys `:asset-pipeline` (the pipeline used to resolve assets) and
+  `:stack-frame-filter` (which is used by the HTML exception report).
 
   This provides the information needed by the actual Twixt handler, as well as anything else downstream that needs to
   generate Twixt asset URIs."

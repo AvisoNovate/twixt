@@ -1,12 +1,14 @@
 (ns io.aviso.twixt.jade
   "Provides asset pipeline middleware for compiling Jade templates to HTML using jade4j."
-  (:import [de.neuland.jade4j JadeConfiguration]
-           [de.neuland.jade4j.exceptions JadeException]
-           [de.neuland.jade4j.template TemplateLoader])
-  (:require [clojure.java.io :as io]
-            [io.aviso.twixt :as twixt]
-            [io.aviso.tracker :as t]
-            [io.aviso.twixt.utils :as utils]))
+  (:import
+    [de.neuland.jade4j JadeConfiguration]
+    [de.neuland.jade4j.exceptions JadeException]
+    [de.neuland.jade4j.template TemplateLoader])
+  (:require
+    [clojure.java.io :as io]
+    [io.aviso.twixt :as twixt]
+    [io.aviso.tracker :as t]
+    [io.aviso.twixt.utils :as utils]))
 
 (defn- add-missing-extension
   [name ext]
@@ -80,10 +82,10 @@
                      e))))))))
 
 (defn complete-path
-  "Computes the complete path for a partial path, relative to an existing asset. Alternately,
-  if the path starts with a leading slash (an absolute path), the the leading path is stripped.
+  "Computes the complete path for a partial path, relative to an existing asset.
+  Alternately, if the path starts with a leading slash (an absolute path), the the leading path is stripped.
 
-  The result is a complete asset path that can be passed to io.aviso.twixt/get-asset-uri."
+  The result is a complete asset path that can be passed to [[get-asset-uri]]."
   [asset ^String path]
   (if (.startsWith path "/")
     (.substring path 1)
@@ -93,8 +95,10 @@
   "A Jade4J helper object that is used to allow a template to resolve asset URIs."
   (uri
     [this path]
-    "Used to obtain the URI for a given path. The path may be relative to the currently compiling
-asset, or may be absoluate (with a leading slash). Throws an exception if the asset it not found."))
+    "Used to obtain the URI for a given path.
+    The path may be relative to the currently compiling asset, or may be absoluate (with a leading slash).
+
+    Throws an exception if the asset it not found."))
 
 (defn- create-twixt-helper
   [asset context]
