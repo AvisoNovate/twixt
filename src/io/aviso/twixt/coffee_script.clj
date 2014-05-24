@@ -5,28 +5,32 @@
   (:require [io.aviso.tracker :as t]
             [io.aviso.twixt
              [rhino :as rhino]
-             [utils :as utils]]))
+             [utils :as utils]]
+            [clojure.string :as str]))
 
 (defn- ^String extract-value [^Map object key]
   (str (.get object key)))
 
 (defn- coffee-script-compiler [asset context]
-  (let [name (:resource-path asset)]
+  (let [file-path (:resource-path asset)
+        file-name (-> file-path (str/split #"/") last)]
     (t/timer
-      #(format "Compiled `%s' to JavaScript in %.2f ms" name %)
+      #(format "Compiled `%s' to JavaScript in %.2f ms" file-path %)
       (t/track
-        #(format "Compiling `%s' to JavaScript" name)
+        #(format "Compiling `%s' to JavaScript" file-path)
         (let [^Map result
               (rhino/invoke-javascript ["META-INF/twixt/coffee-script.js" "META-INF/twixt/invoke-coffeescript.js"]
                                        "compileCoffeeScriptSource"
                                        (-> asset :content utils/as-string)
-                                       name)]
+                                       file-path
+                                       file-name)]
 
           ;; The script returns an object with key "exception" or key "output":
           (when (.containsKey result "exception")
             (throw (RuntimeException. (extract-value result "exception"))))
-
-          (utils/create-compiled-asset asset "text/javascript" (extract-value result "output") nil))))))
+          (-> asset
+              (utils/create-compiled-asset "text/javascript" (extract-value result "output") nil)
+              (utils/add-attachment "source.map" "application/json" (-> result (extract-value "sourceMap") utils/as-bytes))))))))
 
 (defn register-coffee-script
   "Updates the Twixt options with support for compiling CoffeeScript into JavaScript."
