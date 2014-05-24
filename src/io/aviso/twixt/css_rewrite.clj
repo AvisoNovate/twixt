@@ -1,7 +1,7 @@
 (ns io.aviso.twixt.css-rewrite
-  "Defines an asset pipeline filter used to rewrite URLs in CSS files.
+  "Defines an asset pipeline filter used to rewrite URIs in CSS files.
   Relative URLs in CSS files will become invalid due to the inclusion of the individual asset's checksum in the
-  asset request path."
+  asset request path; instead, the relative URIs are expanded to complete URIs that include the individual asset's checksum."
   (:require
     [clojure.string :as str]
     [io.aviso.tracker :as t]

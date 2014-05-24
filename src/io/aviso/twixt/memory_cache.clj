@@ -12,7 +12,7 @@
    Cached values are permanent; in even the largest web application, the amount of assets is relatively finite,
    so no attempt has been made to evict assets from the cache.
 
-   The optional store-in-cache? parameter is a function; it is passed an asset, and returns true
+   The optional `store-in-cache?` parameter is a function; it is passed an asset, and returns true
    if the asset should be stored in the cache."
   ([asset-handler]
    (wrap-with-sticky-cache asset-handler (constantly true)))

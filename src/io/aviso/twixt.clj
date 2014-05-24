@@ -1,5 +1,7 @@
 (ns io.aviso.twixt
-  "Pipeline for accessing and transforming assets for streaming. Integrates with Ring.
+  "Pipeline for accessing and transforming assets for streaming.
+
+   Twixt integrates with Ring, as a set of Ring rewquest filters.
 
    Twixt plugs into the Ring pipeline, but most of its work is done in terms of the asset pipeline.
 
@@ -61,14 +63,20 @@
 
   If the asset does not exist, the resolver returns nil.
 
-  The asset map has the following keys:
+  An asset map has the minimum following keys:
 
   - `:content` - the content of the asset in a form that is compatible with clojure.java.io
   - `:resource-path` - the full path of the underlying resource
   - `:content-type` - the MIME type of the content, as determined from the path's extension
   - `:size` - size of the asset in bytes
   - `:checksum` - Adler32 checksum of the content
-  - `:modified-at` - instant at which the file was last modified (not always trustworthy for files packaged in JARs)"
+  - `:modified-at` - instant at which the file was last modified (not always trustworthy for files packaged in JARs)
+
+  Various optional parts, such as caching, will add additional keys.
+  For example, `:dependencies` is map used to track underlying dependencies for files, such as Less sources,
+  that can be invalidated by changes to more than one file.
+
+  `:attachments` is used to add additional files such as JavaScript source maps."
   [{:keys [content-types]}]
   (fn [asset-path context]
     (let [resource-path (str "META-INF/assets/" asset-path)]

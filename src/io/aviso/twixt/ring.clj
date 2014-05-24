@@ -148,7 +148,7 @@
 
   This assumes that the resulting handler will then be wrapped with the twixt setup.
 
-  In most cases, you will want to use the [[wrap-with-twixt]] function in the startup namespace."
+  In most cases, you will want to use the `wrap-with-twixt` function in the `io.aviso.twixt.startup` namespace."
   [handler]
   (fn [request]
     (or (twixt-handler request)

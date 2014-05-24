@@ -19,7 +19,15 @@
     (.call js-fn context scope nil (into-array arguments))))
 
 (defn invoke-javascript
-  [script-urls javascript-fn-name & arguments]
+  "Invokes a JavaScript function, returning the result.
+
+  - `script-paths` - JavaScript files to load, as classpath resource paths
+  - `javascript-fn-name` - name of JavaScript function to execute
+  - `arguments` - additional arguments to pass to the function
+
+  Returns the JavaScript result; typically this will be a JavaScript object, and the properties
+  of it can be accessed via the methods of `java.util.Map`."
+  [script-paths javascript-fn-name & arguments]
   (let [context (Context/enter)]
     (try
       ;; Apparently, CoffeeScript can blow away a 64K limit pretty easily.
@@ -29,7 +37,7 @@
 
         ;; Dieter maintains a pool of configured Context instances so that we don't
         ;; have to re-load the scripts on each compilation. That would be nice.
-        (doseq [file script-urls]
+        (doseq [file script-paths]
           (load-script context scope file))
 
         (invoke-function context scope javascript-fn-name arguments))
