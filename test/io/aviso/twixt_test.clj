@@ -81,13 +81,6 @@
 
   (is (nil? (find-asset-uri context "does/not/exist.png"))))
 
-
-
-#_ (deftest uri-generation
-
-  (is (= (get-asset-uri twixt "sample.js") "/assets/sample.js"))
-  (is (nil? (get-asset-uri twixt "does-not-exist.js"))))
-
 (deftest coffeescript-compilation
 
   (let [asset (pipeline "coffeescript-source.coffee" context)]
