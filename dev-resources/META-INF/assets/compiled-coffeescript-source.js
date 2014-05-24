@@ -3,3 +3,5 @@
   println("CoffeeScript is fun!");
 
 }).call(this);
+
+//# sourceMappingURL=./coffeescript-source.coffee@source.map
