@@ -10,15 +10,14 @@
     [io.aviso.tracker :as t]
     [io.aviso.twixt
      [rhino :as rhino]
-     [utils :as utils]]
-    [clojure.string :as str]))
+     [utils :as utils]]))
 
 (defn- ^String extract-value [^Map object key]
   (str (.get object key)))
 
 (defn- coffee-script-compiler [asset context]
   (let [file-path (:resource-path asset)
-        file-name (-> file-path (str/split #"/") last)]
+        file-name (utils/path->name file-path)]
     (t/timer
       #(format "Compiled `%s' to JavaScript in %.2f ms" file-path %)
       (t/track

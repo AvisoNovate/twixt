@@ -139,3 +139,11 @@
   [f m]
   (reduce (fn [output [k v]] (assoc output k (f v))) {} m))
 
+(defn path->name
+  "Converts a path to just the file name, the last term in the path."
+  [^String path]
+  (let [slashx (.lastIndexOf path "/")]
+    (if (< slashx 0)
+      path
+      (.substring path (inc slashx)))))
+

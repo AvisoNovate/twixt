@@ -15,7 +15,7 @@ function compileCoffeeScriptSource(input, filepath, filename) {
             inline: true});
 
         return {
-            output: result.js + "\n//# sourceMappingURL=./" + filename + "@source.map\n" ,
+            output: result.js + "\n//# sourceMappingURL=" + filename + "@source.map\n" ,
             sourceMap: result.v3SourceMap
         };
     }
