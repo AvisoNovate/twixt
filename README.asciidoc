@@ -161,10 +161,11 @@ You can override +:path-prefix+ to change the root URL for assets; +/+ is an acc
 
 The +:content-types+ key maps file extensions to MIME types.
 
-+:content-transformers:+ maps content types to a transformation function; The CoffeeScript, Jade, and Less compilers operate by adding entries to +:content-types+ and :content-transformers+.
+The +:content-transformers+ key is a map of content type keys (as strings, such as "text/coffeescript") to a
+transformation function; The CoffeeScript, Jade, and Less compilers operate by adding entries to +:content-types+ and :content-transformers+.
 
-The +:compressable+ key identifies which content types are compressable; note the use of the +/*+ suffix to indicate
-that all text content types are compressable.
+The +:compressable+ key is a set used to identifiy which content types are compressable; note the use of the +/*+ suffix to indicate
+that all text content types are compressable. Anything not explicitly compressable is considered non-compressable.
 
 The +:twixt-template+ key is a map that provides default values for the +:twixt+ request key.
 This is often used to provide information to specific content transformers.
