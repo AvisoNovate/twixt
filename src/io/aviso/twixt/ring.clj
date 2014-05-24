@@ -14,21 +14,29 @@
       .getTime))
 
 (defn- asset->ring-response
-  [asset]
-  (cond->
-    ;; First the standard stuff ...
-    (-> asset
-        :content
-        io/input-stream
-        r/response
-        (r/header "Content-Length" (:size asset))
-        ;; Because any change to the content will create a new checksum and a new URL, a change to the content
-        ;; is really an entirely new resource. The current resource is therefore immutable and can have a far-future expires
-        ;; header.
-        (r/header "Expires" far-future)
-        (r/content-type (:content-type asset)))
-    ;; The optional extras ...
-    (:compressed asset) (r/header "Content-Encoding" "gzip")))
+  [asset attachment-name]
+  (let [content-source (if (some? attachment-name)
+                         (get-in asset [:attachments attachment-name])
+                         asset)]
+    ;; content-source may be nil if the URL includes an attachment but the attachment doesn't exist.
+    (if content-source
+      ;; First the standard stuff ...
+      (cond->
+        (->
+          content-source
+          :content
+          io/input-stream
+          r/response
+          (r/header "Content-Length" (:size content-source))
+          ;; Because any change to the content will create a new checksum and a new URL, a change to the content
+          ;; is really an entirely new resource. The current resource is therefore immutable and can have a far-future expires
+          ;; header.
+          (r/header "Expires" far-future)
+          (r/content-type (:content-type content-source)))
+
+        ;; The optional extras ...
+        ;; :compressed will never be true for an attachment (that may change in the future).
+        (:compressed content-source) (r/header "Content-Encoding" "gzip")))))
 
 
 (defn- match? [^String path-prefix ^String path]
@@ -37,18 +45,27 @@
     (not (or (= path path-prefix)
              (.endsWith path "/")))))
 
+(defn- split-asset-path-and-attachment-name
+  [path]
+  (let [atx (.indexOf path "@")]
+    (if (< atx 0)
+      [path nil]
+      [(.substring path 0 atx)
+       (.substring path (inc atx))])))
+
 (defn- parse-path
-  "Parses the complete request path into a checksum, compressed-flag, and asset path."
+  "Parses the complete request path into a checksum, compressed-flag, asset path and (optional) attachment name."
   [^String path-prefix ^String path]
   (let [suffix (.substring path (.length path-prefix))
         slashx (.indexOf suffix "/")
         full-checksum (.substring suffix 0 slashx)
         compressed? (.startsWith full-checksum "z")
         checksum (if compressed? (.substring full-checksum 1) full-checksum)
-        asset-path (.substring suffix (inc slashx))]
+        [asset-path attachment-name] (-> suffix (.substring (inc slashx)) split-asset-path-and-attachment-name)]
     [checksum
      compressed?
-     asset-path]))
+     asset-path
+     attachment-name]))
 
 (defn- asset->redirect-response
   [status path-prefix asset]
@@ -59,25 +76,28 @@
 (def ^:private asset->301-response (partial asset->redirect-response 301))
 
 (defn- create-asset-response
-  [path-prefix requested-checksum asset]
+  [path-prefix requested-checksum asset attachment-name]
   (cond
     (nil? asset) nil
-    (= requested-checksum (:checksum asset)) (asset->ring-response asset)
+    (= requested-checksum (:checksum asset)) (asset->ring-response asset attachment-name)
     :else (asset->301-response path-prefix asset)))
 
 (defn twixt-handler
   "A Ring request handler that identifies requests targetted for Twixt assets.  Returns a Ring response map
-  if the request is for an existing asset, otherwise returns nil.
+   if the request is for an existing asset, otherwise returns nil.
 
-  Asset URLs always include the intended asset's checksum; if the actual asset checksum does not match, then
-  a 301 (moved permanently) response is sent with the correct asset URL."
+   The path may indicate an attachment to the asset (such as the source.map for a compiled JavaScript file).
+   The attachment is indicated as a suffix: the `@` symbol and the name of the attachment.
+
+   Asset URLs always include the intended asset's checksum; if the actual asset checksum does not match, then
+   a 301 (moved permanently) response is sent with the correct asset URL."
   [request]
   (let [path-prefix (-> request :twixt :path-prefix)
         path (:uri request)]
     (when (match? path-prefix path)
       (t/track
         #(format "Handling asset request `%s'" path)
-        (let [[requested-checksum compressed? asset-path] (parse-path path-prefix path)
+        (let [[requested-checksum compressed? asset-path attachment-name] (parse-path path-prefix path)
               context (:twixt request)
               ;; When actually servicing an asset request, we have to trust the data in the URL
               ;; that determines whether to server the normal or gzip'ed resource.
@@ -85,7 +105,8 @@
               asset-pipeline (:asset-pipeline context)]
           (create-asset-response path-prefix
                                  requested-checksum
-                                 (asset-pipeline asset-path context')))))))
+                                 (asset-pipeline asset-path context')
+                                 attachment-name))))))
 
 ;;; It's really difficult to start with a path, convert it to a resource, and figure out if it is a folder
 ;;; or a file on the classpath. Instead, we just assume that anything that doesn't look like a path that
