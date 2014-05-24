@@ -115,7 +115,7 @@
   Each path must exist.
 
   An asset path does not start with a leading slash.
-  ΩThe default asset resolver locates each asset on the classpath under `META-INF/assets/`.
+  The default asset resolver locates each asset on the classpath under `META-INF/assets/`.
 
   - `context` - the `:twixt` key, extracted from the Ring request map
   - `paths` - asset paths"
