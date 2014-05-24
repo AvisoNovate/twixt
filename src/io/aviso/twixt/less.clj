@@ -1,7 +1,7 @@
 (ns io.aviso.twixt.less
   "Provides asset pipeline middleware for compiling Less source files to CSS."
   (:import
-    [com.github.sommeri.less4j LessSource LessSource$FileNotFound Less4jException LessCompiler$Problem LessCompiler]
+    [com.github.sommeri.less4j LessSource LessSource$FileNotFound Less4jException LessCompiler$Problem LessCompiler LessCompiler$CompilationResult LessSource$StringSource LessCompiler$Configuration]
     [com.github.sommeri.less4j.core DefaultLessCompiler])
   (:require
     [clojure.java.io :as io]
@@ -62,16 +62,26 @@
 
 (defn- compile-less
   [^LessCompiler less-compiler asset {:keys [asset-resolver] :as context}]
-  (let [name (:resource-path asset)]
+  (let [path (:resource-path asset)]
     (t/timer
-      #(format "Compiled `%s' to CSS in %.2f ms" name %)
+      #(format "Compiled `%s' to CSS in %.2f ms" path %)
       (t/track
-        #(format "Compiling `%s' from Less to CSS" name)
+        #(format "Compiling `%s' from Less to CSS" path)
         (try
           (let [dependencies (atom {})
                 root-source (create-less-source asset-resolver dependencies asset context)
-                output (.compile less-compiler root-source)]
-            (utils/create-compiled-asset asset "text/css" (.getCss output) @dependencies))
+                ;; A bit of work to trick the Less compiler into writing the right thing into the output CSS.
+                ^LessCompiler$CompilationResult output (.compile less-compiler root-source)
+                complete-css (str
+                               (.getCss output)
+                               "\n/*# sourceMappingURL="
+                               (utils/path->name path)
+                               "@source.map */")
+                source-map (.getSourceMap output)]
+            (->
+              asset
+              (utils/create-compiled-asset "text/css" complete-css @dependencies)
+              (utils/add-attachment "source.map" "application/json" (utils/as-bytes source-map))))
           (catch Less4jException e
             (throw (RuntimeException. (format-less-exception e) e))))))))
 
