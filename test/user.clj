@@ -16,9 +16,10 @@
            (doall
              (get-asset-uris (:twixt request) "invalid-coffeescript.coffee")))))
 
-(def app
+(defn app
+  []
   (wrap-with-twixt handler default-options true))
 
 (defn launch []
-  (let [server (run-jetty app {:port 8888 :join? false})]
+  (let [server (run-jetty (app) {:port 8888 :join? false})]
     #(.stop server)))
