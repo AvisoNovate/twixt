@@ -18,7 +18,7 @@ Twixt draws inspiration from http://tapestry.apache.org[Apache Tapestry] and htt
 
 Twixt currently supports:
 
-* CoffeeScript to JavaScript compilation (using Rhino)
+* CoffeeScript to JavaScript compilation (using Rhino) - including source maps
 * Jade to HTML compilation (using https://github.com/neuland/jade4j[jade4j])
 * Less to CSS compilation (using https://github.com/SomMeri/less4j[less4j])
 * File system caching of compiled content
@@ -284,7 +284,7 @@ You can expose Clojure functions as variables if you wish; the Jade template sho
 === Helper / Variable pitfalls
 
 The main issue with helpers and variables relates to cache invalidation.
-Twixt bases cache invalidiation entirely on the contents of the underlying files.
+Twixt bases cache invalidation entirely on the contents of the underlying files.
 
 There is currently an ambiguity that comes into play when the referenced asset is a compressable file type (e.g., not an image
 file). This can cause the Jade compiler to generate a compressed URI that, for a different request and client, will not be useful.
