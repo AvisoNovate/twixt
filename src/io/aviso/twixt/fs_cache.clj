@@ -11,7 +11,8 @@
      [pprint :as pp]
      [string :as s]]
     [clojure.tools.logging :as l]
-    [io.aviso.tracker :as t]))
+    [io.aviso.tracker :as t]
+    [io.aviso.twixt.utils :as utils]))
 
 
 (defn- checksum-matches?
@@ -36,6 +37,16 @@
     (with-open [reader (-> file io/reader PushbackReader.)]
       (edn/read reader))))
 
+(defn- read-attachments
+  [asset asset-cache-dir]
+  (if (-> asset :attachments empty?)
+    asset
+    (update-in asset [:attachments]
+               (fn [attachments]
+                 (utils/map-values
+                   attachments
+                   #(assoc % :content (io/file asset-cache-dir (:content %))))))))
+
 (def ^:private asset-file-name "asset.edn")
 (def ^:private content-file-name "content")
 
@@ -50,7 +61,30 @@
       (some->
         (io/file asset-cache-dir asset-file-name)
         read-cached-asset-data
-        (assoc :content (io/file asset-cache-dir content-file-name))))))
+        (assoc :content (io/file asset-cache-dir content-file-name))
+        (read-attachments asset-cache-dir)))))
+
+
+(defn- write-attachment
+  "Writes the attachment's content to a file, returns the attachment with :content modified
+  to be the simple name of the file written."
+  [asset-cache-dir name attachment]
+  (let [file-name (str (UUID/randomUUID) "-" name)
+        content-file (io/file asset-cache-dir file-name)]
+    (io/copy (:content attachment) content-file)
+    (assoc attachment :content file-name)))
+
+(defn- write-attachments
+  "Writes attachments as files in the cache dir, updating each's :content key into a simple file name."
+  [asset asset-cache-dir]
+  (if (-> asset :attachments empty?)
+    asset
+    (update-in asset [:attachments]
+               (fn [attachments]
+                 (into {}
+                       (map (fn [[name attachment]]
+                              [name (write-attachment asset-cache-dir name attachment)])
+                            attachments))))))
 
 (defn- write-cached-asset [^File asset-cache-dir asset]
   (t/track
@@ -61,11 +95,13 @@
       ;; Write the content first
       (io/copy (:content asset) content-file)
       (with-open [^Writer writer (io/writer asset-file)]
-        (.write writer (->
-                         asset
-                         (dissoc :content)
-                         ;; Override *print-length* and *print-level* to ensure it is all written out.
-                         ^String (pp/write :length nil :level nil :stream nil)))
+        (.write writer (-> asset
+                           (write-attachments asset-cache-dir)
+                           ;; The name of the content file is (currently) a fixed value,
+                           ;; so we can just remove the key, rather than replace it with a file name.
+                           (dissoc :content)
+                           ;; Override *print-length* and *print-level* to ensure it is all written out.
+                           ^String (pp/write :length nil :level nil :stream nil)))
         (.write writer "\n")))))
 
 (defn- delete-dir-and-contents
