@@ -11,7 +11,7 @@
     [io.aviso.twixt.asset :as asset]
     [clojure.string :as str]))
 
-(defn as-string
+(defn ^String as-string
   "Converts a source (compatible with `clojure.java.io/IOFactory`) into a String using the provided encoding.
 
   The source is typically a byte array, or a `File`.

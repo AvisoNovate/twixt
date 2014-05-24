@@ -11,7 +11,7 @@
     [io.aviso.twixt.utils :as utils]))
 
 (defn- add-missing-extension
-  [name ext]
+  [^String name ext]
   (if (.endsWith name ext)
     name
     (str name ext)))
@@ -53,7 +53,7 @@
           helpers)
         (merge variables))))
 
-(defn- create-configuration
+(defn- ^JadeConfiguration create-configuration
   [pretty-print asset {:keys [asset-resolver] :as context} dependencies]
   (doto (JadeConfiguration.)
     (.setPrettyPrint pretty-print)

@@ -1,7 +1,7 @@
 (ns io.aviso.twixt.less
   "Provides asset pipeline middleware for compiling Less source files to CSS."
   (:import
-    [com.github.sommeri.less4j LessSource LessSource$FileNotFound Less4jException LessCompiler$Problem]
+    [com.github.sommeri.less4j LessSource LessSource$FileNotFound Less4jException LessCompiler$Problem LessCompiler]
     [com.github.sommeri.less4j.core DefaultLessCompiler])
   (:require
     [clojure.java.io :as io]
@@ -19,7 +19,7 @@
     (utils/compute-relative-path relative-path)
     (asset-resolver context)))
 
-(defn- create-less-source
+(defn- ^LessSource create-less-source
   [asset-resolver dependencies asset context]
   ;; Whenever a LessSource is created, associated the asset as a dependency; this includes the primary source
   ;; and all imported sources.
@@ -61,7 +61,7 @@
 
 
 (defn- compile-less
-  [less-compiler asset {:keys [asset-resolver] :as context}]
+  [^LessCompiler less-compiler asset {:keys [asset-resolver] :as context}]
   (let [name (:resource-path asset)]
     (t/timer
       #(format "Compiled `%s' to CSS in %.2f ms" name %)

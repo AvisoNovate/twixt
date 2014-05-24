@@ -46,7 +46,7 @@
              (.endsWith path "/")))))
 
 (defn- split-asset-path-and-attachment-name
-  [path]
+  [^String path]
   (let [atx (.indexOf path "@")]
     (if (< atx 0)
       [path nil]
@@ -113,7 +113,7 @@
 ;;; ends with a file extension can be ignored.
 
 (defn- handle-asset-redirect
-  [uri context]
+  [^String uri context]
   ;; This may be too specific, may need to find a better way to differentiate between a "folder" and a file.
   ;; This just checks to see if the path ends with something that looks like an extension. We just have to
   ;; assume that none of the folders on classpath look like that! This is also a bit restrictive; it assumes

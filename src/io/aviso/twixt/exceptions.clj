@@ -16,7 +16,8 @@
 
 (def ^:private path-separator (System/getProperty "path.separator"))
 
-(defn- exception-message [exception]
+(defn- exception-message
+  [^Throwable exception]
   (or (.getMessage exception)
       (-> exception .getClass .getName)))
 

@@ -13,7 +13,7 @@
 (def ^:private complete-url-pattern #"^[#/]|(\p{Alpha}\w*:)")
 
 (defn- rewrite-relative-url
-  [asset-path context relative-url]
+  [asset-path context ^String relative-url]
   (if (.startsWith relative-url "data:")
     relative-url
     (t/track
