@@ -66,6 +66,14 @@
       (replace-asset-content content-type (as-bytes content))
       (assoc :compiled true :dependencies merged-dependencies))))
 
+(defn add-attachment
+  "Adds an attachment to an asset."
+  {:since "0.1.13"}
+  [asset name content-type ^bytes content]
+  (assoc-in asset [:attachments name] {:content-type content-type
+                                       :content      content
+                                       :size         (alength content)}))
+
 (defn read-content
   "Reads the content of a provided source (compatible with clojure.java.io/input-stream) as a byte array."
   [source]
