@@ -48,8 +48,9 @@
   [asset {{:keys [helpers variables]} :jade :as context} dependencies]
   (let [context' (update-in context [:asset-pipeline]
                             wrap-asset-pipeline-with-dependency-tracker dependencies)]
-    (-> (utils/map-values helpers
-                          #(% asset context'))
+    (-> (utils/map-values
+          #(% asset context')
+          helpers)
         (merge variables))))
 
 (defn- create-configuration

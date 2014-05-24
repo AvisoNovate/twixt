@@ -136,6 +136,6 @@
 
 (defn map-values
   "Applies a function to each value in the source map, The target map contains the resulting values."
-  [m f]
+  [f m]
   (reduce (fn [output [k v]] (assoc output k (f v))) {} m))
 

@@ -44,8 +44,8 @@
     (update-in asset [:attachments]
                (fn [attachments]
                  (utils/map-values
-                   attachments
-                   #(assoc % :content (io/file asset-cache-dir (:content %))))))))
+                   #(assoc % :content (io/file asset-cache-dir (:content %)))
+                   attachments)))))
 
 (def ^:private asset-file-name "asset.edn")
 (def ^:private content-file-name "content")
