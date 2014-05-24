@@ -82,7 +82,7 @@
                              (or (.getMessage e) (-> e .getClass .getName)))
                      e))))))))
 
-(defn complete-path
+(defn- complete-path
   "Computes the complete path for a partial path, relative to an existing asset.
   Alternately, if the path starts with a leading slash (an absolute path), the the leading path is stripped.
 
