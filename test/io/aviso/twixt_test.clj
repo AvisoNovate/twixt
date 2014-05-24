@@ -91,15 +91,6 @@
     (is (:compiled asset))
     (is (= (sorted-dependencies asset) ["coffeescript-source.coffee"])))
 
-  #_ (deftest compiled-results-are-cached
-    (let [v1 (get-streamable twixt "coffeescript-source.coffee")
-          v2 (get-streamable twixt "coffeescript-source.coffee")]
-
-      ;; Clojure doesn't have a good way of checking that two references are to the same object (e.g., Groovy's is()
-      ;; method). Instead, we compare the :content keys, which are a byte array, which should compare based on identity
-      ;; rather than content.
-      (is (= (:content v1) (:content v2)))))
-
   (testing "compilation failure"
 
     (is (thrown-with-msg? Exception
