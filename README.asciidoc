@@ -1,5 +1,8 @@
 == Twixt
 
+image:https://drone.io/github.com/AvisoNovate/twixt/status.png[Build Status, link="https://drone.io/github.com/AvisoNovate/twixt"]
+
+
 Twixt is an extensible asset pipeline for use in Clojure web applications.
 It is designed to complement an application built using Ring and related libraries, such as Compojure.
 Twixt provides content transformation (such as Less to CSS), support for efficient immutable resources,
