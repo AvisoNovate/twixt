@@ -30,6 +30,8 @@
         (create-less-source asset-resolver dependencies rel context)
         (throw (new LessSource$FileNotFound))))
 
+    (getName [] (-> asset :asset-path utils/path->name))
+
     (toString [] (:resource-path asset))
 
     (getContent []
@@ -70,8 +72,10 @@
         (try
           (let [dependencies (atom {})
                 root-source (create-less-source asset-resolver dependencies asset context)
+                ^LessCompiler$Configuration options  (doto (LessCompiler$Configuration.)
+                                                              (.setLinkSourceMap false))
                 ;; A bit of work to trick the Less compiler into writing the right thing into the output CSS.
-                ^LessCompiler$CompilationResult output (.compile less-compiler root-source)
+                ^LessCompiler$CompilationResult output (.compile less-compiler root-source options)
                 complete-css (str
                                (.getCss output)
                                "\n/*# sourceMappingURL="
