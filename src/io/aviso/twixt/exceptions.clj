@@ -258,16 +258,14 @@ h
   "The default stack frame filter function, used by the HTML excepton report to identify frames that can be hidden
   by default.
 
-  This implementation hides frames that:
+  This implementation extends the standard frame filter (`io.aviso.repl/standard-frame-filter`),
+  to also omit frames with no line number.
 
-  - Are in the `clojure.lang` package
-  - Are in the `sun.reflect` package
-  - Do not have a line number."
+  The HTML exception report treats `:omit` and `:hide` identically; frames marked as either are
+  initially hidden, but can be revealed in the client."
   [frame]
   (cond
     (nil? (:line frame)) :omit
-    ;; This can be removed after pretty 0.1.12:
-    (-> frame :package (= "sun.reflect")) :hide
     :else (repl/standard-frame-filter frame)))
 
 (defn register-exception-reporting
