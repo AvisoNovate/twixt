@@ -12,22 +12,36 @@
      [less :as less]
      [ring :as ring]]))
 
-(defn read-asset-content [asset]
-  (asset asset "Can't read content from nil asset.")
+(defn read-as-trimmed-string
+  [content]
+  (-> content
+      read-content
+      String.
+      .trim))
+
+(defn read-asset-content
+  [asset]
+  (assert asset "Can't read content from nil asset.")
   (->
     asset
     :content
-    read-content
-    String.
-    .trim))
+    read-as-trimmed-string))
 
-(defn read-resource-content [path]
+(defn read-attachment-content
+  [asset attachment-name]
+  (assert asset "Can't read content from nil asset.")
+  (->
+    asset
+    (get-in [:attachments attachment-name])
+    :content
+    read-as-trimmed-string))
+
+(defn read-resource-content
+  [path]
   (->
     (str "META-INF/" path)
     io/resource
-    read-content
-    String.
-    .trim))
+    read-as-trimmed-string))
 
 (defn- sorted-dependencies
   [asset]
@@ -88,6 +102,8 @@
     (is (= (-> asset :checksum) compiled-coffeescript-checksum))
     (is (= (read-asset-content asset)
            (read-resource-content "assets/compiled-coffeescript-source.js")))
+    (is (= (read-attachment-content asset "source.map")
+           (read-resource-content "assets/compiled-coffeescript-source.map")))
     (is (:compiled asset))
     (is (= (sorted-dependencies asset) ["coffeescript-source.coffee"])))
 
@@ -140,6 +156,9 @@
 
     (is (= (:content-type asset) "text/css"))
     (is (= (read-asset-content asset) expected))
+
+    (is (= (read-attachment-content asset "source.map")
+           (read-resource-content "assets/compiled-sample.less-source.map")))
 
     (is (:compiled asset))
     (is (= (sorted-dependencies asset) ["colors.less" "sample.less"])))

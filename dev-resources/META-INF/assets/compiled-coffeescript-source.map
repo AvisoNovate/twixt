@@ -1,0 +1,13 @@
+{
+  "version": 3,
+  "file": "",
+  "sourceRoot": "",
+  "sources": [
+    "coffeescript-source.coffee"
+  ],
+  "names": [],
+  "mappings": ";AAAA;AAAA,EAAA,OAAA,CAAQ,sBAAR,CAAA,CAAA;AAAA",
+  "sourcesContent": [
+    "println \"CoffeeScript is fun!\""
+  ]
+}
