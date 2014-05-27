@@ -66,6 +66,7 @@
   An asset map has the minimum following keys:
 
   - `:content` - the content of the asset in a form that is compatible with clojure.java.io
+  - `:asset-path` - the path of the asset under the root folder `/META-INF/assets/`
   - `:resource-path` - the full path of the underlying resource
   - `:content-type` - the MIME type of the content, as determined from the path's extension
   - `:size` - size of the asset in bytes
