@@ -51,7 +51,7 @@
 ;; Note: updating the CoffeeScript compiler will often change the outputs, including checksums, not least because
 ;; the compiler injects a comment with the compiler version.
 
-(def compiled-coffeescript-checksum "aea835e2")
+(def compiled-coffeescript-checksum "52753585")
 
 (deftest asset-pipeline
   (testing "asset not found"
@@ -65,7 +65,7 @@
                        :resource-path "META-INF/assets/coffeescript-source.coffee"
                        :asset-path "coffeescript-source.coffee"
                        :content-type "text/javascript"
-                       :size 162
+                       :size 160
                        :checksum compiled-coffeescript-checksum))))
 
 (deftest get-missing-asset-is-an-exception

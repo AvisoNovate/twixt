@@ -4,4 +4,4 @@
 
 }).call(this);
 
-//# sourceMappingURL=./coffeescript-source.coffee@source.map
+//# sourceMappingURL=coffeescript-source.coffee@source.map
