@@ -65,13 +65,26 @@
 
   An asset map has the minimum following keys:
 
-  - `:content` - the content of the asset in a form that is compatible with clojure.java.io
-  - `:asset-path` - the path of the asset under the root folder `/META-INF/assets/`
-  - `:resource-path` - the full path of the underlying resource
-  - `:content-type` - the MIME type of the content, as determined from the path's extension
-  - `:size` - size of the asset in bytes
-  - `:checksum` - Adler32 checksum of the content
-  - `:modified-at` - instant at which the file was last modified (not always trustworthy for files packaged in JARs)
+  `:content`
+  : content of the asset in a form that is compatible with clojure.java.io
+
+  `:asset-path` String
+  : path of the asset under the root folder `/META-INF/assets/`
+
+  `:resource-path` String
+  : full path of the underlying resource
+
+  `:content-type` String
+  : MIME type of the content, as determined from the path's extension
+
+  `:size` number
+  : size of the asset in bytes
+
+  `:checksum` String
+  : Adler32 checksum of the content
+
+  `:modified-at` Date
+  :  instant at which the file was last modified (not always trustworthy for files packaged in JARs)
 
   Various optional parts, such as caching, will add additional keys.
   For example, `:dependencies` is map used to track underlying dependencies for files, such as Less sources,

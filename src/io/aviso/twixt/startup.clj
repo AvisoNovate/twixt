@@ -14,7 +14,7 @@
   "The default way to setup Twixt, with exception reporting.
   This (currently) enables support for CoffeeScript, Less, and Jade.
 
-  The provided Ring request handler is wrapped in the following stack:
+  The provided Ring request handler is wrapped in the following stack (outermost to innermost):
 
   - twixt setup (adds `:twixt` key to the request)
   - exception reporting

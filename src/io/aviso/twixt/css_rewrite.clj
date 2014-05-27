@@ -48,6 +48,7 @@
       (utils/replace-asset-content asset "text/css" (utils/as-bytes content')))))
 
 (defn wrap-with-css-rewriting
+  "Wraps the asset handler with the CSS URI rewriting logic needed for the client to be able to properly rquest the referenced assets."
   [handler]
   (fn [asset-path context]
     (let [asset (handler asset-path context)]

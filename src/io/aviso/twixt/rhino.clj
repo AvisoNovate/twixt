@@ -21,9 +21,14 @@
 (defn invoke-javascript
   "Invokes a JavaScript function, returning the result.
 
-  - `script-paths` - JavaScript files to load, as classpath resource paths
-  - `javascript-fn-name` - name of JavaScript function to execute
-  - `arguments` - additional arguments to pass to the function
+  script-paths
+  : JavaScript files to load, as seq of classpath resource paths
+
+  javascript-fn-name
+  : name of JavaScript function to execute
+
+  arguments
+  : additional arguments to pass to the function
 
   Returns the JavaScript result; typically this will be a JavaScript object, and the properties
   of it can be accessed via the methods of `java.util.Map`."

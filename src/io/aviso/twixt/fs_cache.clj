@@ -124,8 +124,11 @@
   Only assets that have truthy value for :compiled key will be file-system cached. This is set by the various
   compiler and transformers, such as the CoffeeScript to JavaScript transformer.
 
-  - `asset-handler` - to be wrapped
-  - `cache-dir-name` - name of root folder to store cache in (from the Twixt options); the directory will be created as necessary"
+  asset-handler
+  : handler to be wrapped
+
+  cache-dir-name
+  : name of root folder to store cache in (from the Twixt options); the directory will be created as necessary"
   [asset-handler cache-dir-name]
   (let [cache-dir (io/file cache-dir-name "compiled")]
     (l/infof "Caching compiled assets to `%s'." cache-dir)

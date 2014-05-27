@@ -205,8 +205,11 @@ h
 (defn build-report
   "Builds an HTML exception report (as a string).
   
-  - `request` - Ring request map, which must contain the `:twixt` key.
-  - `exception` - Exception to report"
+  request
+  : Ring request map, which must contain the `:twixt` key
+
+  exception
+  : instance of Throwable to report"
   [request exception]
   (let [twixt (:twixt request)]
     (html5
@@ -269,7 +272,7 @@ h
     :else (repl/standard-frame-filter frame)))
 
 (defn register-exception-reporting
-  "Must be invoked to configure the twixt options with the default `:stack-frame-filter` key, [[default-stack-frame-filter]]."
+  "Must be invoked to configure the Twixt options with the default `:stack-frame-filter` key, [[default-stack-frame-filter]]."
   [options]
   (assoc options :stack-frame-filter default-stack-frame-filter))
 

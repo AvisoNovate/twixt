@@ -2,7 +2,9 @@
   "Provides asset pipeline middleware to perform CoffeeScript to JavaScript compilation.
 
   CoffeeScript assets include a source map as an attachment.
-  The compiled JavaScript includes the directive for the browser to load the map."
+  The source map includes the source of the CoffeeScript file.
+
+  The compiled JavaScript includes the directive for the browser to load the source map."
   (:import
     [org.mozilla.javascript ScriptableObject]
     [java.util Map])

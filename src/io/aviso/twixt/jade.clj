@@ -108,7 +108,8 @@
       (twixt/get-asset-uri context (complete-path asset path)))))
 
 (defn register-jade
-  "Updates the Twixt options with support for compiling Jade into HTML."
+  "Updates the Twixt options with support for compiling Jade into HTML. Pretty printing of the output HTML is desirable
+  in development, but should be turned off in production for efficiency."
   [options pretty-print]
   (-> options
       (assoc-in [:content-types "jade"] "text/jade")
