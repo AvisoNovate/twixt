@@ -83,22 +83,6 @@
       (if-let [url (io/resource resource-path)]
         (make-asset-map content-types asset-path resource-path url)))))
 
-(defn default-stack-frame-filter
-  "The default stack frame filter function, used by the HTML excepton report to identify frames that can be hidden
-  by default.
-
-  This implementation hides frames that:
-
-  - Are in the `clojure.lang` package
-  - Are in the `sun.reflect` package
-  - Do not have a line number."
-  [frame]
-  (not
-    (or
-      (nil? (:line frame))
-      (-> frame :package (= "clojure.lang"))
-      (-> frame :package (= "sun.reflect")))))
-
 (def default-options
   "Provides the default options when using Twixt; these rarely need to be changed except, perhaps, for `:path-prefix`
   or `:cache-folder`, or by plugins."
@@ -109,8 +93,7 @@
    :content-transformers {}
    ;; Identify which content types are compressable; all other content types are assumed to not be compressable.
    :compressable         #{"text/*" "application/edn" "application/json"}
-   :cache-folder         (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))
-   :stack-frame-filter   default-stack-frame-filter})
+   :cache-folder         (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))})
 
 (defn- get-single-asset
   [asset-pipeline asset-path context]

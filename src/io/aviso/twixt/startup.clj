@@ -33,6 +33,7 @@
    (wrap-with-twixt handler t/default-options development-mode))
   ([handler twixt-options development-mode]
    (let [twixt-options' (-> twixt-options
+                            te/register-exception-reporting
                             cs/register-coffee-script
                             (jade/register-jade development-mode)
                             less/register-less)

@@ -11,6 +11,7 @@
   (:require
     [clojure.string :as s]
     [io.aviso
+     [repl :as repl]
      [exception :as exception]
      [twixt :as t]]))
 
@@ -101,17 +102,33 @@ h
     " &mdash; "
     method))
 
-(defn- stack-trace-element->row-markup
-  [stack-frame-filter
-   {:keys [file line names]
-    :as   element}]
+(defn- apply-stack-frame-filter
+  [filter frames]
+  (loop [result []
+         [frame & more-frames] frames]
+    (if (nil? frame)
+      result
+      (case (filter frame)
+        :show
+        (recur (conj result frame) more-frames)
+
+        ;; We could perhaps do this differntly, but unlike console output, we treat these the same.
+        (:hide :omit)
+        (recur (conj result (assoc frame :filtered true)) more-frames)
+
+        :terminate
+        result))))
+
+(defn- stack-frame->row-markup
+  [{:keys [file line names]
+    :as   frame}]
   (let [clojure? (-> names empty? not)
-        java-name (element->java-name element)]
-    [:tr (if (stack-frame-filter element) {} {:class :filtered})
+        java-name (element->java-name frame)]
+    [:tr (if (:filtered frame) {:class :filtered} {})
      [:td.function-name
       (if clojure?
         (list
-          (element->clojure-name element)
+          (element->clojure-name frame)
           [:div.filtered java-name])
         java-name)
       ]
@@ -146,7 +163,8 @@ h
           (->>
             e
             exception/expand-stack-trace
-            (map (partial stack-trace-element->row-markup (:stack-frame-filter twixt))))
+            (apply-stack-frame-filter (:stack-frame-filter twixt))
+            (map stack-frame->row-markup))
           ]))
      ]))
 
@@ -234,4 +252,26 @@ h
           response
           (content-type "text/html")
           (status 500))))))
+
+
+(defn default-stack-frame-filter
+  "The default stack frame filter function, used by the HTML excepton report to identify frames that can be hidden
+  by default.
+
+  This implementation hides frames that:
+
+  - Are in the `clojure.lang` package
+  - Are in the `sun.reflect` package
+  - Do not have a line number."
+  [frame]
+  (cond
+    (nil? (:line frame)) :omit
+    ;; This can be removed after pretty 0.1.12:
+    (-> frame :package (= "sun.reflect")) :hide
+    :else (repl/standard-frame-filter frame)))
+
+(defn register-exception-reporting
+  "Must be invoked to configure the twixt options with the default `:stack-frame-filter` key, [[default-stack-frame-filter]]."
+  [options]
+  (assoc options :stack-frame-filter default-stack-frame-filter))
 
