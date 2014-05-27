@@ -33,8 +33,8 @@ http://howardlewisship.com/io.aviso/twixt/[API Documentation]
 
 == Usage
 
-By default, Twixt serves resources located on the classpath, in the +META-INF/assets/+ folder.
-The contents of this folder is accessible via the URL +/assets/+.
+Twixt serves resources located on the classpath, in the +META-INF/assets/+ folder.
+The contents of this folder is accessible, by default, via the URL +/assets/+.
 
 By design, assets are segregated from the rest of your code.
 This prevents a malicious client from directly accessing your code or configuration files.
