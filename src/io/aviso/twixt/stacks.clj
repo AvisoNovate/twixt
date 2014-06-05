@@ -27,6 +27,12 @@
         component-asset (asset-pipeline complete-path context)
         dependencies (:dependencies component-asset)]
 
+    (if-not (some? component-asset)
+      (throw (ex-info (format "Could not locate resource `%s' (a component of `%s')."
+                              complete-path
+                              asset-path)
+                      context)))
+
     (io/copy (:content component-asset) content-stream)
 
     ;; Now add the component asset as a dependency by itself, or

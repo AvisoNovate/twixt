@@ -114,8 +114,8 @@
          (some? context)
          (some? asset-path)]}
   (or (asset-pipeline asset-path context)
-      (throw (IllegalArgumentException. (format "Asset path `%s' does not map to an available resource."
-                                                asset-path)))))
+      (throw (ex-info (format "Asset path `%s' does not map to an available resource." asset-path)
+                      context))))
 
 (defn get-asset-uris
   "Converts a number of asset paths into client URIs.

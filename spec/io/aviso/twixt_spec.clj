@@ -7,13 +7,15 @@
     io.aviso.twixt.utils)
   (:require
     [clojure.java.io :as io]
+    [io.aviso.exception :as exception]
     [io.aviso.twixt
      [coffee-script :as cs]
      [jade :as jade]
      [less :as less]
      [ring :as ring]
      [stacks :as stacks]]
-    [clojure.string :as str]))
+    [clojure.string :as str]
+    [clojure.tools.logging :as l]))
 
 (defn read-as-trimmed-string
   [content]
@@ -92,7 +94,7 @@
   (context "get-asset-uri"
 
     (it "throws IllegalArgumentException if an asset does not exist"
-        (should-throw IllegalArgumentException
+        (should-throw Exception
                       "Asset path `does/not/exist.png' does not map to an available resource."
                       (get-asset-uri @twixt-context "does/not/exist.png")))
 
@@ -232,12 +234,11 @@
           (should= "text/javascript" (:content-type @asset)))
 
       (it "is marked as compiled"
-          (pprint @asset)
           (should (:compiled @asset)))
 
       (it "identifies the correct aggregated asset paths"
-          (should= ["stack/barney.js" "stack/fred.js"]
-                   (-> @asset :aggregate-asset-paths sort)))
+          (should= ["stack/fred.js" "stack/barney.js"]
+                   (-> @asset :aggregate-asset-paths)))
 
       (it "includes dependencies on every file in the stack"
           (should= ["stack/barney.js" "stack/bedrock.stack" "stack/fred.js"]
@@ -246,6 +247,34 @@
       (it "has the correct aggregated content"
           (should= (read-resource-content "expected/bedrock.js")
                    (read-asset-content @asset))))
+
+    (context "stack with compilation"
+
+      (with-all asset (@pipeline "stack/compiled.stack" @twixt-context))
+
+      (it "identifies the correct aggregated asset path"
+          (should= ["coffeescript-source.coffee" "stack/stack.coffee"]
+                   (-> @asset :aggregate-asset-paths)))
+
+      (it "includes dependencies on every file in the stack"
+          (should= ["coffeescript-source.coffee" "stack/compiled.stack" "stack/stack.coffee"]
+                   (sorted-dependencies @asset)))
+
+      ;; Note: the compiled output includes the sourceMappingURL comments.
+      ;; It is possible that will not work well in the client and may need to be filtered out.
+      (it "has the correct aggregated content"
+          (should= (read-resource-content "expected/compiled-stack.js")
+                   (read-asset-content @asset))))
+
+    (context "stack with missing component"
+
+      (it "throws a reasonable excepton when a component is missing"
+          (try
+            (get-asset-uri @twixt-context "stack/missing-component.stack")
+            (should-fail)
+            (catch Exception e
+              (should= "Could not locate resource `stack/does-not-exist.coffee' (a component of `stack/missing-component.stack')."
+                       (.getMessage e))))))
 
     (context "get-asset-uri"
       (it "always returns the stack asset URI"

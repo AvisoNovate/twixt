@@ -1,0 +1,1 @@
+motto = "Stacks are fun, especially in production."
