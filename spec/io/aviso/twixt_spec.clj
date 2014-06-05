@@ -71,8 +71,8 @@
 
   (with-all options (->
                       default-options
-                      (assoc   :development-mode true
-                                                 :cache-folder @cache-folder)
+                      (assoc :development-mode true
+                                               :cache-folder @cache-folder)
                       ;; This is usually done by the startup namespace:
                       cs/register-coffee-script
                       jade/register-jade
@@ -266,6 +266,22 @@
           (should= (read-resource-content "expected/compiled-stack.js")
                    (read-asset-content @asset))))
 
+    (context "stack of stacks"
+      (with-all asset (@pipeline "stack/meta.stack" @twixt-context))
+
+      (it "identifies the correct aggregated asset path"
+          (should= ["stack/fred.js" "stack/barney.js" "coffeescript-source.coffee" "stack/stack.coffee"]
+                   (-> @asset :aggregate-asset-paths)))
+
+      (it "includes dependencies on every file in the stack"
+          (should= ["coffeescript-source.coffee" "stack/barney.js" "stack/bedrock.stack" "stack/compiled.stack" "stack/fred.js" "stack/meta.stack" "stack/stack.coffee"]
+                   (sorted-dependencies @asset)))
+
+
+      (it "has the correct aggregated content"
+          (should= (read-resource-content "expected/meta.js")
+                   (read-asset-content @asset))))
+
     (context "stack with missing component"
 
       (it "throws a reasonable excepton when a component is missing"
@@ -324,7 +340,7 @@
   ;; before speclj outputs the report; without it, you often get a jumble of console output (including formatted exceptions)
   ;; and the report as well.  Perhaps another solution is to get speclj to pipe its output through clojure.tools.logging?
   (it "needs to slow down to let the console catch up"
-      (Thread/sleep 250)))
+      (Thread/sleep 1000)))
 
 
 

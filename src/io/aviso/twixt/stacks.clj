@@ -20,6 +20,12 @@
   [asset]
   (-> asset :content io/reader PushbackReader. edn/read))
 
+(defn- update-aggregate-asset-paths
+  [asset-paths component-asset]
+  (if-let [aggregate-paths (-> component-asset :aggregate-asset-paths seq)]
+    (concat asset-paths aggregate-paths)
+    (conj asset-paths (:asset-path component-asset))))
+
 (defn- include-component
   [{:keys [asset-pipeline] :as context} {:keys [asset-path] :as asset} component-path content-stream]
   ;; This may only be correct for relative, not absolute, paths:
@@ -41,7 +47,7 @@
     (-> (if (empty? dependencies)
           (update-in asset [:dependencies] utils/add-asset-as-dependency component-asset)
           (update-in asset [:dependencies] merge dependencies))
-        (update-in [:aggregate-asset-paths] (fnil conj []) (:asset-path component-asset)))))
+        (update-in [:aggregate-asset-paths] (fnil update-aggregate-asset-paths []) component-asset))))
 
 (defn- aggregate-stack
   [{:keys [resource-path] :as asset} context]
