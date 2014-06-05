@@ -40,7 +40,7 @@
 (defn read-resource-content
   [path]
   (->
-    (str "META-INF/" path)
+    path
     io/resource
     read-as-trimmed-string))
 
@@ -107,11 +107,11 @@
                               :checksum compiled-coffeescript-checksum)))
 
     (it "has the correct compiled content"
-        (should= (read-resource-content "assets/compiled-coffeescript-source.js")
+        (should= (read-resource-content "expected/coffeescript-source.js")
                  (read-asset-content @asset)))
 
     (it "has the correct source.map attachment"
-        (should= (read-resource-content "assets/compiled-coffeescript-source.map")
+        (should= (read-resource-content "expected/coffeescript-source.map")
                  (read-attachment-content @asset "source.map")))
 
     (it "has the expected dependencies"
@@ -137,7 +137,7 @@
           (should (:compiled @asset)))
 
       (it "has the correct compiled content"
-          (should= (read-resource-content "assets/compiled-jade-source.html")
+          (should= (read-resource-content "expected/jade-source.html")
                    (read-asset-content @asset))))
 
     (context "using Jade includes"
@@ -145,7 +145,7 @@
       (with-all asset (@pipeline "sub/jade-include.jade" @twixt-context))
 
       (it "has the correct compiled content"
-          (should= (read-resource-content "assets/compiled-jade-include.html")
+          (should= (read-resource-content "expected/jade-include.html")
                    (read-asset-content @asset)))
 
       (it "has the expected dependencies"
@@ -166,7 +166,7 @@
       (with-all asset (@pipeline "jade-helper.jade" @context'))
 
       (it "has the correct compiled content"
-          (should= (read-resource-content "assets/compiled-jade-helper.html")
+          (should= (read-resource-content "expected/jade-helper.html")
                    (read-asset-content @asset)))
 
       (it "includes a dependency on the asset accessed by twixt.uri()"
@@ -183,11 +183,11 @@
           (should (:compiled @asset)))
 
       (it "has the correct compiled content"
-          (should= (read-resource-content "assets/compiled-sample.css")
+          (should= (read-resource-content "expected/sample.css")
                    (read-asset-content @asset)))
 
       (it "has an attached source.map"
-          (should= (read-resource-content "assets/compiled-sample.less-source.map")
+          (should= (read-resource-content "expected/sample.map")
                    (read-attachment-content @asset "source.map")))
 
       (it "includes dependencies for @import-ed files"
@@ -207,7 +207,7 @@
       (with-all asset (@pipeline "logo.less" @twixt-context))
 
       (it "has the correct compiled content"
-          (should= (read-resource-content "assets/compiled-logo.css")
+          (should= (read-resource-content "expected/logo.css")
                    (read-asset-content @asset)))))
 
   (context "asset redirector"
