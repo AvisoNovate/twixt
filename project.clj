@@ -11,8 +11,11 @@
                  [com.github.sommeri/less4j "1.5.3"]
                  [de.neuland-bfi/jade4j "0.4.0"]
                  [hiccup "1.0.4"]]
+  :test-paths ["spec"]
+  :plugins [[speclj "3.0.2"]]
   :codox {:src-dir-uri               "https://github.com/AvisoNovate/twixt/blob/master/"
           :src-linenum-anchor-prefix "L"
           :defaults                  {:doc/format :markdown}}
   :profiles {:dev {:dependencies [[log4j "1.2.17"]
+                                  [speclj "3.0.2"]
                                   [ring/ring-jetty-adapter "1.2.0"]]}})

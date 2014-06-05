@@ -1,12 +1,19 @@
 (ns user
   (:use
+    speclj.config
     io.aviso.tracker
     io.aviso.repl
+    clojure.pprint
     [io.aviso.twixt :only [get-asset-uris default-options]]
     io.aviso.twixt.startup
-    ring.adapter.jetty))
+    ring.adapter.jetty)
+  (:require
+    ;; See https://github.com/slagyr/speclj/issues/79
+    speclj.run.standard))
 
 (install-pretty-exceptions)
+
+(alter-var-root #'default-config assoc :color true :reporters ["documentation"])
 
 (defn handler
   [request]
