@@ -247,6 +247,12 @@
           (should= (read-resource-content "expected/bedrock.js")
                    (read-asset-content @asset))))
 
+    (context "get-asset-uri"
+      (it "always returns the stack asset URI"
+          (should= "/assets/[hash]/stack/bedrock.stack"
+                   (->> (get-asset-uri @twixt-context "stack/bedrock.stack")
+                        remove-hash-from-uri))))
+
     (context "get-asset-uris"
 
       (it "returns a list of component asset URIs in place of a stack"
