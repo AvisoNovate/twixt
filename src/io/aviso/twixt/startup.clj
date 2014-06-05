@@ -34,12 +34,13 @@
    (wrap-with-twixt handler t/default-options development-mode))
   ([handler twixt-options development-mode]
    (let [twixt-options' (-> twixt-options
+                            (assoc :development-mode development-mode)
                             te/register-exception-reporting
                             cs/register-coffee-script
-                            (jade/register-jade development-mode)
+                            jade/register-jade
                             less/register-less
                             stacks/register-stacks)
-         asset-pipeline (t/default-asset-pipeline twixt-options' development-mode)]
+         asset-pipeline (t/default-asset-pipeline twixt-options')]
      (->
        handler
        ring/wrap-with-twixt

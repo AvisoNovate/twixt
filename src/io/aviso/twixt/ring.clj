@@ -159,15 +159,15 @@
 
   The `:twixt` key is the default asset pipeline context, which is needed by [[get-asset-uri]] in order to resolve asset paths
   to an actual asset.
-  It also contains the keys `:asset-pipeline` (the pipeline used to resolve assets) and
-  `:stack-frame-filter` (which is used by the HTML exception report).
+  It also contains the keys `:asset-pipeline` (the pipeline used to resolve assets),
+  `:stack-frame-filter` (which is used by the HTML exception report) and `:development-mode`.
 
   This provides the information needed by the actual Twixt handler, as well as anything else downstream that needs to
   generate Twixt asset URIs."
   [handler twixt-options asset-pipeline]
   (let [twixt (-> twixt-options
                   ;; Pass down only what is needed to generate asset URIs, or to produce the HTML exception report.
-                  (select-keys [:path-prefix :stack-frame-filter])
+                  (select-keys [:path-prefix :stack-frame-filter :development-mode])
                   (assoc :asset-pipeline asset-pipeline)
                   (merge (:twixt-template twixt-options)))]
     (fn [request]

@@ -67,22 +67,22 @@
   `:content`
   : content of the asset in a form that is compatible with clojure.java.io
 
-  `:asset-path` String
+  `:asset-path`
   : path of the asset under the root folder `/META-INF/assets/`
 
-  `:resource-path` String
+  `:resource-path`
   : full path of the underlying resource
 
-  `:content-type` String
+  `:content-type`
   : MIME type of the content, as determined from the path's extension
 
-  `:size` number
+  `:size`
   : size of the asset in bytes
 
-  `:checksum` String
+  `:checksum`
   : Adler32 checksum of the content
 
-  `:modified-at` Date
+  `:modified-at`
   :  instant at which the file was last modified (not always trustworthy for files packaged in JARs)
 
   Various optional parts, such as caching, will add additional keys.
@@ -109,7 +109,10 @@
    :cache-folder         (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))})
 
 (defn- get-single-asset
-  [asset-pipeline asset-path context]
+  [asset-pipeline context asset-path]
+  {:pre [(some? asset-pipeline)
+         (some? context)
+         (some? asset-path)]}
   (or (asset-pipeline asset-path context)
       (throw (IllegalArgumentException. (format "Asset path `%s' does not map to an available resource."
                                                 asset-path)))))
@@ -121,19 +124,50 @@
   An asset path does not start with a leading slash.
   The default asset resolver locates each asset on the classpath under `META-INF/assets/`.
 
-  - `context` - the `:twixt` key, extracted from the Ring request map
-  - `paths` - asset paths"
-  [{:keys [asset-pipeline path-prefix] :as context} & paths]
-  (utils/nil-check context "nil context provided to get-asset-uris")
-  (->> paths
-       (map #(get-single-asset asset-pipeline % context))
-       (map (partial asset/asset->request-path path-prefix))))
+  Unlike [[get-asset-uri]], this function will expand (in _development mode_) stack assets
+  into the asset URIs for all component assets.
+
+  context
+  : the `:twixt` key, extracted from the Ring request map
+
+  paths
+  : asset paths to convert to URIs"
+  [{:keys [asset-pipeline path-prefix development-mode] :as context} & paths]
+  (loop [asset-uris []
+         [path & more-paths] paths]
+    (if-not (some? path)
+      asset-uris
+      (let [asset (get-single-asset asset-pipeline context path)
+            aggregate-asset-paths (-> asset :aggregate-asset-paths seq)]
+        (if (and development-mode aggregate-asset-paths)
+          (recur (concat asset-uris (apply get-asset-uris context aggregate-asset-paths))
+                 more-paths)
+          (recur (conj asset-uris (asset/asset->request-path path-prefix asset))
+                 more-paths))))))
 
 (defn get-asset-uri
-  "Uses [[get-asset-uris]] to get a single URI for a single asset path.
-  The resource must exist."
-  [context asset-path]
-  (first (get-asset-uris context asset-path)))
+  "Converts a single asset paths into a client URI.
+  Throws an exception if the path does not exist.
+
+  The default asset resolver locates each asset on the classpath under `META-INF/assets/`.
+
+  This works much the same as [[get-asset-uris]] except that stack asset will
+  be a URI to the stack (whose content is the aggregation of the components of the stack)
+  rather than the list of component asset URIs.
+  This matches the behavior of `get-asset-uris` in _production_, but you should use
+  `get-asset-uris` in development, since in development, you want the individual
+  component assets, rather than the aggregated whole.
+
+  context
+  : the `:twixt` key, extracted from the Ring request map
+
+  asset-path
+  : path to the asset; asset paths do __not__ start with a leading slash."
+  [{:keys [asset-pipeline path-prefix] :as context} asset-path]
+  (->>
+    asset-path
+    (get-single-asset asset-pipeline context)
+    (asset/asset->request-path path-prefix)))
 
 (defn find-asset-uri
   "Returns the URI for an asset, if it exists.
@@ -202,7 +236,7 @@
     (asset-handler asset-path (assoc context :asset-resolver asset-resolver))))
 
 (defn default-asset-pipeline
-  "Sets up the default pipeline in either development mode or production mode.
+  "Sets up the default pipeline.
 
   The asset pipeline starts with a resolver, which is then intercepted using asset pipeline middleware.
   As with Ring, middleware is a function that accepts an asset-handler and returns an asset-handler. The asset-handler
@@ -215,7 +249,7 @@
 
   In some cases, middlware may modify the context before passing it forward to the next asset-handler, typically
   by adding additional keys."
-  [twixt-options development-mode]
+  [{:keys [development-mode] :as twixt-options}]
   (let [asset-resolver (make-asset-resolver twixt-options)]
     (->
       asset-resolver
@@ -225,8 +259,4 @@
       (default-wrap-pipeline-with-compressed-caching development-mode)
       (wrap-pipeline-with-asset-resolver asset-resolver)
       wrap-pipeline-with-tracing)))
-
-
-
-
 

@@ -61,7 +61,7 @@
     (.setCaching false)
     (.setTemplateLoader (create-template-loader asset asset-resolver dependencies))))
 
-(defn- jade-compiler [pretty-print asset context]
+(defn- jade-compiler [asset context]
   (let [name (:resource-path asset)]
     (t/timer
       #(format "Compiled `%s' to HTML in %.2f ms" name %)
@@ -71,7 +71,7 @@
           ;; Seed the dependencies with the Jade source file. Any included
           ;; sources will be added to dependencies.
           (let [dependencies (atom {name (utils/extract-dependency asset)})
-                configuration (create-configuration pretty-print asset context dependencies)
+                configuration (create-configuration (-> context :development-mode) asset context dependencies)
                 template (.getTemplate configuration (:asset-path asset))
                 compiled-output (.renderTemplate configuration template {})]
             (utils/create-compiled-asset asset "text/html" compiled-output @dependencies))
@@ -108,10 +108,10 @@
       (twixt/get-asset-uri context (complete-path asset path)))))
 
 (defn register-jade
-  "Updates the Twixt options with support for compiling Jade into HTML. Pretty printing of the output HTML is desirable
-  in development, but should be turned off in production for efficiency."
-  [options pretty-print]
+  "Updates the Twixt options with support for compiling Jade into HTML. Pretty printing of the output HTML is enabled
+  in development mode, but disabled in production (for efficiency)."
+  [options]
   (-> options
       (assoc-in [:content-types "jade"] "text/jade")
-      (assoc-in [:content-transformers "text/jade"] (partial jade-compiler pretty-print))
+      (assoc-in [:content-transformers "text/jade"] jade-compiler)
       (assoc-in [:twixt-template :jade :helpers "twixt"] create-twixt-helper)))

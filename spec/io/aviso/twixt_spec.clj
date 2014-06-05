@@ -12,7 +12,8 @@
      [jade :as jade]
      [less :as less]
      [ring :as ring]
-     [stacks :as stacks]]))
+     [stacks :as stacks]]
+    [clojure.string :as str]))
 
 (defn read-as-trimmed-string
   [content]
@@ -49,6 +50,14 @@
   [asset]
   (->> asset :dependencies vals (map :asset-path) sort))
 
+(defn- remove-hash-from-uri
+  [^String asset-uri]
+  (str/join "/" (->
+                  asset-uri
+                  (.split "/")
+                  vec
+                  (assoc 2 "[hash]"))))
+
 ;; Note: updating the CoffeeScript compiler will often change the outputs, including checksums, not least because
 ;; the compiler injects a comment with the compiler version.
 
@@ -60,16 +69,18 @@
 
   (with-all options (->
                       default-options
-                      (assoc :cache-folder @cache-folder)
+                      (assoc   :development-mode true
+                                                 :cache-folder @cache-folder)
                       ;; This is usually done by the startup namespace:
                       cs/register-coffee-script
-                      (jade/register-jade true)
+                      jade/register-jade
                       less/register-less
                       stacks/register-stacks))
 
-  (with-all pipeline (default-asset-pipeline @options true))
+  (with-all pipeline (default-asset-pipeline @options))
 
-  (with-all twixt-context (assoc @options :asset-pipeline @pipeline))
+  (with-all twixt-context (assoc @options :development-mode true
+                                          :asset-pipeline @pipeline))
 
 
   (context "asset pipeline"
@@ -104,10 +115,9 @@
                               :resource-path "META-INF/assets/coffeescript-source.coffee"
                               :asset-path "coffeescript-source.coffee"
                               :content-type "text/javascript"
-                              :compiled true
+                              :compiled tru
                               :size 160
                               :checksum compiled-coffeescript-checksum)))
-
     (it "has the correct compiled content"
         (should= (read-resource-content "expected/coffeescript-source.js")
                  (read-asset-content @asset)))
@@ -157,12 +167,12 @@
     (context "using Jade helpers"
 
       (with-all context' (->
-                       @twixt-context
-                       ;; The merge is normally part of the Ring code.
-                       (merge (:twixt-template @options))
-                       ;; This could be done by Ring middleware, or by
-                       ;; modifying the :twixt-template as well.
-                       (assoc-in [:jade :variables "logoTitle"] "Our Logo")) )
+                           @twixt-context
+                           ;; The merge is normally part of the Ring code.
+                           (merge (:twixt-template @options))
+                           ;; This could be done by Ring middleware, or by
+                           ;; modifying the :twixt-template as well.
+                           (assoc-in [:jade :variables "logoTitle"] "Our Logo")))
 
 
       (with-all asset (@pipeline "jade-helper.jade" @context'))
@@ -222,8 +232,8 @@
           (should= "text/javascript" (:content-type @asset)))
 
       (it "is marked as compiled"
-        (pprint @asset)
-        (should (:compiled @asset)))
+          (pprint @asset)
+          (should (:compiled @asset)))
 
       (it "identifies the correct aggregated asset paths"
           (should= ["stack/barney.js" "stack/fred.js"]
@@ -231,12 +241,25 @@
 
       (it "includes dependencies on every file in the stack"
           (should= ["stack/barney.js" "stack/bedrock.stack" "stack/fred.js"]
-                   (sorted-dependencies @asset))
-          )
+                   (sorted-dependencies @asset)))
 
       (it "has the correct aggregated content"
           (should= (read-resource-content "expected/bedrock.js")
-                   (read-asset-content @asset)))))
+                   (read-asset-content @asset))))
+
+    (context "get-asset-uris"
+
+      (it "returns a list of component asset URIs in place of a stack"
+
+          (should= ["/assets/[hash]/stack/fred.js" "/assets/[hash]/stack/barney.js"]
+                   (->> (get-asset-uris @twixt-context "stack/bedrock.stack")
+                        (map remove-hash-from-uri))))
+
+      (it "returns just the stack asset URI in production mode"
+          (should= ["/assets/[hash]/stack/bedrock.stack"]
+                   (->> (get-asset-uris (assoc @twixt-context :development-mode false) "stack/bedrock.stack")
+                        (map remove-hash-from-uri))))))
+
 
   (context "asset redirector"
     (with-all wrapped (ring/wrap-with-asset-redirector (constantly nil)))
