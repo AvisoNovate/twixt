@@ -11,7 +11,8 @@
      [coffee-script :as cs]
      [jade :as jade]
      [less :as less]
-     [ring :as ring]]))
+     [ring :as ring]
+     [stacks :as stacks]]))
 
 (defn read-as-trimmed-string
   [content]
@@ -63,7 +64,8 @@
                       ;; This is usually done by the startup namespace:
                       cs/register-coffee-script
                       (jade/register-jade true)
-                      (less/register-less)))
+                      less/register-less
+                      stacks/register-stacks))
 
   (with-all pipeline (default-asset-pipeline @options true))
 
@@ -210,6 +212,32 @@
           (should= (read-resource-content "expected/logo.css")
                    (read-asset-content @asset)))))
 
+  (context "stack support"
+
+    (context "simple stack"
+
+      (with-all asset (@pipeline "stack/bedrock.stack" @twixt-context))
+
+      (it "has the content type from the stack file"
+          (should= "text/javascript" (:content-type @asset)))
+
+      (it "is marked as compiled"
+        (pprint @asset)
+        (should (:compiled @asset)))
+
+      (it "identifies the correct aggregated asset paths"
+          (should= ["stack/barney.js" "stack/fred.js"]
+                   (-> @asset :aggregate-asset-paths sort)))
+
+      (it "includes dependencies on every file in the stack"
+          (should= ["stack/barney.js" "stack/bedrock.stack" "stack/fred.js"]
+                   (sorted-dependencies @asset))
+          )
+
+      (it "has the correct aggregated content"
+          (should= (read-resource-content "expected/bedrock.js")
+                   (read-asset-content @asset)))))
+
   (context "asset redirector"
     (with-all wrapped (ring/wrap-with-asset-redirector (constantly nil)))
 
@@ -232,11 +260,9 @@
                      (should-be-nil (@wrapped {:uri path :twixt @twixt-context}))
                      "/"
                      "/a-folder"
-                     "/another/folder/"))
+                     "/another/folder/")))
 
-    )
-
-  ;; Slightly bogus; this lets the mass of exception written out by the executing tests have a chance to finish
+  ;; Slightly bogus; this lets the mass of exceptions written out by the executing tests have a chance to finish
   ;; before speclj outputs the report; without it, you often get a jumble of console output (including formatted exceptions)
   ;; and the report as well.  Perhaps another solution is to get speclj to pipe its output through clojure.tools.logging?
   (it "needs to slow down to let the console catch up"

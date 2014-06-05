@@ -31,7 +31,6 @@
 
 ;;; Lots of stuff from Tapestry 5.4 is not yet implemented
 ;;; - multiple domains (the context, the file system, etc.)
-;;; - JavaScript aggregation
 ;;; - JavaScript minification
 ;;; - CSS minification
 

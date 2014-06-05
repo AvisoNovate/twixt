@@ -1,0 +1,2 @@
+{:content-type "text/javascript"
+ :components   ["fred.js" "barney.js"]}

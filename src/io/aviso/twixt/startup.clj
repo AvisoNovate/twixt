@@ -8,11 +8,12 @@
      [exceptions :as te]
      [jade :as jade]
      [less :as less]
-     [ring :as ring]]))
+     [ring :as ring]
+     [stacks :as stacks]]))
 
 (defn wrap-with-twixt
   "The default way to setup Twixt, with exception reporting.
-  This (currently) enables support for CoffeeScript, Less, and Jade.
+  This (currently) enables support for CoffeeScript, Less, and Jade, and Stacks.
 
   The provided Ring request handler is wrapped in the following stack (outermost to innermost):
 
@@ -36,7 +37,8 @@
                             te/register-exception-reporting
                             cs/register-coffee-script
                             (jade/register-jade development-mode)
-                            less/register-less)
+                            less/register-less
+                            stacks/register-stacks)
          asset-pipeline (t/default-asset-pipeline twixt-options' development-mode)]
      (->
        handler
