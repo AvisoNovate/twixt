@@ -84,13 +84,20 @@
   : Adler32 checksum of the content
 
   `:modified-at`
-  :  instant at which the file was last modified (not always trustworthy for files packaged in JARs)
+  : instant at which the file was last modified (not always trustworthy for files packaged in JARs)
 
-  Various optional parts, such as caching, will add additional keys.
-  For example, `:dependencies` is map used to track underlying dependencies for files, such as Less sources,
-  that can be invalidated by changes to more than one file.
+  `:compiled`
+  : _optional_ - true for assets that represent some for of compilation (or aggregation) and should be cached
 
-  `:attachments` is used to add additional files such as JavaScript source maps."
+  `:aggregate-asset-path`
+  : _optional_ - seq of asset paths from which a stack asset was constructed
+
+  `:dependencies`
+  : _optional_ - used to track underlying dependencies; a map of resource path to details about that resource
+  (keys `:asset-path`, `:checksum`, and  `:modified-at`)
+
+  `:attachments`
+  : _optional_ - map of string name to attachment (with contains `:content`, `:size`, and `:content-type`)"
   [{:keys [content-types]}]
   (fn [asset-path context]
     (let [resource-path (str "META-INF/assets/" asset-path)]

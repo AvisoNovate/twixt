@@ -80,7 +80,7 @@
                                (.getCss output)
                                "\n/*# sourceMappingURL="
                                (utils/path->name path)
-                               "@source.map */")
+                               "@source.map */\n")
                 source-map (.getSourceMap output)]
             (->
               asset

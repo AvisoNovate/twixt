@@ -124,6 +124,8 @@
   Only assets that have truthy value for :compiled key will be file-system cached. This is set by the various
   compiler and transformers, such as the CoffeeScript to JavaScript transformer.
 
+  Assets that are accessed for aggregation are not cached (the final aggregated asset will be cached).
+
   asset-handler
   : handler to be wrapped
 
@@ -133,7 +135,7 @@
   (let [cache-dir (io/file cache-dir-name "compiled")]
     (l/infof "Caching compiled assets to `%s'." cache-dir)
     (.mkdirs cache-dir)
-    (fn [asset-path {:keys [asset-resolver] :as context}]
+    (fn [asset-path {:keys [asset-resolver for-aggregation] :as context}]
       (let [asset-cache-dir (io/file cache-dir asset-path)
             cached-asset (read-cached-asset asset-cache-dir)]
         (if (is-valid? asset-resolver cached-asset)
@@ -141,6 +143,8 @@
           (do
             (delete-dir-and-contents asset-cache-dir)
             (let [asset (asset-handler asset-path context)]
-              (if (:compiled asset)
+              (if (and
+                    (:compiled asset)
+                    (not for-aggregation))
                 (write-cached-asset asset-cache-dir asset))
               asset)))))))

@@ -284,13 +284,35 @@
 
     (context "stack with missing component"
 
-      (it "throws a reasonable excepton when a component is missing"
+      (it "throws a reasonable exception when a component is missing"
           (try
             (get-asset-uri @twixt-context "stack/missing-component.stack")
             (should-fail)
             (catch Exception e
               (should= "Could not locate resource `stack/does-not-exist.coffee' (a component of `stack/missing-component.stack')."
                        (.getMessage e))))))
+
+    (context "CSS stack"
+
+      (with-all asset (@pipeline "stack/style.stack" @twixt-context))
+
+      (it "has the content type from the stack file"
+          (should= "text/css" (:content-type @asset)))
+
+
+      (it "identifies the correct aggregated asset paths"
+          (should= ["stack/local.less" "sample.less"]
+                   (-> @asset :aggregate-asset-paths)))
+
+      (it "identifies the correct dependencies"
+          ;; TODO: The referenced asset (aviso-logo.png) should be a dependency!
+          (should= ["colors.less" "sample.less" "stack/local.less" "stack/style.stack"]
+                   (sorted-dependencies @asset)))
+
+      ;; Again, need to think about stripping out the sourceMappingURL lines.
+      (it "contains the correct aggregated content"
+          (should= (read-resource-content "expected/style.css")
+                   (read-asset-content @asset))))
 
     (context "get-asset-uri"
       (it "always returns the stack asset URI"

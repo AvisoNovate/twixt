@@ -54,7 +54,7 @@
   (t/track
     #(format "Reading stack `%s' and aggregating contents." resource-path)
     ;; Make sure that the aggregated asset is not compressed
-    (let [context' (assoc context :gzip-enabled false)
+    (let [context' (assoc context :for-aggregation true)
           stack (read-stack asset)]
 
       (assert (-> stack :content-type some?))

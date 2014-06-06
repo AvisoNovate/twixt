@@ -12,17 +12,20 @@
    Cached values are permanent; in even the largest web application, the amount of assets is relatively finite,
    so no attempt has been made to evict assets from the cache.
 
+   Assets that are accessed for aggregation are not cached (the aggregated assed will be cached).
+
    The optional `store-in-cache?` parameter is a function; it is passed an asset, and returns true
    if the asset should be stored in the cache."
   ([asset-handler]
    (wrap-with-sticky-cache asset-handler (constantly true)))
   ([asset-handler store-in-cache?]
    (let [cache (atom {})]
-     (fn [asset-path context]
+     (fn [asset-path {:keys [for-aggregation] :as context}]
        (if-let [asset (get @cache asset-path)]
          asset
          (when-let [asset (asset-handler asset-path context)]
-           (if (store-in-cache? asset)
+           (if (and (not for-aggregation)
+                    (store-in-cache? asset))
              (swap! cache assoc asset-path asset))
            asset))))))
 
@@ -55,18 +58,23 @@
   assets that are obtained from the cache are checked to ensure they are still valid;
   invalid cached assets are discarded and re-fetched from downstream.
 
+  Assets that are obtained for aggregation are _not_ cached; it is assumed that they are
+  intermediate results and only the final aggregated asset needs to be cached.
+
   A cached asset is invalid if any of its dependencies has changed (based on modified-at timestamp)."
   ([asset-handler]
    (wrap-with-invalidating-cache asset-handler (constantly true)))
   ([asset-handler store-in-cache?]
    (let [cache (atom {})]
-     (fn [asset-path context]
+     (fn [asset-path {:keys [for-aggregation] :as context}]
        (let [asset (get @cache asset-path)]
          (if (is-valid? asset)
            asset
            (do
              (swap! cache dissoc asset-path)
              (when-let [asset (asset-handler asset-path context)]
-               (if (store-in-cache? asset)
+               (if (and
+                     (not for-aggregation)
+                     (store-in-cache? asset))
                  (swap! cache assoc asset-path asset))
                asset))))))))

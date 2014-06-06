@@ -1,0 +1,2 @@
+{:content-type "text/css"
+ :components   ["local.less" "../sample.less"]}

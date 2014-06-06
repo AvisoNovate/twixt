@@ -48,10 +48,15 @@
       (utils/replace-asset-content asset "text/css" (utils/as-bytes content')))))
 
 (defn wrap-with-css-rewriting
-  "Wraps the asset handler with the CSS URI rewriting logic needed for the client to be able to properly rquest the referenced assets."
+  "Wraps the asset handler with the CSS URI rewriting logic needed for the client to be able to properly request the referenced assets.
+
+  Rewriting occurs for individual CSS assets (including those created by compiling a Less source). It does not occur for
+  aggregated CSS assets (since the individual assets will already have had URIs rewritten)."
   [handler]
   (fn [asset-path context]
     (let [asset (handler asset-path context)]
-      (if (= "text/css" (:content-type asset))
+      (if (and
+            (= "text/css" (:content-type asset))
+            (-> asset :aggregate-asset-paths empty?))
         (rewrite-css asset context)
         asset))))

@@ -41,12 +41,15 @@
 
 (defn wrap-pipeline-with-compression
   "Asset pipeline middleware for detecting if asset content is compressable, and compressing
-  the asset when necessary."
+  the asset when necessary
+
+  When an asset is accessed for aggregation, it is never compressed."
   [asset-handler {compressable-types :compressable}]
-  (fn [asset-path options]
+  (fn [asset-path {:keys [gzip-enabled for-aggregation] :as options}]
     (let [asset (asset-handler asset-path options)]
       (if (and asset
-               (:gzip-enabled options)
+               gzip-enabled
+               (not for-aggregation)
                (is-compressable-mime-type? compressable-types (:content-type asset)))
         (compress-asset asset)
         asset))))
