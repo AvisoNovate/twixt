@@ -271,6 +271,17 @@ them on the fly.
 In production mode, there are no checks to see if the in-memory cache is valid; if a source file is changed, it is assumed
 that the entire application will be re-deployed and re-started.
 
+== JavaScript Minimization
+
+Minimization is only enabled in production.
+
+It is set up for _simple optimizations_; this removes whitespace and may shorten variable and function names.
+The optimization level is not current configurable.
+
+It is recommended that you make use of JavaScript stacks; this allows the compiler to only be executed once
+on a larger sample of JavaScript.
+
+
 == Jade Notes
 
 === twixt helper
