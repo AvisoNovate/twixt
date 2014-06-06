@@ -1,7 +1,7 @@
 (ns io.aviso.twixt.js-minification
   "Provides support for JavaScript minification using the Google Closure compiler."
   (:import (com.google.javascript.jscomp CompilerOptions ClosureCodingConvention DiagnosticGroups CheckLevel
-                                         SourceFile Result))
+                                         SourceFile Result CompilationLevel))
   (:require [clojure.java.io :as io]
             [io.aviso.twixt.utils :as utils]
             [io.aviso.tracker :as t]
@@ -23,6 +23,7 @@
                       (.setCodingConvention (ClosureCodingConvention.))
                       (.setOutputCharset "utf-8")
                       (.setWarningLevel DiagnosticGroups/CHECK_VARIABLES CheckLevel/WARNING))
+            _ (.setOptionsForCompilationLevel CompilationLevel/SIMPLE_OPTIMIZATIONS options)
             compiler ^{:type ClosureCompiler} (doto (.newInstance ClosureCompiler) .disableThreads)
             input (SourceFile/fromInputStream file-path
                                               (-> asset :content io/input-stream))
