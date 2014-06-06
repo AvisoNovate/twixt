@@ -1,7 +1,6 @@
-== Twixt
+== Twixt - Clojure Web Application Asset Pipeline
 
 image:https://drone.io/github.com/AvisoNovate/twixt/status.png[Build Status, link="https://drone.io/github.com/AvisoNovate/twixt"]
-
 
 Twixt is an extensible asset pipeline for use in Clojure web applications.
 It is designed to complement an application built using Ring and related libraries, such as Compojure.
@@ -55,13 +54,19 @@ Twixt maps file extensions to MIME types; it will then transform certain MIME ty
 ;;; Use Compojure to map routes to handlers
 (defroutes app ...)
 
-;;; Create twixt wrappers and handler to handle /asset/ URLs, in development (vs. production) mode
+;;; Create twixt wrappers and handler to handle /asset/ URLs, in development mode
 (def app-handler
   (startup/wrap-with-twixt app true)
 
 ;;; Use the Ring Jetty adapter to serve your site
 (run-jetty app-handler)
-----  
+----
+
+NOTE: Twixt changes its behavior in a number of ways in development mode (as opposed to the normal
+production mode).
+For example, Less compilation will pretty-print the generated HTML markup in development
+mode.
+In production mode, the markup omits all unnecessary white space.
 
 The Twixt middleware intercepts requests for the +/assets/+ URI that map to actual files; non-matching requests, or
 requests for assets that do not exist, are delegated down to the wrapped handlers.
@@ -85,10 +90,13 @@ Currently, the mapping is very straightforward: the path +/assets/123abc/css/sty
 +META-INF/assets/css/style.less+ which is read into memory and transformed from Less to CSS.
 Embedded in the middle of the URL is the content checksum for the file (+123abc+).
 
+NOTE: Placing this information directly into the URI is called _fingerprinting_.
+
 In your application, assets will change during development, or between production deployments. The URIs provided to
-the client agent (the web browser) is a _resource_; resources are immutable.
+the client agent (the web browser) is a _resource_; on the web, resources are immutable, even though
+in your workspace, files change all the time.
 The checksum in the URI is based on the actual content of the file;
-if the underlying content changes, then a new checksum, new URI, and therefore, new resource will be referenced.
+whenever the underlying content changes, then a new checksum, new URI, and therefore, new resource will be referenced by the URI.
 
 Twixt sets headers to indicate a far-future expiration date for the resource;
 the upshot of which is that, once the resource for an asset is downloaded to the client browser, the browser will not ask for it again.
@@ -115,7 +123,8 @@ through Twixt to get URIs that will work in the browser:
         ...
 ----
 
-The parameter to +defhtml+ is the Ring request map; Twixt has injected middleware that provides the +:twixt+ key.
+The parameter to +defhtml+ is the Ring request map; Twixt has injected middleware that provides the Twixt context under
+the +:twixt+ key.
 
 +get-asset-uri+ is defined in the +io.aviso.twixt+ namespace.
 
@@ -128,6 +137,60 @@ When a client requests an asset that exists, but supplies an incorrect checksum,
 Twixt will respond with a 301 redirect HTTP response,
 directing the client to the correct resource (with the correct checksum). 
 This is an extremely unlikely scenario that would involve a running client in a race with a redeployed application.
+
+== Stacks
+
+In development, you often want to have many small source files downloaded individually to the browser.
+This is simpler to debug, and faster ... a change to one file will be a small recompile of just that file.
+
+In production, it's a different story; you want the client to make as few requests to the server as possible.
+
+This can be accomplished using _stacks_.
+
+Stacks allow you to group together related files of the same type into a single asset. Commonly, this is used
+to aggregate JavaScript or CSS.
+
+In development mode, you will see the individual files of the stack;
+in production mode, the stack is represented by a single URI which maps to the aggregated content of all the
+files in the stack.
+
+A stack file is written in https://github.com/edn-format/edn[EDN].
+Each stack file contains a +:content-type+ key, and a +:components+ key.
+Stack files have a +.stack+ extension.
+
+[source,clojure]
+----
+{:content-type "text/css"
+ :components "bootstrap3/bootstrap.css"
+             "app.less"
+             "ie-fixes.less"}
+----
+
+When using stacks, you will want a slight tweak to your page template:
+
+[source,clojure]
+----
+(defhtml index
+  [{context :twixt :as request}]
+  (html
+    (doctype :html5
+    [:html
+      [:head
+        [:title "My Clojure App"]
+        (apply include-css (get-asset-uris context "css/app-css.stack"))
+        ...
+----
+
+Since +get-asset-uris+ will return a collection of URIs (unlike +get-asset-uri+ which always returns just one),
+we must change +include-css+ to +apply include-css+.
+
+This template will work in development (+get-asset-uris+ returning several URIs) and in production (just a
+single URI).
+
+It is possible for stacks to include other stacks as components.
+
+Stack components are _included_ not _imported_; if a component asset is listed more than once, its content will
+be aggregated more than once.
 
 == Direct asset URLs
 
@@ -167,7 +230,7 @@ The +:content-types+ key maps file extensions to MIME types.
 The +:content-transformers+ key is a map of content type keys (as strings, such as "text/coffeescript") to a
 transformation function; The CoffeeScript, Jade, and Less compilers operate by adding entries to +:content-types+ and :content-transformers+.
 
-The +:compressable+ key is a set used to identifiy which content types are compressable; note the use of the +/*+ suffix to indicate
+The +:compressable+ key is a set used to identify which content types are compressable; note the use of the +/*+ suffix to indicate
 that all text content types are compressable. Anything not explicitly compressable is considered non-compressable.
 
 The +:twixt-template+ key is a map that provides default values for the +:twixt+ request key.
@@ -186,6 +249,10 @@ will be accessed from the file system cache.
 
 Whenever a source file changes, the corresponding compiled file is rebuilt (and then the file system cache is updated).
 This is great for development, as you will frequently be changing your source files.
+
+Twixt is smart about dependencies; for example, a Less file may +@import+ another Less file; the compiled asset
+will have dependencies on _both_ files; if either changes, Twixt will re-compile the sources into a new asset,
+with a new asset URI.
 
 Twixt doesn't bother to cache the GZip compressed versions of assets to the file system; it is relatively quick
 to rebuild the compressed byte stream. There's an in-memory cache of the compressed assets, but each request includes
@@ -262,19 +329,13 @@ Creator functions can be added to the Twixt context using Ring middleware:
     (handler (assoc-in request [:twixt :jade :helpers "adrotation"] create-ad-rotation-helper))
 ----
 
-However, more frequently, you will just add to the Twixt options:
+However, more frequently, you will just add to the Twixt options in your application's startup code:
 
 ----
-(defn register-jade
-  "Updates the Twixt options with support for compiling Jade into HTML."
-  [options pretty-print]
-  (-> options
-      (assoc-in [:content-types "jade"] "text/jade")
-      (assoc-in [:content-transformers "text/jade"] (partial jade-compiler pretty-print))
-      (assoc-in [:twixt-template :jade :helpers "twixt"] create-twixt-helper)))
+  (assoc-in twixt/default-options [:twixt-template :jade :helpers "adrotation"] create-ad-rotation-helper))
 ----
 
-NOTE: This function is automatically called when using the standard +io.aviso.twixt.startup/wrap-with-twixt+ function.
+This +:twixt-template+ key is used to create the +:twixt+ Ring request key.
 
 === Defining your own variables
 
@@ -301,8 +362,6 @@ The goal is to achieve at least parity with Apache Tapestry, plus some additiona
 * ClojureScript compilation
 * JavaScript minimization via https://developers.google.com/closure/compiler/[Google Closure]
 * CSS Minification
-* Aggregated JavaScript stacks
-* Aggregated CSS stacks
 * RequireJS support and AMD modules
 * Break out the the Less, Jade, CoffeeScript, and exception reporting support into a-la-carte modules
 * "Warm up" the cache at startup (in production)

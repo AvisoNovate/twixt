@@ -33,6 +33,7 @@
 ;;; - multiple domains (the context, the file system, etc.)
 ;;; - JavaScript minification
 ;;; - CSS minification
+;;; - AMD/RequireJS modules
 
 (defn- extract-file-extension [^String path]
   (let [dotx (.lastIndexOf path ".")]
