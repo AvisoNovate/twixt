@@ -3,6 +3,7 @@
 * Source maps for CoffeeScript
 * Source maps for Less (partial, pending improvements to Less4J)
 * Support for stacks: aggregated assets that combine into a single virtual asset
+* JavaScript Minification (in production mode)
  
 ## 0.1.12 (2014-04-29)
 
