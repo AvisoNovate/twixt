@@ -32,7 +32,6 @@
 
 ;;; Lots of stuff from Tapestry 5.4 is not yet implemented
 ;;; - multiple domains (the context, the file system, etc.)
-;;; - JavaScript minification
 ;;; - CSS minification
 ;;; - AMD/RequireJS modules
 
@@ -90,7 +89,7 @@
   `:compiled`
   : _optional_ - true for assets that represent some for of compilation (or aggregation) and should be cached
 
-  `:aggregate-asset-path`
+  `:aggregate-asset-paths`
   : _optional_ - seq of asset paths from which a stack asset was constructed
 
   `:dependencies`
@@ -252,6 +251,8 @@
   As with Ring, middleware is a function that accepts an asset-handler and returns an asset-handler. The asset-handler
   is passed an asset path and a context. The initial context is the value of the `:twixt` key from the
   Ring request map.
+
+  In production mode, JavaScript will be minimized.
 
   The context will contain a `:asset-pipeline` key whose value is the asset pipeline in use.
   The context will contain a `:path-prefix` key, extracted from the twixt options.

@@ -21,6 +21,7 @@ Twixt draws inspiration from http://tapestry.apache.org[Apache Tapestry] and htt
 Twixt currently supports:
 
 * CoffeeScript to JavaScript compilation (using Rhino) - including source maps
+* JavaScript Minimization (using https://developers.google.com/closure/compiler/[Google Closure])
 * Jade to HTML compilation (using https://github.com/neuland/jade4j[jade4j])
 * Less to CSS compilation (using https://github.com/SomMeri/less4j[less4j])
 * File system caching of compiled content
@@ -360,10 +361,9 @@ The goal is to achieve at least parity with Apache Tapestry, plus some additiona
 
 * E-Tags support
 * ClojureScript compilation
-* JavaScript minimization via https://developers.google.com/closure/compiler/[Google Closure]
 * CSS Minification
 * RequireJS support and AMD modules
-* Break out the the Less, Jade, CoffeeScript, and exception reporting support into a-la-carte modules
+* Break out the the Less, Jade, CoffeeScript, exception reporting support, etc. into a-la-carte modules
 * "Warm up" the cache at startup (in production)
 
 == Stability
