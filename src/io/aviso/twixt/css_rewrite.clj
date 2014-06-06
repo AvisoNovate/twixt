@@ -13,27 +13,29 @@
 (def ^:private complete-url-pattern #"^[#/]|(\p{Alpha}\w*:)")
 
 (defn- rewrite-relative-url
-  [asset-path context ^String relative-url]
+  [asset-path context dependencies ^String relative-url]
   (if (.startsWith relative-url "data:")
     relative-url
     (t/track
       #(format "Rewriting relative URL `%s'" relative-url)
       (let [referenced-path (utils/compute-relative-path asset-path relative-url)
             asset ((:asset-pipeline context) referenced-path context)]
-        (if asset
-          (asset/asset->request-path (:path-prefix context) asset)
+        (if-not asset
           (throw (ex-info
                    (format "Unable to locate asset `%s'." referenced-path)
                    {:source-asset asset-path
-                    :relative-url relative-url})))))))
+                    :relative-url relative-url})))
 
-(defn- css-url-match-handler [asset-path context match]
+        (swap! dependencies utils/add-asset-as-dependency asset)
+        (asset/asset->request-path (:path-prefix context) asset)))))
+
+(defn- css-url-match-handler [asset-path context dependencies match]
   (let [url (nth match 2)
         parameters (nth match 3)]
     (str "url(\""
          (if (re-matches complete-url-pattern url)
            (str url parameters)
-           (str (rewrite-relative-url asset-path context url)
+           (str (rewrite-relative-url asset-path context dependencies url)
                 parameters))
          "\")")))
 
@@ -42,10 +44,15 @@
   (t/track
     #(format "Rewriting URLs in `%s'" (:asset-path asset))
     (let [content (utils/as-string (:content asset))
+          ;; Using an atom this way is clumsy.
+          dependencies (atom (utils/get-dependencies asset))
           content' (str/replace content
                                 url-pattern
-                                (partial css-url-match-handler (:asset-path asset) context))]
-      (utils/replace-asset-content asset "text/css" (utils/as-bytes content')))))
+                                (partial css-url-match-handler (:asset-path asset) context dependencies))]
+      (->
+        asset
+        (utils/replace-asset-content "text/css" (utils/as-bytes content'))
+        (assoc :dependencies @dependencies)))))
 
 (defn wrap-with-css-rewriting
   "Wraps the asset handler with the CSS URI rewriting logic needed for the client to be able to properly request the referenced assets.

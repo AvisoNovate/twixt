@@ -44,9 +44,8 @@
     ;; Now add the component asset as a dependency by itself, or
     ;; add the component asset's dependencies
 
-    (-> (if (empty? dependencies)
-          (update-in asset [:dependencies] utils/add-asset-as-dependency component-asset)
-          (update-in asset [:dependencies] merge dependencies))
+    (-> asset
+        (update-in [:dependencies] utils/add-asset-as-dependency component-asset)
         (update-in [:aggregate-asset-paths] (fnil update-aggregate-asset-paths []) component-asset))))
 
 (defn- aggregate-stack

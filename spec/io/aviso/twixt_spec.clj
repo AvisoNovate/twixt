@@ -299,14 +299,15 @@
       (it "has the content type from the stack file"
           (should= "text/css" (:content-type @asset)))
 
-
       (it "identifies the correct aggregated asset paths"
           (should= ["stack/local.less" "sample.less"]
                    (-> @asset :aggregate-asset-paths)))
 
       (it "identifies the correct dependencies"
-          ;; TODO: The referenced asset (aviso-logo.png) should be a dependency!
-          (should= ["colors.less" "sample.less" "stack/local.less" "stack/style.stack"]
+          ;; Remember that a change to aviso-logo.png will change the checksum in the
+          ;; compiled and CSS-rewritten stack/local.css, so it must be a dependency
+          ;; of the final asset.
+          (should= ["aviso-logo.png" "colors.less" "sample.less" "stack/local.less" "stack/style.stack"]
                    (sorted-dependencies @asset)))
 
       ;; Again, need to think about stripping out the sourceMappingURL lines.

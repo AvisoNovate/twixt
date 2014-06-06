@@ -52,10 +52,18 @@
   [asset]
   (select-keys asset [:checksum :modified-at :asset-path]))
 
+(defn get-dependencies
+  "Returns map from resource path to dependency data. This may be a map of just
+  the asset itself if it has no other dependencies."
+  [asset]
+  (if (-> asset :dependencies nil?)
+    {(:resource-path asset) (extract-dependency asset)}
+    (:dependencies asset)))
+
 (defn add-asset-as-dependency
   "Adds the asset to a dependency map."
   [dependencies asset]
-  (assoc dependencies (:resource-path asset) (extract-dependency asset)))
+  (merge (or dependencies {}) (get-dependencies asset)))
 
 (defn create-compiled-asset
   "Used to transform an asset map after it has been compiled from one form to another. Dependencies
