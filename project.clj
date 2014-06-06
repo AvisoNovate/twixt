@@ -7,6 +7,7 @@
                  [io.aviso/pretty "0.1.12"]
                  [io.aviso/tracker "0.1.0"]
                  [ring/ring-core "1.2.2"]
+                 [com.google.javascript/closure-compiler "v20140508"]
                  [org.mozilla/rhino "1.7R4"]
                  [com.github.sommeri/less4j "1.5.3"]
                  [de.neuland-bfi/jade4j "0.4.0"]

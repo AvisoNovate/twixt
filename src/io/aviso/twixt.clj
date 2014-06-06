@@ -26,6 +26,7 @@
      [css-rewrite :as rewrite]
      [fs-cache :as fs]
      [memory-cache :as mem]
+     [js-minification :as js]
      [utils :as utils]]
     [ring.util.mime-type :as mime]))
 
@@ -205,12 +206,13 @@
 (defn default-wrap-pipeline-with-content-transformation
   "Used when constructing the asset pipeline, wraps a handler (normally, the asset resolver)
    with additional pipeline handlers based on
-   the `:content-transformers` key of the Twixt options, plus CSS URL Rewriting."
-  [asset-handler twixt-options]
-  (->
+   the `:content-transformers` key of the Twixt options, plus JavaScript mininifcation and CSS URL Rewriting."
+  [asset-handler {:keys [development-mode] :as twixt-options}]
+  (cond->
     asset-handler
-    (wrap-pipeline-with-per-content-type-transformation twixt-options)
-    rewrite/wrap-with-css-rewriting))
+    true (wrap-pipeline-with-per-content-type-transformation twixt-options)
+    (not development-mode) js/wrap-with-javascript-minimizations
+    true rewrite/wrap-with-css-rewriting))
 
 (defn default-wrap-pipeline-with-caching
   "Used when constructing the asset pipeline to wrap the handler with production-mode or development-mode caching.

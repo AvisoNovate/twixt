@@ -30,8 +30,7 @@
   [{:keys [asset-pipeline] :as context} {:keys [asset-path] :as asset} component-path content-stream]
   ;; This may only be correct for relative, not absolute, paths:
   (let [complete-path (utils/compute-relative-path asset-path component-path)
-        component-asset (asset-pipeline complete-path context)
-        dependencies (:dependencies component-asset)]
+        component-asset (asset-pipeline complete-path context)]
 
     (if-not (some? component-asset)
       (throw (ex-info (format "Could not locate resource `%s' (a component of `%s')."

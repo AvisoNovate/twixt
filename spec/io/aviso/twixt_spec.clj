@@ -48,6 +48,17 @@
     io/resource
     read-as-trimmed-string))
 
+(defn have-same-content
+  [expected-content-resource asset]
+  (let [expected (read-resource-content expected-content-resource)
+        actual (read-asset-content asset)]
+    (if (= expected actual)
+      true
+      (printf "Content of `%s' did not match `%s'\n----\n%s\n----\n"
+              (:resource-path asset)
+              expected-content-resource
+              actual))))
+
 (defn- sorted-dependencies
   [asset]
   (->> asset :dependencies vals (map :asset-path) sort))
@@ -81,8 +92,7 @@
 
   (with-all pipeline (default-asset-pipeline @options))
 
-  (with-all twixt-context (assoc @options :development-mode true
-                                          :asset-pipeline @pipeline))
+  (with-all twixt-context (assoc @options :asset-pipeline @pipeline))
 
 
   (context "asset pipeline"
@@ -121,8 +131,7 @@
                               :size 160
                               :checksum compiled-coffeescript-checksum)))
     (it "has the correct compiled content"
-        (should= (read-resource-content "expected/coffeescript-source.js")
-                 (read-asset-content @asset)))
+        (should (have-same-content "expected/coffeescript-source.js" @asset)))
 
     (it "has the correct source.map attachment"
         (should= (read-resource-content "expected/coffeescript-source.map")
@@ -151,16 +160,14 @@
           (should (:compiled @asset)))
 
       (it "has the correct compiled content"
-          (should= (read-resource-content "expected/jade-source.html")
-                   (read-asset-content @asset))))
+          (should (have-same-content "expected/jade-source.html" @asset))))
 
     (context "using Jade includes"
 
       (with-all asset (@pipeline "sub/jade-include.jade" @twixt-context))
 
       (it "has the correct compiled content"
-          (should= (read-resource-content "expected/jade-include.html")
-                   (read-asset-content @asset)))
+          (should (have-same-content "expected/jade-include.html" @asset)))
 
       (it "has the expected dependencies"
           (should= ["common.jade" "sub/jade-include.jade" "sub/samedir.jade"]
@@ -180,8 +187,7 @@
       (with-all asset (@pipeline "jade-helper.jade" @context'))
 
       (it "has the correct compiled content"
-          (should= (read-resource-content "expected/jade-helper.html")
-                   (read-asset-content @asset)))
+          (should (have-same-content "expected/jade-helper.html" @asset)))
 
       (it "includes a dependency on the asset accessed by twixt.uri()"
           (should= ["aviso-logo.png" "jade-helper.jade"]
@@ -197,8 +203,7 @@
           (should (:compiled @asset)))
 
       (it "has the correct compiled content"
-          (should= (read-resource-content "expected/sample.css")
-                   (read-asset-content @asset)))
+          (should (have-same-content "expected/sample.css" @asset)))
 
       (it "has an attached source.map"
           (should= (read-resource-content "expected/sample.map")
@@ -221,8 +226,7 @@
       (with-all asset (@pipeline "logo.less" @twixt-context))
 
       (it "has the correct compiled content"
-          (should= (read-resource-content "expected/logo.css")
-                   (read-asset-content @asset)))))
+          (should (have-same-content "expected/logo.css" @asset)))))
 
   (context "stack support"
 
@@ -245,8 +249,7 @@
                    (sorted-dependencies @asset)))
 
       (it "has the correct aggregated content"
-          (should= (read-resource-content "expected/bedrock.js")
-                   (read-asset-content @asset))))
+          (should (have-same-content "expected/bedrock.js" @asset))))
 
     (context "stack with compilation"
 
@@ -263,8 +266,7 @@
       ;; Note: the compiled output includes the sourceMappingURL comments.
       ;; It is possible that will not work well in the client and may need to be filtered out.
       (it "has the correct aggregated content"
-          (should= (read-resource-content "expected/compiled-stack.js")
-                   (read-asset-content @asset))))
+          (should (have-same-content "expected/compiled-stack.js" @asset))))
 
     (context "stack of stacks"
       (with-all asset (@pipeline "stack/meta.stack" @twixt-context))
@@ -279,8 +281,7 @@
 
 
       (it "has the correct aggregated content"
-          (should= (read-resource-content "expected/meta.js")
-                   (read-asset-content @asset))))
+          (should (have-same-content "expected/meta.js" @asset))))
 
     (context "stack with missing component"
 
@@ -312,8 +313,7 @@
 
       ;; Again, need to think about stripping out the sourceMappingURL lines.
       (it "contains the correct aggregated content"
-          (should= (read-resource-content "expected/style.css")
-                   (read-asset-content @asset))))
+          (should (have-same-content "expected/style.css" @asset))))
 
     (context "get-asset-uri"
       (it "always returns the stack asset URI"
@@ -334,6 +334,22 @@
                    (->> (get-asset-uris (assoc @twixt-context :development-mode false) "stack/bedrock.stack")
                         (map remove-hash-from-uri))))))
 
+  (context "JavaScript Minimization"
+
+    (with-all prod-options (assoc @options :development-mode false))
+
+    (with-all prod-pipeline (default-asset-pipeline @prod-options))
+
+    (with-all prod-twixt-context (assoc @prod-options :asset-pipeline @prod-pipeline))
+
+    (with-all asset (@prod-pipeline "stack/meta.stack" @prod-twixt-context))
+
+    (it "contains the correct minimized content"
+        (should (have-same-content "expected/minimized/meta.js" @asset)))
+
+    (it "can handle much larger files"
+        (should (have-same-content "expected/minimized/bootstrap.js"
+                                   (@prod-pipeline "stack/bootstrap.stack" @prod-twixt-context)))))
 
   (context "asset redirector"
     (with-all wrapped (ring/wrap-with-asset-redirector (constantly nil)))
