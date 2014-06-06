@@ -10,9 +10,9 @@
 ;; See bug http://dev.clojure.org/jira/browse/CLJ-1440
 ;; this is an ugly workaround.
 
-(def ClosureCompiler com.google.javascript.jscomp.Compiler)
+(def ^:private ClosureCompiler com.google.javascript.jscomp.Compiler)
 
-(defn minimize-javascript-asset
+(defn- minimize-javascript-asset
   [{file-path :resource-path :as asset}]
   (t/timer
     #(format "Minimized `%s' (%,d bytes) in %.2f ms"
