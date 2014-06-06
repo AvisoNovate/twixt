@@ -205,7 +205,7 @@
 (defn default-wrap-pipeline-with-content-transformation
   "Used when constructing the asset pipeline, wraps a handler (normally, the asset resolver)
    with additional pipeline handlers based on
-   the `:content-transformers` key of the Twixt options, plus JavaScript mininifcation and CSS URL Rewriting."
+   the `:content-transformers` key of the Twixt options, plus JavaScript minification and CSS URL Rewriting."
   [asset-handler {:keys [development-mode] :as twixt-options}]
   (cond->
     asset-handler
