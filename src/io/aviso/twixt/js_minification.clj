@@ -24,7 +24,7 @@
                       (.setOutputCharset "utf-8")
                       (.setWarningLevel DiagnosticGroups/CHECK_VARIABLES CheckLevel/WARNING))
             _ (.setOptionsForCompilationLevel CompilationLevel/SIMPLE_OPTIMIZATIONS options)
-            compiler ^{:type ClosureCompiler} (doto (.newInstance ClosureCompiler) .disableThreads)
+            compiler (doto (.newInstance ClosureCompiler) .disableThreads)
             input (SourceFile/fromInputStream file-path
                                               (-> asset :content io/input-stream))
             result ^Result (.compile compiler [] [input] options)]
