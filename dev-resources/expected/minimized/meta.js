@@ -1,1 +1,1 @@
-var fred="Fred Flintstone";var barney="Barney Rubble";(function(){println("CoffeeScript is fun!")}).call(this);(function(){var motto;motto="Stacks are fun, especially in production."}).call(this);
+var fred="Fred Flintstone";var barney="Barney Rubble";(function(){println("CoffeeScript is fun!")}).call(this);(function(){var showDialog;showDialog=function(text){return window.alert(text)};$("#logo").click(showDialog)}).call(this);

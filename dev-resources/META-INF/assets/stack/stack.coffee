@@ -1,1 +1,3 @@
-motto = "Stacks are fun, especially in production."
+showDialog = (text) -> window.alert text
+
+$("#logo").click showDialog
