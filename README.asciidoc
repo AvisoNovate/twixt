@@ -1,5 +1,7 @@
 == Twixt - Awesome asset management for Clojure web applications
 
+image:http://clojars.org/io.aviso/twixt/latest-version.svg[Clojars Project, link="http://clojars.org/io.aviso/twixt"]
+
 image:https://drone.io/github.com/AvisoNovate/twixt/status.png[Build Status, link="https://drone.io/github.com/AvisoNovate/twixt"]
 
 Twixt is an extensible asset pipeline for use in Clojure web applications.
