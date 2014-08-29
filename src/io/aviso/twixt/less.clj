@@ -1,7 +1,7 @@
 (ns io.aviso.twixt.less
   "Provides asset pipeline middleware for compiling Less source files to CSS."
   (:import
-    [com.github.sommeri.less4j LessSource LessSource$FileNotFound Less4jException LessCompiler$Problem LessCompiler LessCompiler$CompilationResult LessSource$StringSource LessCompiler$Configuration]
+    [com.github.sommeri.less4j LessSource LessSource$FileNotFound Less4jException LessCompiler$Problem LessCompiler LessCompiler$CompilationResult LessSource$StringSource LessCompiler$Configuration LessCompiler$SourceMapConfiguration]
     [com.github.sommeri.less4j.core DefaultLessCompiler])
   (:require
     [clojure.java.io :as io]
@@ -72,8 +72,10 @@
         (try
           (let [dependencies (atom {})
                 root-source (create-less-source asset-resolver dependencies asset context)
-                ^LessCompiler$Configuration options  (doto (LessCompiler$Configuration.)
-                                                              (.setLinkSourceMap false))
+                ^LessCompiler$Configuration options (LessCompiler$Configuration.)
+                _ (doto ^LessCompiler$SourceMapConfiguration (.getSourceMapConfiguration options)
+                    (.setLinkSourceMap false)
+                    (.setIncludeSourcesContent true))
                 ;; A bit of work to trick the Less compiler into writing the right thing into the output CSS.
                 ^LessCompiler$CompilationResult output (.compile less-compiler root-source options)
                 complete-css (str

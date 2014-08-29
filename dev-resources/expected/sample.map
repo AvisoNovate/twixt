@@ -4,6 +4,6 @@
 "lineCount":1,
 "mappings":"AAEAA;",
 "sources":["sample.less"],
-"sourcesContent":[null],
+"sourcesContent":["@import \"colors.less\";\n\nbody {\n  color: @body-color;\n}"],
 "names":["body"]
 }
