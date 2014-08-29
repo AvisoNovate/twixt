@@ -7,7 +7,7 @@
     [io.aviso.twixt :only [get-asset-uris default-options]]
     io.aviso.twixt.startup
     ring.adapter.jetty)
-  (:require
+  #_ (:require
     ;; See https://github.com/slagyr/speclj/issues/79
     speclj.run.standard))
 
