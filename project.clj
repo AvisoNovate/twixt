@@ -19,4 +19,5 @@
           :defaults                  {:doc/format :markdown}}
   :profiles {:dev {:dependencies [[log4j "1.2.17"]
                                   [speclj "3.1.0"]
-                                  [ring/ring-jetty-adapter "1.2.0"]]}})
+                                  [ring/ring-jetty-adapter "1.2.0"]]
+                   :jvm-opts     ["-Xmx1g"]}})
