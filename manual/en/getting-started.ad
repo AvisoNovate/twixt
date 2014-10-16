@@ -1,0 +1,49 @@
+title: Getting Started
+---
+
+Twixt serves resources located on the classpath, in the +META-INF/assets/+ folder.
+The contents of this folder is accessible to clients, by default, via the URL +/assets/+.
+
+By design, assets are segregated from the rest of your code.
+This prevents a malicious client from directly accessing your code or configuration files.
+Anything outside the +META-INF/assets/+ folder is inaccessible via Twixt.
+
+Twixt maps file extensions to MIME types; it will then transform certain MIME types; for example +.coffee+ files are compiled to JavaScript.
+
+[source,clojure]
+----
+(ns example.app
+  (:use compojure.core
+        ring.adapter.jetty
+        [io.aviso.twixt.startup :as startup]))
+
+;;; Use Compojure to map routes to handlers
+(defroutes app ...)
+
+;;; Create twixt wrappers and handler to handle /asset/ URLs;
+;;; true -> in development mode
+(def app-handler
+  (startup/wrap-with-twixt app true)
+
+;;; Use the Ring Jetty adapter to serve your application
+(run-jetty app-handler)
+----
+
+NOTE: Twixt changes its behavior in a number of ways in development mode (as opposed to the normal
+production mode).
+For example, Less compilation will pretty-print the generated HTML markup in development
+mode.
+In production mode, the markup omits all unnecessary white space.
+
+The Twixt middleware intercepts requests for the +/assets/+ URI that map to actual files; non-matching requests, or
+requests for assets that do not exist, are delegated down to the wrapped handlers.
+
+In development mode, Twixt will write compiled files to the file system (you can configure where if you like). 
+On a restart of the application, it will use those cached files if the source files have not changed. This is important,
+as compilation of some resources, such as CoffeeScript, can take several seconds (due to the speed, or lack thereof, of
+the Rhino JavaScript engine).
+
+The Twixt API includes alternate functions for constructing both the Ring middleware, and Twixt's own
+asset pipeline; this allows you to add new features, or exclude unwanted features. Please reference the
+code to see how to configure Twixt options, assemble the Twixt asset pipeline, and finally, provide the necessary
+Ring middleware.

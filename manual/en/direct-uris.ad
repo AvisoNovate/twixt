@@ -1,0 +1,13 @@
+title: Direct URIs
+---
+
+Sometimes it is not possible to determine the full asset URI ahead of time; 
+a common example would be a client-side
+framework, such as http://angularjs.org[AngularJS] that wants to load HTML templates dynamically, at runtime.  It will know
+the path to the asset, but will not know the checksum.
+
+In this case, an *optional* Ring middleware can be used: +wrap-with-asset-redirector+.
+
+This middleware identifies requests that match existing assets and responds with a 302 redirect to the proper asset URL.
+For example, the asset stored as +META-INF/assets/blueant/cla.html+ can be accessed as +/blueant/cla.html+, and will be sent a redirect
+to +/assets/123abc/blueant/cla.html+.

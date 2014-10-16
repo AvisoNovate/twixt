@@ -1,0 +1,65 @@
+title: URIs
+---
+
+At its core, Twixt is a set of Ring middleware that maps certain URI patterns to matching files on the classpath,
+and does some transformations along the way.
+
+Currently, the mapping is very straightforward: the path +/assets/123abc/css/style.less+ is mapped to resource
++META-INF/assets/css/style.less+ which is read into memory and transformed from Less to CSS.
+Embedded in the middle of the URL is the content checksum for the file (+123abc+).
+
+NOTE: Placing this information directly into the URI is called _fingerprinting_.
+
+In your application, assets will change during development, or between production deployments. The URIs provided to
+the client agent (the web browser) is a _resource_; on the web, resources are immutable, even though
+in your workspace, files change all the time.
+The checksum in the URI is based on the actual content of the file;
+whenever the underlying content changes, then a new checksum, new URI, and therefore, new resource will be referenced by the URI.
+
+Twixt sets headers to indicate a far-future expiration date for the resource;
+the upshot of which is that, once the resource for an asset is downloaded to the client browser, the browser will not ask for it again.
+This is great for overall performance, since it reduces the amount of network I/O
+the client will encounter, especially on subsequent visits to the same site. 
+
+It also reduces the load on the server in two ways:
+
+* Fewer requests will need to be sent to the server as client will use their local cache.
+* Content can be cached by intermediary servers.
+
+The checksum has a optional "z" prefix; this indicates a GZip compressed resource.
+
+On a request that renders markup, Twixt will detect if the client supports GZip compression.
+If so, then for assets where compression makes sense (such as JavaScript, and
+specifically excluding image formats) then Twixt will generate an alternate URI that
+indicates access to the compressed asset.
+
+Because of this, when referencing assets inside your templates, you must pass paths (relative to +META-INF/assets+)
+through Twixt to get URIs that will work in the browser:
+
+[source,clojure]
+----
+(defhtml index
+  [{context :twixt :as request}]
+  (html
+    (doctype :html5
+    [:html
+      [:head
+        [:title "My Clojure App"]
+        (include-css (get-asset-uri context "css/style.less"))
+        ...
+----
+
+The parameter to +defhtml+ is the Ring request map; Twixt has injected middleware that provides the Twixt context under
+the +:twixt+ key.
+
++get-asset-uri+ is defined in the +io.aviso.twixt+ namespace.
+
+Twixt must do all necessary compilations and other transformations, to arrive at final content for which a checksum
+can be computed.
+Although this can slow the initial HTML render, it is also good because any exceptions, such as compilation errors, will occur immediately,
+rather than when the asset's content is later retrieved by the client.
+
+When a client requests an asset that exists, but supplies an incorrect checksum,
+Twixt will respond with a 301 redirect HTTP response,
+directing the client to the correct resource (with the correct checksum). 
+This is an extremely unlikely scenario that would involve a running client in a race with a redeployed application.

@@ -1,0 +1,53 @@
+title: Notes
+---
+
+== Future Plans
+
+The goal is to achieve at least parity with Apache Tapestry, plus some additional features specific to Clojure. This means:
+
+* E-Tags support
+* ClojureScript compilation
+* CSS Minification
+* RequireJS support and AMD modules
+* Break out the the Less, Jade, CoffeeScript, exception reporting support, etc. into a-la-carte modules
+* "Warm up" the cache at startup (in production)
+
+
+== A note about feedback
+
+http://tapestryjava.blogspot.com/2013/05/once-more-feedback-please.html[Feedback] is very important to me; I often find
+Clojure just a bit frustrating, because if there is an error in your code, it can be a bit of a challenge to track the problem
+backwards from the failure to the offending code. Part of this is inherent in functional programming, part of it is related to lazy evaluation,
+and part is the trade-off between a typed and untyped language.
+
+In any case, it is very important to me that when thing go wrong, you are provided with a detailed description of the failure.
+Twixt has a mechanism for tracking the operations it is attempting, to give you insight into what exactly failed if there
+is an error.  For example, (from the test suite):
+
+----
+ERROR [       qtp2166970-29] io.aviso.twixt.coffee-script An exception has occurred:
+ERROR [       qtp2166970-29] io.aviso.twixt.coffee-script [  1] - Invoking handler (that throws exceptions)
+ERROR [       qtp2166970-29] io.aviso.twixt.coffee-script [  2] - Accessing asset `invalid-coffeescript.coffee'
+ERROR [       qtp2166970-29] io.aviso.twixt.coffee-script [  3] - Compiling `META-INF/assets/invalid-coffeescript.coffee' to JavaScript
+ERROR [       qtp2166970-29] io.aviso.twixt.coffee-script META-INF/assets/invalid-coffeescript.coffee:6:1: error: unexpected INDENT
+      argument: dep2
+^^^^^^
+java.lang.RuntimeException: META-INF/assets/invalid-coffeescript.coffee:6:1: error: unexpected INDENT
+      argument: dep2
+^^^^^^
+   ....
+----
+
+In other words, when there's a failure, Twixt can tell you the steps that led up the failure, which is 90% of solving the problem in the first place.
+
+Twixt's exception report captures all of this and presents it as readable HTML.
+The exception report page also does a decent job of de-mangling Java class names to Clojure namespaces and function names.
+
+== How does Twixt differ from Dieter?
+
+On the application I was building, I had a requirement to deploy as a JAR; Dieter expects all the assets to be on the filesystem; I spent some time attempting to hack the Dieter code to allow resources on the classpath as well.
+When that proved unsuccessful, I decided to build out something a bit more ambitious, that would support the features that have accumulated in Tapestry over the last few years.
+
+Twixt also embraces http://www.infoq.com/presentations/Clojure-Large-scale-patterns-techniques[system as transient state], meaning nothing is stored statically.
+
+Twixt will grow further apart from Dieter as the more advanced pieces are put into place.

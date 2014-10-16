@@ -1,0 +1,32 @@
+title: About
+---
+
+== Awesome asset management for Clojure web applications
+
+%={:type :github :user "AvisoNovate" :repo "twixt"}%
+
+image:http://clojars.org/io.aviso/twixt/latest-version.svg[Clojars Project, link="http://clojars.org/io.aviso/twixt"]
+
+image:https://drone.io/github.com/AvisoNovate/twixt/status.png[Build Status, link="https://drone.io/github.com/AvisoNovate/twixt"]
+
+Twixt is an extensible asset pipeline for use in Clojure web applications.
+It is designed to complement an application built using Ring and related libraries, such as Compojure.
+Twixt provides content transformation (such as Less to CSS), support for efficient immutable resources,
+and best-of-breed exception reporting.
+
+Twixt draws inspiration from http://tapestry.apache.org[Apache Tapestry] and https://github.com/edgecase/dieter[Dieter].
+
+Twixt currently supports:
+
+* link:exceptions.html[Best-of-breed exception report]
+* link:http://coffeescript.org/[CoffeeScript] to JavaScript compilation (using Rhino) - including source maps
+* JavaScript Minimization (using https://developers.google.com/closure/compiler/[Google Closure])
+* Jade to HTML compilation (using https://github.com/neuland/jade4j[jade4j])
+* Less to CSS compilation (using https://github.com/SomMeri/less4j[less4j])
+* link:stacks.html[JavaScript and CSS aggregation]
+* File system caching of compiled content
+* Automatic GZip compression
+
+== Stability
+
+*Alpha*: Many features are not yet implemented and the code is likely to change in many ways going forward ... but still very useful!

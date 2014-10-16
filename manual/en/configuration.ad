@@ -1,0 +1,32 @@
+title: Configuration
+---
+
+Twixt's configuration is used to determine where to locate asset resources on the classpath, 
+and what folder to serve them under. It also maps file name extensions to MIME types, and
+configures the file system cache.
+
+The default options:
+
+[source,clojure]
+----
+(def default-options
+  {:path-prefix          "/assets/"
+   :content-types        mime/default-mime-types
+   :twixt-template       {}
+   :content-transformers {}
+   :compressable         #{"text/*" "application/edn" "application/json"}
+   :cache-folder         (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))
+----
+
+You can override +:path-prefix+ to change the root URL for assets; +/+ is an acceptable value.
+
+The +:content-types+ key maps file extensions to MIME types.
+
+The +:content-transformers+ key is a map of content type keys (as strings, such as "text/coffeescript") to a
+transformation function; The CoffeeScript, Jade, and Less compilers operate by adding entries to +:content-types+ and :content-transformers+.
+
+The +:compressable+ key is a set used to identify which content types are compressable; note the use of the +/*+ suffix to indicate
+that all text content types are compressable. Anything not explicitly compressable is considered non-compressable.
+
+The +:twixt-template+ key is a map that provides default values for the +:twixt+ request key.
+This is often used to provide information to specific content transformers.

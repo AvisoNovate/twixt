@@ -1,0 +1,54 @@
+title: Stacks
+---
+
+In development, you often want to have many small source files downloaded individually to the browser.
+This is simpler to debug, and faster ... a change to one file will be a small recompile of just that file.
+
+In production, it's a different story; you want the client to make as few requests to the server as possible.
+
+This can be accomplished using _stacks_.
+
+Stacks allow you to group together related files of the same type into a single asset. Commonly, this is used
+to aggregate JavaScript or CSS.
+
+In development mode, you will see the individual files of the stack;
+in production mode, the stack is represented by a single URI which maps to the aggregated content of all the
+files in the stack.
+
+A stack file is written in https://github.com/edn-format/edn[EDN].
+Each stack file contains a +:content-type+ key, and a +:components+ key.
+Stack files have a +.stack+ extension.
+
+[source,clojure]
+----
+{:content-type "text/css"
+ :components "bootstrap3/bootstrap.css"
+             "app.less"
+             "ie-fixes.less"}
+----
+
+When using stacks, you will want a slight tweak to your page template:
+
+[source,clojure]
+----
+(defhtml index
+  [{context :twixt :as request}]
+  (html
+    (doctype :html5
+    [:html
+      [:head
+        [:title "My Clojure App"]
+        (apply include-css (get-asset-uris context "css/app-css.stack"))
+        ...
+----
+
+Since +get-asset-uris+ will return a collection of URIs (unlike +get-asset-uri+ which always returns just one),
+we must change +include-css+ to +apply include-css+.
+
+This template will work in development (+get-asset-uris+ returning several URIs) and in production (just a
+single URI).
+
+It is possible for stacks to include other stacks as components.
+
+Stack components are _included_ not _imported_; if a component asset is listed more than once, its content will
+be aggregated more than once.

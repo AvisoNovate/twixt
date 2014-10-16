@@ -1,0 +1,14 @@
+title: Exception Reporting
+---
+
+Twixt features a very readable HTML exception report page, which displays:
+
+* The entire stack of nested exceptions, top to bottom
+* The stack trace for only the root exception
+* Demangled namespace and function names for Clojure stack frames: `io.aviso.twixt/new-twixt/reify/middleware/fn` instead of
+  `io.aviso.twixt$new_twixt$reify__954$middleware__959$fn__960.invoke()`.
+* The contents of the Ring request map
+* All JVM system properties
+
+Twixt provides middleware that wraps the request in a `try` block; exceptions are caught and converted to the HTML exception report, which is passed down to the client. 
+Twixt does not attempt to perform content negotiation: it sends a `text/html` stream.

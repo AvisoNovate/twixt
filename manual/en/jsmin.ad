@@ -1,0 +1,11 @@
+title: JavaScript Minimization
+---
+
+JavaScript minimization is only enabled in production.
+
+It is set up for _simple optimizations_; this removes whitespace and may shorten variable and function names.
+
+The optimization level is not current configurable.
+
+It is recommended that you make use of JavaScript stacks; this allows the compiler to only be executed once
+on a larger sample of JavaScript.
