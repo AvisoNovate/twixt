@@ -1,4 +1,7 @@
-## 0.1.14 -
+## 0.1.14 - (2014-10-24)
+
+* In-line source maps for compiled Less files (in development mode)
+* Update Less4J dependency to 0.8.3
 
 ## 0.1.13 (2014-06-06)
 
