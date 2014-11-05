@@ -45,8 +45,8 @@
 
   When an asset is accessed for aggregation, it is never compressed."
   [asset-handler {compressable-types :compressable}]
-  (fn [asset-path {:keys [gzip-enabled for-aggregation] :as options}]
-    (let [asset (asset-handler asset-path options)]
+  (fn [asset-path {:keys [gzip-enabled for-aggregation] :as context}]
+    (let [asset (asset-handler asset-path context)]
       (if (and asset
                gzip-enabled
                (not for-aggregation)

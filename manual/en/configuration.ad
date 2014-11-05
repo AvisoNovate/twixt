@@ -14,6 +14,7 @@ The default options:
    :content-types        mime/default-mime-types
    :twixt-template       {}
    :content-transformers {}
+   :js-optimizations     :default
    :compressable         #{"text/*" "application/edn" "application/json"}
    :cache-folder         (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))
 ----
@@ -30,3 +31,8 @@ that all text content types are compressable. Anything not explicitly compressab
 
 The +:twixt-template+ key is a map that provides default values for the +:twixt+ request key.
 This is often used to provide information to specific content transformers.
+
+The +:js-optimisations+ key is a keyword that specifies which Google Closure compilation level should be used to minimize javascript files.
+This may be one of :default, :none, :simple, :whitespace, :advanced
+The :default option means :none is dev mode and :simple in production mode
+

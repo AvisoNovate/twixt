@@ -27,13 +27,14 @@
 
   The two argument version is used to set development-mode, but use default options.
 
-  Otherwise, provide the handler, alternate options and true or false for development mode."
+  Otherwise, provide the handler, alternate options and true or false for development mode.
+  The alternate options are merged with defaults and override them."
   ([handler]
    (wrap-with-twixt handler false))
   ([handler development-mode]
    (wrap-with-twixt handler t/default-options development-mode))
   ([handler twixt-options development-mode]
-   (let [twixt-options' (-> twixt-options
+   (let [twixt-options' (-> (merge t/default-options twixt-options)
                             (assoc :development-mode development-mode)
                             te/register-exception-reporting
                             cs/register-coffee-script

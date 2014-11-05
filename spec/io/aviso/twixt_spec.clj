@@ -92,7 +92,8 @@
           (with-all options (->
                               default-options
                               (assoc :development-mode true
-                                                       :cache-folder @cache-folder)
+                                     :cache-folder @cache-folder
+                                     :js-optimizations :none)
                               ;; This is usually done by the startup namespace:
                               cs/register-coffee-script
                               jade/register-jade
@@ -344,21 +345,52 @@
                                 (map remove-hash-from-uri))))))
 
           (context "JavaScript Minimization"
+            (context "is enabled by default in production mode"
 
-            (with-all prod-options (assoc @options :development-mode false))
+              (with-all prod-options (assoc @options :development-mode false :js-optimizations :default))
 
-            (with-all prod-pipeline (default-asset-pipeline @prod-options))
+              (with-all prod-pipeline (default-asset-pipeline @prod-options))
 
-            (with-all prod-twixt-context (assoc @prod-options :asset-pipeline @prod-pipeline))
+              (with-all prod-twixt-context (assoc @prod-options :asset-pipeline @prod-pipeline))
 
-            (with-all asset (@prod-pipeline "stack/meta.stack" @prod-twixt-context))
+              (with-all asset (@prod-pipeline "stack/meta.stack" @prod-twixt-context))
 
-            (it "contains the correct minimized content"
+              (it "contains the correct minimized content"
                 (should (have-same-content "expected/minimized/meta.js" @asset)))
 
-            (it "can handle much larger files"
+              (it "can handle much larger files"
                 (should (have-same-content "expected/minimized/bootstrap.js"
-                                           (@prod-pipeline "stack/bootstrap.stack" @prod-twixt-context)))))
+                          (@prod-pipeline "stack/bootstrap.stack" @prod-twixt-context)))))
+
+            (context "can be disabled in production mode"
+
+              (with-all prod-options (assoc @options :development-mode false
+                                                     :js-optimizations :none))
+
+              (with-all prod-pipeline (default-asset-pipeline @prod-options))
+
+              (with-all prod-twixt-context (assoc @prod-options :asset-pipeline @prod-pipeline))
+
+              (with-all asset (@prod-pipeline "stack/meta.stack" @prod-twixt-context))
+
+              (it "contains the correct unoptimized content"
+                (should (have-same-content "expected/meta.js" @asset))))
+
+            (context "can be enabled in development mode"
+
+              (with-all dev-options (assoc @options :development-mode true
+                                                    :js-optimizations :simple))
+
+              (with-all dev-pipeline (default-asset-pipeline @dev-options))
+
+              (with-all dev-twixt-context (assoc @dev-options :asset-pipeline @dev-pipeline))
+
+              (with-all asset (@dev-pipeline "stack/fred.js" @dev-twixt-context))
+
+              (it "contains the correct unoptimized content"
+                (should (have-same-content "expected/minimized/fred.js" @asset))))
+
+            )
 
           (context "asset redirector"
             (with-all wrapped (ring/wrap-with-asset-redirector (constantly nil)))

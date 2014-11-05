@@ -1,11 +1,11 @@
 title: JavaScript Minimization
 ---
 
-JavaScript minimization is only enabled in production.
+JavaScript minimization is enabled by default only in production mode.
 
 It is set up for _simple optimizations_; this removes whitespace and may shorten variable and function names.
 
-The optimization level is not current configurable.
+The optimization level is configurable using the +:js-optimisations+ key as described in %={:type :link :page "configuration"}.
 
 It is recommended that you make use of JavaScript stacks; this allows the compiler to only be executed once
 on a larger sample of JavaScript.

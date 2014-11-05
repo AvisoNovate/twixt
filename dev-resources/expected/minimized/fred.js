@@ -1,0 +1,1 @@
+var fred="Fred Flintstone";

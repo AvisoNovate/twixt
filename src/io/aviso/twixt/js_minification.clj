@@ -5,7 +5,8 @@
   (:require [clojure.java.io :as io]
             [io.aviso.twixt.utils :as utils]
             [io.aviso.tracker :as t]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojure.tools.logging :as l]))
 
 ;; See bug http://dev.clojure.org/jira/browse/CLJ-1440
 ;; this is an ugly workaround.
@@ -13,17 +14,17 @@
 (def ^:private ClosureCompiler com.google.javascript.jscomp.Compiler)
 
 (defn- minimize-javascript-asset
-  [{file-path :resource-path :as asset}]
+  [{file-path :resource-path :as asset} optimizations]
   (t/timer
     #(format "Minimized `%s' (%,d bytes) in %.2f ms"
              file-path (:size asset) %)
     (t/track
-      #(format "Minimizing `%s' using Google Closure" file-path)
+      #(format "Minimizing `%s' using Google Closure with compilation level %s" file-path optimizations)
       (let [options (doto (CompilerOptions.)
                       (.setCodingConvention (ClosureCodingConvention.))
                       (.setOutputCharset "utf-8")
                       (.setWarningLevel DiagnosticGroups/CHECK_VARIABLES CheckLevel/WARNING))
-            _ (.setOptionsForCompilationLevel CompilationLevel/SIMPLE_OPTIMIZATIONS options)
+            _ (.setOptionsForCompilationLevel optimizations options)
             compiler (doto (.newInstance ClosureCompiler) .disableThreads)
             input (SourceFile/fromInputStream file-path
                                               (-> asset :content io/input-stream))
@@ -35,12 +36,24 @@
                                (str/join "; " (-> result .errors seq)))
                           options)))))))
 
+(def optimization-levels {:simple CompilationLevel/SIMPLE_OPTIMIZATIONS
+                          :whitespace CompilationLevel/WHITESPACE_ONLY
+                          :advanced CompilationLevel/ADVANCED_OPTIMIZATIONS})
+
 (defn wrap-with-javascript-minimizations
   "Identifies JavaScript assets and, if not aggregating, passes them through the Google Closure compiler."
-  [asset-handler]
-  (fn [asset-path {:keys [for-aggregation] :as options}]
-    (let [{:keys [content-type] :as asset} (asset-handler asset-path options)]
+  [asset-handler {:keys [development-mode js-optimizations]}]
+  (fn [asset-path {:keys [for-aggregation] :as context}]
+    (let [{:keys [content-type] :as asset} (asset-handler asset-path context)]
       (if (and (= "text/javascript" content-type)
                (not for-aggregation))
-        (minimize-javascript-asset asset)
+        (case js-optimizations
+          :none asset
+          :default (if development-mode
+                     ;; Do nothing by default in development mode
+                       asset
+                       ;; Otherwise default to :simple in production mode
+                       (minimize-javascript-asset asset (optimization-levels :simple)))
+          ;; Use the provided level if it's set and not :none
+          (minimize-javascript-asset asset (optimization-levels js-optimizations)))
         asset))))

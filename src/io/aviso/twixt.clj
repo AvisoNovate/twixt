@@ -114,6 +114,7 @@
    :content-transformers {}
    ;; Identify which content types are compressable; all other content types are assumed to not be compressable.
    :compressable         #{"text/*" "application/edn" "application/json"}
+   :js-optimizations     :default
    :cache-folder         (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))})
 
 (defn- get-single-asset
@@ -206,12 +207,12 @@
   "Used when constructing the asset pipeline, wraps a handler (normally, the asset resolver)
    with additional pipeline handlers based on
    the `:content-transformers` key of the Twixt options, plus JavaScript minification and CSS URL Rewriting."
-  [asset-handler {:keys [development-mode] :as twixt-options}]
-  (cond->
+  [asset-handler twixt-options]
+  (->
     asset-handler
-    true (wrap-pipeline-with-per-content-type-transformation twixt-options)
-    (not development-mode) js/wrap-with-javascript-minimizations
-    true rewrite/wrap-with-css-rewriting))
+    (wrap-pipeline-with-per-content-type-transformation twixt-options)
+    (js/wrap-with-javascript-minimizations twixt-options)
+    rewrite/wrap-with-css-rewriting))
 
 (defn default-wrap-pipeline-with-caching
   "Used when constructing the asset pipeline to wrap the handler with production-mode or development-mode caching.
