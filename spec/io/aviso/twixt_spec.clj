@@ -67,7 +67,6 @@
               expected-content-resource
               actual))))
 
-
 (defn- sorted-dependencies
   [asset]
   (->> asset :dependencies vals (map :asset-path) sort))
@@ -196,8 +195,9 @@
 
               (with-all asset (@pipeline "jade-helper.jade" @context'))
 
-              (it "has the correct compiled content"
-                  (should (have-same-content "expected/jade-helper.html" @asset)))
+              (it "has the correct compiled content ignoring attr order"
+                  (should (or (= "<img title=\"Our Logo\" src=\"/assets/8ee745bf/aviso-logo.png\">" (read-asset-content @asset))
+                              (= "<img src=\"/assets/8ee745bf/aviso-logo.png\" title=\"Our Logo\">" (read-asset-content @asset)))))
 
               (it "includes a dependency on the asset accessed by twixt.uri()"
                   (should= ["aviso-logo.png" "jade-helper.jade"]
