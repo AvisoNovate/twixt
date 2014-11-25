@@ -2,9 +2,8 @@
   "Some re-usable utilities. This namespace should be considered unsupported (subject to change at any time)."
   (:import
     [java.io CharArrayWriter ByteArrayOutputStream File]
-    [java.nio.charset Charset]
     [java.util.zip Adler32]
-    [java.net URISyntaxException URL URI]
+    [java.net URL URI]
     [java.util Date])
   (:require
     [clojure.java.io :as io]
