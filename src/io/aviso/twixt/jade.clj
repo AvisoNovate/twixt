@@ -8,7 +8,8 @@
     [clojure.java.io :as io]
     [io.aviso.twixt :as twixt]
     [io.aviso.tracker :as t]
-    [io.aviso.twixt.utils :as utils]))
+    [io.aviso.twixt.utils :as utils]
+    [medley.core :as medley]))
 
 (defn- add-missing-extension
   [^String name ext]
@@ -48,9 +49,9 @@
   [asset {{:keys [helpers variables]} :jade :as context} dependencies]
   (let [context' (update-in context [:asset-pipeline]
                             wrap-asset-pipeline-with-dependency-tracker dependencies)]
-    (-> (utils/map-values
+    (-> (medley/map-vals
           #(% asset context')
-          helpers)
+          (or helpers {}))
         (merge variables))))
 
 (defn- ^JadeConfiguration create-configuration

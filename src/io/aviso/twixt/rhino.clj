@@ -2,7 +2,7 @@
   "Code to execute Rhino for purposes such as compiling CoffeeScript to JavaScript."
   ;; Liberally borrowing from Dieter!
   (:import
-    [org.mozilla.javascript Context NativeObject ScriptableObject Scriptable Function])
+    [org.mozilla.javascript Context Scriptable Function])
   (:require
     [clojure.java.io :as io]
     [io.aviso.tracker :as t]))

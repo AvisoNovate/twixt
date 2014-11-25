@@ -4,7 +4,6 @@
     [com.github.sommeri.less4j LessSource LessSource$FileNotFound Less4jException LessCompiler$Problem LessCompiler LessCompiler$CompilationResult LessSource$StringSource LessCompiler$Configuration LessCompiler$SourceMapConfiguration]
     [com.github.sommeri.less4j.core DefaultLessCompiler])
   (:require
-    [clojure.java.io :as io]
     [clojure.string :as str]
     [io.aviso.tracker :as t]
     [io.aviso.twixt.utils :as utils]))

@@ -7,7 +7,6 @@
     [java.util Date])
   (:require
     [clojure.java.io :as io]
-    [io.aviso.twixt.asset :as asset]
     [clojure.string :as str]))
 
 (defn ^String as-string
@@ -140,11 +139,6 @@
   (or
     value
     (throw (NullPointerException. message))))
-
-(defn map-values
-  "Applies a function to each value in the source map, The target map contains the resulting values."
-  [f m]
-  (reduce (fn [output [k v]] (assoc output k (f v))) {} m))
 
 (defn path->name
   "Converts a path to just the file name, the last term in the path."

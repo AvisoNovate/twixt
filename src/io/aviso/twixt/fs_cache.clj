@@ -3,16 +3,15 @@
   The cache will persist between executions of the application; this is used in development to prevent
   duplicated, expensive work from being performed after a restart."
   (:import [java.util UUID]
-           [java.io PushbackReader File OutputStream Writer])
+           [java.io PushbackReader File Writer])
   (require
     [clojure.java.io :as io]
     [clojure
      [edn :as edn]
-     [pprint :as pp]
-     [string :as s]]
+     [pprint :as pp]]
+    [medley.core :as medley]
     [clojure.tools.logging :as l]
-    [io.aviso.tracker :as t]
-    [io.aviso.twixt.utils :as utils]))
+    [io.aviso.tracker :as t]))
 
 
 (defn- checksum-matches?
@@ -43,7 +42,7 @@
     asset
     (update-in asset [:attachments]
                (fn [attachments]
-                 (utils/map-values
+                 (medley/map-vals
                    #(assoc % :content (io/file asset-cache-dir (:content %)))
                    attachments)))))
 

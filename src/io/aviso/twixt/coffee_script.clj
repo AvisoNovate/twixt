@@ -6,7 +6,6 @@
 
   The compiled JavaScript includes the directive for the browser to load the source map."
   (:import
-    [org.mozilla.javascript ScriptableObject]
     [java.util Map])
   (:require
     [io.aviso.tracker :as t]
