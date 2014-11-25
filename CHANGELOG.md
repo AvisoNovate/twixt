@@ -1,4 +1,6 @@
-## 0.1.15 -
+## 0.1.15 - UNRELEASED
+
+Added medley (0.5.3) as a dependency.
  
 ## 0.1.14 - (2014-10-24)
 
