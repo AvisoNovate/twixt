@@ -4,8 +4,8 @@
             :license {:name "Apache Sofware Licencse 2.0"
                       :url  "http://www.apache.org/licenses/LICENSE-2.0.html"}
             :dependencies [[org.clojure/clojure "1.6.0"]
-                           [io.aviso/pretty "0.1.12"]
-                           [io.aviso/tracker "0.1.2"]
+                           [io.aviso/pretty "0.1.16"]
+                           [io.aviso/tracker "0.1.6"]
                            [medley "0.5.3"]
                            [ring/ring-core "1.3.1"]
                            [com.google.javascript/closure-compiler "v20140814"]
