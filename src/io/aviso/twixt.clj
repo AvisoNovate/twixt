@@ -186,7 +186,7 @@
     (asset/asset->request-path path-prefix asset)))
 
 (defn wrap-pipeline-with-tracing
-  "The first middleware in the asset pipeline, used to trace the constuction of the asset."
+  "The first middleware in the asset pipeline, used to trace the construction of the asset."
   [asset-handler]
   (fn [asset-path context]
     (t/track
