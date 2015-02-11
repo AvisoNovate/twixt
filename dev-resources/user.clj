@@ -1,17 +1,23 @@
 (ns user
-  (:use
-    speclj.config
-    io.aviso.tracker
-    io.aviso.repl
-    clojure.pprint
-    [io.aviso.twixt :only [get-asset-uris default-options]]
-    io.aviso.twixt.startup
-    ring.adapter.jetty)
-  (:require
-    ;; See https://github.com/slagyr/speclj/issues/79
-    speclj.run.standard))
+  (:use speclj.config
+        io.aviso.tracker
+        io.aviso.repl
+        clojure.pprint
+        [io.aviso.twixt :only [get-asset-uris default-options]]
+        io.aviso.exception
+        io.aviso.twixt.startup
+        ring.adapter.jetty)
+  ;; See https://github.com/slagyr/speclj/issues/79
+  (:require speclj.run.standard))
 
 (install-pretty-exceptions)
+
+(alter-var-root #'*default-frame-filter*
+                (fn [default-frame-filter]
+                  (fn [frame]
+                    (if (= (:package frame) "speclj")
+                      :terminate
+                      (default-frame-filter frame)))))
 
 (alter-var-root #'default-config assoc :color true :reporters ["documentation"])
 
