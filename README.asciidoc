@@ -9,6 +9,6 @@ It is designed to complement an application built using Ring and related librari
 Twixt provides content transformation (such as Less to CSS), support for efficient immutable resources,
 and best-of-breed exception reporting.
 
-Twixt is available under the terms of the Apache Sofware License 2.0.
+Twixt is available under the terms of the Apache Software License 2.0.
 
 link:https://portal.aviso.io/#/docs/open-source[Full Documentation]
