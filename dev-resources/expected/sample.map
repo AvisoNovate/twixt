@@ -2,8 +2,8 @@
 "version":3,
 "file":"sample.css",
 "lineCount":1,
-"mappings":"AAEAA;",
-"sources":["sample.less"],
-"sourcesContent":["@import \"colors.less\";\n\nbody {\n  color: @body-color;\n}"],
+"mappings":"ACEAA;",
+"sources":["colors.less","sample.less"],
+"sourcesContent":["@body-color: #898989;\n","@import \"colors.less\";\n\nbody {\n  color: @body-color;\n}"],
 "names":["body"]
 }

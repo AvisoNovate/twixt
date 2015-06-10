@@ -5,13 +5,12 @@
     hiccup.page
     ring.util.response)
   (:import
-    [clojure.lang APersistentMap Sequential PersistentHashMap$ArrayNode$Seq PersistentHashMap]
+    [clojure.lang APersistentMap Sequential  PersistentHashMap]
     [java.util Map]
     [java.util.regex Pattern])
   (:require
     [clojure.string :as s]
     [io.aviso
-     [repl :as repl]
      [exception :as exception]
      [twixt :as t]]))
 
@@ -269,7 +268,7 @@ h
   [frame]
   (cond
     (nil? (:line frame)) :omit
-    :else (repl/standard-frame-filter frame)))
+    :else exception/*default-frame-filter*))
 
 (defn register-exception-reporting
   "Must be invoked to configure the Twixt options with the default `:stack-frame-filter` key, [[default-stack-frame-filter]]."

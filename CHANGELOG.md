@@ -1,4 +1,8 @@
-## 0.1.15 -- UNRELEASED
+## 0.1.16 -- UNRELEASED
+
+Update dependencies to latest.
+
+## 0.1.15 -- 7 Nov 2014
 
 Added medley (0.5.3) as a dependency.
  

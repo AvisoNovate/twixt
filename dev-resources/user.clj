@@ -6,18 +6,13 @@
         [io.aviso.twixt :only [get-asset-uris default-options]]
         io.aviso.exception
         io.aviso.twixt.startup
-        ring.adapter.jetty)
-  ;; See https://github.com/slagyr/speclj/issues/79
-  (:require speclj.run.standard))
+        ring.adapter.jetty))
 
 (install-pretty-exceptions)
 
-(alter-var-root #'*default-frame-filter*
-                (fn [default-frame-filter]
-                  (fn [frame]
-                    (if (= (:package frame) "speclj")
-                      :terminate
-                      (default-frame-filter frame)))))
+(alter-var-root #'*default-frame-rules*
+                conj
+                [:package "speclj" :terminate])
 
 (alter-var-root #'default-config assoc :color true :reporters ["documentation"])
 
@@ -33,6 +28,10 @@
   []
   (wrap-with-twixt handler default-options true))
 
-(defn launch []
-  (let [server (run-jetty (app) {:port 8888 :join? false})]
-    #(.stop server)))
+(defn launch
+  []
+  (run-jetty (app) {:port 8888 :join? false}))
+
+(defn shutdown
+  [server]
+  (.stop server))

@@ -1,17 +1,17 @@
-(defproject io.aviso/twixt "0.1.16-SNAPSHOT"
+(defproject io.aviso/twixt "0.1.16"
             :description "An extensible asset pipeline for Clojure web applications"
             :url "https://github.com/AvisoNovate/twixt"
             :license {:name "Apache Sofware Licencse 2.0"
                       :url  "http://www.apache.org/licenses/LICENSE-2.0.html"}
             :dependencies [[org.clojure/clojure "1.6.0"]
-                           [io.aviso/pretty "0.1.16"]
+                           [io.aviso/pretty "0.1.18"]
                            [io.aviso/tracker "0.1.6"]
-                           [medley "0.5.3"]
-                           [ring/ring-core "1.3.1"]
-                           [com.google.javascript/closure-compiler "v20140814"]
+                           [medley "0.6.0"]
+                           [ring/ring-core "1.3.2"]
+                           [com.google.javascript/closure-compiler "v20150505"]
                            [org.mozilla/rhino "1.7R4"]
-                           [com.github.sommeri/less4j "1.8.3"]
-                           [de.neuland-bfi/jade4j "0.4.0"]
+                           [com.github.sommeri/less4j "1.12.0"]
+                           [de.neuland-bfi/jade4j "0.4.3"]
                            [hiccup "1.0.5"]]
             :test-paths ["spec"]
             :plugins [[speclj "3.1.0"]
@@ -29,6 +29,6 @@
                     :src-linenum-anchor-prefix "L"
                     :defaults                  {:doc/format :markdown}}
             :profiles {:dev {:dependencies [[log4j "1.2.17"]
-                                            [speclj "3.1.0"]
-                                            [ring/ring-jetty-adapter "1.2.0"]]
+                                            [speclj "3.2.0"]
+                                            [ring/ring-jetty-adapter "1.3.2"]]
                              :jvm-opts     ["-Xmx1g"]}})
