@@ -1,4 +1,4 @@
-## 0.1.16 -- UNRELEASED
+## 0.1.16 -- 10 Jun 2015
 
 Update dependencies to latest.
 
