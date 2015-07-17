@@ -1,7 +1,7 @@
 (ns io.aviso.twixt
   "Pipeline for accessing and transforming assets for streaming.
 
-   Twixt integrates with Ring, as a set of Ring rewquest filters.
+   Twixt integrates with Ring, as a set of Ring request filters.
 
    Twixt plugs into the Ring pipeline, but most of its work is done in terms of the asset pipeline.
 
