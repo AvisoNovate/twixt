@@ -47,8 +47,8 @@
 
 (defn- create-shared-variables
   [asset {{:keys [helpers variables]} :jade :as context} dependencies]
-  (let [context' (update-in context [:asset-pipeline]
-                            wrap-asset-pipeline-with-dependency-tracker dependencies)]
+  (let [context' (update context :asset-pipeline
+                         wrap-asset-pipeline-with-dependency-tracker dependencies)]
     (-> (medley/map-vals
           #(% asset context')
           (or helpers {}))

@@ -87,7 +87,7 @@
   : instant at which the file was last modified (not always trustworthy for files packaged in JARs)
 
   `:compiled`
-  : _optional_ - true for assets that represent some for of compilation (or aggregation) and should be cached
+  : _optional_ - true for assets that represent some form of compilation (or aggregation) and should be cached
 
   `:aggregate-asset-paths`
   : _optional_ - seq of asset paths from which a stack asset was constructed

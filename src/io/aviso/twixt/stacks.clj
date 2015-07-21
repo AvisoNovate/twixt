@@ -44,8 +44,8 @@
     ;; add the component asset's dependencies
 
     (-> asset
-        (update-in [:dependencies] utils/add-asset-as-dependency component-asset)
-        (update-in [:aggregate-asset-paths] (fnil update-aggregate-asset-paths []) component-asset))))
+        (update :dependencies utils/add-asset-as-dependency component-asset)
+        (update :aggregate-asset-paths (fnil update-aggregate-asset-paths []) component-asset))))
 
 (defn- aggregate-stack
   [{:keys [resource-path] :as asset} context]

@@ -1,5 +1,7 @@
 ## 0.1.17 - UNRELEASED
 
+Update dependencies, including Clojure to 1.7.0.
+
 ## 0.1.16 - 10 Jun 2015
 
 Update dependencies to latest.
