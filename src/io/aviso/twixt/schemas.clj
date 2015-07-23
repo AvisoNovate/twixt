@@ -39,6 +39,16 @@
   of creating/compiling the asset; the canonical example is a JavaScript source map."
   s/Str)
 
+(s/defschema Dependency
+  {:asset-path  AssetPath
+   :checksum    Checksum
+   :modified-at ModifiedAt})
+
+(s/defschema Attachment
+  {:content      Content
+   :size         Size
+   :content-type ContentType})
+
 (s/defschema Asset
   "A server-side resource that may be exposed to a client (such as a web browser).
   An Asset may be transformed from raw content, for example to transpile a language
@@ -51,12 +61,8 @@
    :modified-at                            ModifiedAt
    (s/optional-key :compiled)              s/Bool
    (s/optional-key :aggregate-asset-paths) [AssetPath]
-   (s/optional-key :dependencies)          {ResourcePath {:asset-path  AssetPath
-                                                          :checksum    Checksum
-                                                          :modified-at ModifiedAt}}
-   (s/optional-key :attachments)           {AttachmentName {:content      Content
-                                                            :size         Size
-                                                            :content-type ContentType}}})
+   (s/optional-key :dependencies)          {ResourcePath Dependency}
+   (s/optional-key :attachments)           {AttachmentName Attachment}})
 
 (s/defschema TwixtContext
   "Defines the minimal values provided in the Twixt context (the :twixt key of the Ring
