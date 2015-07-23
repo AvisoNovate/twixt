@@ -27,8 +27,10 @@
      [fs-cache :as fs]
      [memory-cache :as mem]
      [js-minification :as js]
+     [schemas :refer [Asset AssetHandler AssetPath AssetURI TwixtContext]]
      [utils :as utils]]
-    [ring.util.mime-type :as mime]))
+    [ring.util.mime-type :as mime]
+    [schema.core :as s]))
 
 ;;; Lots of stuff from Tapestry 5.4 is not yet implemented
 ;;; - multiple domains (the context, the file system, etc.)
@@ -52,7 +54,7 @@
                                (extract-content-type content-types resource-path)
                                (utils/read-content url)))
 
-(defn make-asset-resolver
+(s/defn make-asset-resolver :- AssetHandler
   "Factory for the resolver function which converts a path into an asset map.
 
   The factory function is passed the twixt options, which defines content types mappings.
@@ -65,48 +67,48 @@
 
   An asset map has the minimum following keys:
 
-  `:content`
+  :content
   : content of the asset in a form that is compatible with clojure.java.io
 
-  `:asset-path`
-  : path of the asset under the root folder `/META-INF/assets/`
+  :asset-path
+  : path of the asset under the root folder /META-INF/assets/
 
-  `:resource-path`
+  :resource-path
   : full path of the underlying resource
 
-  `:content-type`
+  :content-type
   : MIME type of the content, as determined from the path's extension
 
-  `:size`
+  :size
   : size of the asset in bytes
 
-  `:checksum`
+  :checksum
   : Adler32 checksum of the content
 
-  `:modified-at`
+  :modified-at
   : instant at which the file was last modified (not always trustworthy for files packaged in JARs)
 
-  `:compiled`
+  :compiled
   : _optional_ - true for assets that represent some form of compilation (or aggregation) and should be cached
 
-  `:aggregate-asset-paths`
+  :aggregate-asset-paths
   : _optional_ - seq of asset paths from which a stack asset was constructed
 
-  `:dependencies`
+  :dependencies
   : _optional_ - used to track underlying dependencies; a map of resource path to details about that resource
-  (keys `:asset-path`, `:checksum`, and  `:modified-at`)
+  (keys :asset-path, :checksum, and  :modified-at)
 
-  `:attachments`
-  : _optional_ - map of string name to attachment (with contains `:content`, `:size`, and `:content-type`)"
+  :attachments
+  : _optional_ - map of string name to attachment (with contains :content, :size, and :content-type)"
   [{:keys [content-types]}]
-  (fn [asset-path context]
+  (fn [asset-path _]
     (let [resource-path (str "META-INF/assets/" asset-path)]
       (if-let [url (io/resource resource-path)]
         (make-asset-map content-types asset-path resource-path url)))))
 
 (def default-options
-  "Provides the default options when using Twixt; these rarely need to be changed except, perhaps, for `:path-prefix`
-  or `:cache-folder`, or by plugins."
+  "Provides the default options when using Twixt; these rarely need to be changed except, perhaps, for :path-prefix
+  or :cache-folder, or by plugins."
   {:path-prefix          "/assets/"
    :content-types        mime/default-mime-types
    ;; Content transformer, e.g., compilers (such as CoffeeScript to JavaScript). Key is a content type,
@@ -126,22 +128,23 @@
       (throw (ex-info (format "Asset path `%s' does not map to an available resource." asset-path)
                       context))))
 
-(defn get-asset-uris
+(s/defn get-asset-uris :- [AssetURI]
   "Converts a number of asset paths into client URIs.
   Each path must exist.
 
   An asset path does not start with a leading slash.
   The default asset resolver locates each asset on the classpath under `META-INF/assets/`.
 
-  Unlike [[get-asset-uri]], this function will expand (in _development mode_) stack assets
+  Unlike [[get-asset-uri]], this function will (in _development mode_) expand stack assets
   into the asset URIs for all component assets.
 
   context
-  : the `:twixt` key, extracted from the Ring request map
+  : the :twixt key, extracted from the Ring request map
 
   paths
   : asset paths to convert to URIs"
-  [{:keys [asset-pipeline path-prefix development-mode] :as context} & paths]
+  [{:keys [asset-pipeline path-prefix development-mode] :as context} :- TwixtContext
+   & paths :- [AssetPath]]
   (loop [asset-uris []
          [path & more-paths] paths]
     (if-not (some? path)
@@ -149,12 +152,12 @@
       (let [asset (get-single-asset asset-pipeline context path)
             aggregate-asset-paths (-> asset :aggregate-asset-paths seq)]
         (if (and development-mode aggregate-asset-paths)
-          (recur (concat asset-uris (apply get-asset-uris context aggregate-asset-paths))
+          (recur (into asset-uris (apply get-asset-uris context aggregate-asset-paths))
                  more-paths)
           (recur (conj asset-uris (asset/asset->request-path path-prefix asset))
                  more-paths))))))
 
-(defn get-asset-uri
+(s/defn get-asset-uri :- AssetURI
   "Converts a single asset paths into a client URI.
   Throws an exception if the path does not exist.
 
@@ -168,33 +171,37 @@
   component assets, rather than the aggregated whole.
 
   context
-  : the `:twixt` key, extracted from the Ring request map
+  : the :twixt key, extracted from the Ring request map
 
   asset-path
-  : path to the asset; asset paths do __not__ start with a leading slash."
-  [{:keys [asset-pipeline path-prefix] :as context} asset-path]
-  (->>
-    asset-path
-    (get-single-asset asset-pipeline context)
-    (asset/asset->request-path path-prefix)))
+  : path to the asset; asset paths do __not__ start with a leading slash"
+  [context :- TwixtContext
+   asset-path :- AssetPath]
+  (let [{:keys [asset-pipeline path-prefix]} context]
+    (->>
+      asset-path
+      (get-single-asset asset-pipeline context)
+      (asset/asset->request-path path-prefix))))
 
-(defn find-asset-uri
+(s/defn find-asset-uri :- (s/maybe AssetURI)
   "Returns the URI for an asset, if it exists.
   If not, returns nil."
-  [{:keys [asset-pipeline path-prefix] :as context} asset-path]
+  [{:keys [asset-pipeline path-prefix] :as context}
+   asset-path :- AssetPath]
   (if-let [asset (asset-pipeline asset-path context)]
     (asset/asset->request-path path-prefix asset)))
 
-(defn wrap-pipeline-with-tracing
+(s/defn wrap-pipeline-with-tracing :- AssetHandler
   "The first middleware in the asset pipeline, used to trace the construction of the asset."
-  [asset-handler]
+  [asset-handler :- AssetHandler]
   (fn [asset-path context]
     (t/track
       #(format "Accessing asset `%s'" asset-path)
       (asset-handler asset-path context))))
 
-(defn wrap-pipeline-with-per-content-type-transformation
-  [asset-handler {:keys [content-transformers]}]
+(s/defn wrap-pipeline-with-per-content-type-transformation :- AssetHandler
+  [asset-handler :- AssetHandler
+   {:keys [content-transformers]}]
   (fn [asset-path context]
     (let [asset (asset-handler asset-path context)
           content-type (:content-type asset)
@@ -203,22 +210,25 @@
         (transformer asset context)
         asset))))
 
-(defn default-wrap-pipeline-with-content-transformation
+(s/defn default-wrap-pipeline-with-content-transformation :- AssetHandler
   "Used when constructing the asset pipeline, wraps a handler (normally, the asset resolver)
    with additional pipeline handlers based on
    the `:content-transformers` key of the Twixt options, plus JavaScript minification and CSS URL Rewriting."
-  [asset-handler twixt-options]
+  [asset-handler :- AssetHandler
+   twixt-options]
   (->
     asset-handler
     (wrap-pipeline-with-per-content-type-transformation twixt-options)
     (js/wrap-with-javascript-minimizations twixt-options)
     rewrite/wrap-with-css-rewriting))
 
-(defn default-wrap-pipeline-with-caching
+(s/defn default-wrap-pipeline-with-caching :- AssetHandler
   "Used when constructing the asset pipeline to wrap the handler with production-mode or development-mode caching.
 
   This is invoked before adding support for compression."
-  [asset-handler twixt-options development-mode]
+  [asset-handler :- AssetHandler
+   twixt-options
+   development-mode :- s/Bool]
   (cond->
     asset-handler
     ;; The file system cache should only be used in development and should come after anything downstream
@@ -227,10 +237,11 @@
     (not development-mode) mem/wrap-with-sticky-cache
     development-mode mem/wrap-with-invalidating-cache))
 
-(defn default-wrap-pipeline-with-compressed-caching
+(s/defn default-wrap-pipeline-with-compressed-caching :- AssetHandler
   "Used when constructing the asset pipeline, after compression has been enabled, to cache the
   compressed version of assets."
-  [asset-handler development-mode]
+  [asset-handler :- AssetHandler
+   development-mode :- s/Bool]
   (cond->
     asset-handler
     ;; Currently don't bother with file system cache for compression; it's fast enough not
@@ -238,14 +249,15 @@
     (not development-mode) compress/wrap-with-sticky-compressed-caching
     development-mode compress/wrap-with-invalidating-compressed-caching))
 
-(defn wrap-pipeline-with-asset-resolver
-  "Wraps the asset handler so that the `:asset-resolver` key is set to the asset resolver; the asset resolver
+(s/defn wrap-pipeline-with-asset-resolver :- AssetHandler
+  "Wraps the asset handler so that the :asset-resolver key is set to the asset resolver; the asset resolver
   is a way to bypass intermediate steps and gain access to the asset in its completely untransformed format."
-  [asset-handler asset-resolver]
+  [asset-handler :- AssetHandler
+   asset-resolver]
   (fn [asset-path context]
     (asset-handler asset-path (assoc context :asset-resolver asset-resolver))))
 
-(defn default-asset-pipeline
+(s/defn default-asset-pipeline :- AssetHandler
   "Sets up the default pipeline.
 
   The asset pipeline starts with a resolver, which is then intercepted using asset pipeline middleware.
@@ -255,8 +267,8 @@
 
   In production mode, JavaScript will be minimized.
 
-  The context will contain a `:asset-pipeline` key whose value is the asset pipeline in use.
-  The context will contain a `:path-prefix` key, extracted from the twixt options.
+  The context will contain an :asset-pipeline key whose value is the asset pipeline in use.
+  The context will contain a :path-prefix key, extracted from the twixt options.
   The context may also be passed to [[get-asset-uri]] (and related functions).
 
   In some cases, middlware may modify the context before passing it forward to the next asset-handler, typically

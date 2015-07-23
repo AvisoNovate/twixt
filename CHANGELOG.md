@@ -2,6 +2,8 @@
 
 Update dependencies, including Clojure to 1.7.0.
 
+Clarified many APIs by introducing Prismatic Schema signatures.
+
 ## 0.1.16 - 10 Jun 2015
 
 Update dependencies to latest.

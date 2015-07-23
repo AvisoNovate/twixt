@@ -12,6 +12,7 @@
                            [org.mozilla/rhino "1.7.7"]
                            [com.github.sommeri/less4j "1.13.0"]
                            [de.neuland-bfi/jade4j "0.4.3"]
+                           [prismatic/schema "0.4.3"]
                            [hiccup "1.0.5"]]
             :test-paths ["spec"]
             :plugins [[speclj "3.3.1"]

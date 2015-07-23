@@ -2,7 +2,8 @@
   (:use speclj.config
         io.aviso.repl
         clojure.pprint
-        io.aviso.exception))
+        io.aviso.exception)
+  (:require [schema.core :as s]))
 
 (install-pretty-exceptions)
 
@@ -11,4 +12,6 @@
                 [:package "speclj" :terminate])
 
 (alter-var-root #'default-config assoc :color true :reporters ["documentation"])
+
+(s/set-fn-validation! true)
 
