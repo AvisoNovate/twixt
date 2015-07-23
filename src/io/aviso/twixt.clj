@@ -27,10 +27,11 @@
      [fs-cache :as fs]
      [memory-cache :as mem]
      [js-minification :as js]
-     [schemas :refer [Asset AssetHandler AssetPath AssetURI TwixtContext]]
+     [schemas :refer [Asset AssetHandler AssetPath AssetURI TwixtContext ResourcePath]]
      [utils :as utils]]
     [ring.util.mime-type :as mime]
-    [schema.core :as s]))
+    [schema.core :as s])
+  (:import [java.net URL]))
 
 ;;; Lots of stuff from Tapestry 5.4 is not yet implemented
 ;;; - multiple domains (the context, the file system, etc.)
@@ -46,13 +47,19 @@
   [content-types resource-path]
   (get content-types (extract-file-extension resource-path) "application/octet-stream"))
 
-(defn- make-asset-map
-  [content-types asset-path resource-path url]
-  (utils/replace-asset-content {:asset-path    asset-path   ; to compute relative assets
-                                :resource-path resource-path
-                                :modified-at   (utils/modified-at url)}
-                               (extract-content-type content-types resource-path)
-                               (utils/read-content url)))
+(s/defn ^:private make-asset-map :- Asset
+  [content-types
+   asset-path :- AssetPath
+   resource-path :- ResourcePath
+   url :- URL]
+  (let [^bytes content-bytes (utils/read-content url)]
+    {:asset-path    asset-path
+     :resource-path resource-path
+     :modified-at   (utils/modified-at url)
+     :content-type  (extract-content-type content-types resource-path)
+     :content       content-bytes
+     :size          (alength content-bytes)
+     :checksum      (utils/compute-checksum content-bytes)}))
 
 (s/defn make-asset-resolver :- AssetHandler
   "Factory for the resolver function which converts a path into an asset map.

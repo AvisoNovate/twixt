@@ -1,13 +1,13 @@
 (ns io.aviso.twixt.utils
   "Some re-usable utilities. This namespace should be considered unsupported (subject to change at any time)."
-  (:import
-    [java.io CharArrayWriter ByteArrayOutputStream File]
-    [java.util.zip Adler32]
-    [java.net URL URI]
-    [java.util Date])
-  (:require
-    [clojure.java.io :as io]
-    [clojure.string :as str]))
+  (:require [clojure.java.io :as io]
+            [clojure.string :as str]
+            [schema.core :as s]
+            [io.aviso.twixt.schemas :refer :all])
+  (:import [java.io CharArrayWriter ByteArrayOutputStream File]
+           [java.util.zip Adler32]
+           [java.net URL URI]
+           [java.util Date]))
 
 (defn ^String as-string
   "Converts a source (compatible with `clojure.java.io/IOFactory`) into a String using the provided encoding.
@@ -27,7 +27,7 @@
   "Converts a string to a byte array. The string should be UTF-8 encoded."
   (.getBytes string "UTF-8"))
 
-(defn compute-checksum
+(s/defn compute-checksum :- Checksum
   "Returns a hex string of the Adler32 checksum of the content."
   [^bytes content]
   (->
@@ -36,48 +36,57 @@
     .getValue
     Long/toHexString))
 
-(defn replace-asset-content
+(s/defn replace-asset-content :- Asset
   "Modifies an asset map with new content."
-  [asset content-type ^bytes content-bytes]
+  [asset :- Asset
+   content-type :- ContentType
+   ^bytes content-bytes]
   (assoc asset
     :content-type content-type
     :content content-bytes
     :size (alength content-bytes)
     :checksum (compute-checksum content-bytes)))
 
-(defn extract-dependency
+(s/defn extract-dependency :- Dependency
   "Extracts from the asset the keys needed to track dependencies (used by caching logic)."
-  [asset]
+  [asset :- Asset]
   (select-keys asset [:checksum :modified-at :asset-path]))
 
-(defn get-dependencies
+(s/defn get-dependencies :- DependencyMap
   "Returns map from resource path to dependency data. This may be a map of just
   the asset itself if it has no other dependencies."
-  [asset]
+  [asset :- Asset]
   (if (-> asset :dependencies nil?)
     {(:resource-path asset) (extract-dependency asset)}
     (:dependencies asset)))
 
-(defn add-asset-as-dependency
+(s/defn add-asset-as-dependency :- DependencyMap
   "Adds the asset to a dependency map."
-  [dependencies asset]
+  [dependencies :- (s/maybe DependencyMap)
+   asset :- Asset]
   (merge (or dependencies {}) (get-dependencies asset)))
 
-(defn create-compiled-asset
+(s/defn create-compiled-asset :- Asset
   "Used to transform an asset map after it has been compiled from one form to another. Dependencies
   is a map of resource path to source asset details, used to check cache validity. The source asset's
   dependencies are merged into any provided dependencies to form the :dependencies entry of the asset."
-  [source-asset content-type ^String content dependencies]
+  [source-asset :- Asset
+   content-type :- s/Str
+   content :- s/Str
+   dependencies :- (s/maybe DependencyMap)]
   (let [merged-dependencies (add-asset-as-dependency dependencies source-asset)]
     (->
       source-asset
       (replace-asset-content content-type (as-bytes content))
       (assoc :compiled true :dependencies merged-dependencies))))
 
-(defn add-attachment
+(s/defn add-attachment :- Asset
   "Adds an attachment to an asset."
   {:since "0.1.13"}
-  [asset name content-type ^bytes content]
+  [asset :- Asset
+   name  :- AttachmentName
+   content-type :- ContentType
+   ^bytes content]
   (assoc-in asset [:attachments name] {:content-type content-type
                                        :content      content
                                        :size         (alength content)}))

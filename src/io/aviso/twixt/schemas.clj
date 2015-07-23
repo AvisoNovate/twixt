@@ -44,10 +44,16 @@
    :checksum    Checksum
    :modified-at ModifiedAt})
 
+(s/defschema DependencyMap
+  {ResourcePath Dependency})
+
 (s/defschema Attachment
   {:content      Content
    :size         Size
    :content-type ContentType})
+
+(s/defschema AttachmentMap
+  {AttachmentName Attachment})
 
 (s/defschema Asset
   "A server-side resource that may be exposed to a client (such as a web browser).
@@ -59,10 +65,11 @@
    :size                                   Size
    :checksum                               Checksum
    :modified-at                            ModifiedAt
+   :content                                Content
    (s/optional-key :compiled)              s/Bool
    (s/optional-key :aggregate-asset-paths) [AssetPath]
-   (s/optional-key :dependencies)          {ResourcePath Dependency}
-   (s/optional-key :attachments)           {AttachmentName Attachment}})
+   (s/optional-key :dependencies)          DependencyMap
+   (s/optional-key :attachments)           AttachmentMap})
 
 (s/defschema TwixtContext
   "Defines the minimal values provided in the Twixt context (the :twixt key of the Ring
