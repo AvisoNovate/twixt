@@ -99,7 +99,7 @@
   (keys :asset-path, :checksum, and  :modified-at)
 
   :attachments
-  : _optional_ - map of string name to attachment (with contains :content, :size, and :content-type)"
+  : _optional_ - map of string name to attachment (with keys :content, :size, and :content-type)"
   [{:keys [content-types]}]
   (fn [asset-path _]
     (let [resource-path (str "META-INF/assets/" asset-path)]
