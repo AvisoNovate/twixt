@@ -1,18 +1,15 @@
 (ns io.aviso.twixt.exceptions
   "Support for generating pretty and useful HTML reports when server-side exceptions occur."
-  (:use
-    hiccup.core
-    hiccup.page
-    ring.util.response)
-  (:import
-    [clojure.lang APersistentMap Sequential  PersistentHashMap]
-    [java.util Map]
-    [java.util.regex Pattern])
-  (:require
-    [clojure.string :as s]
-    [io.aviso
-     [exception :as exception]
-     [twixt :as t]]))
+  (:use hiccup.core
+        hiccup.page
+        ring.util.response)
+  (:require [clojure.string :as s]
+            [io.aviso
+             [exception :as exception]
+             [twixt :as t]])
+  (:import [clojure.lang APersistentMap Sequential PersistentHashMap]
+           [java.util Map]
+           [java.util.regex Pattern]))
 
 (def ^:private path-separator (System/getProperty "path.separator"))
 
@@ -267,8 +264,11 @@ h
   initially hidden, but can be revealed in the client."
   [frame]
   (cond
-    (nil? (:line frame)) :omit
-    :else exception/*default-frame-filter*))
+    (nil? (:line frame))
+    :omit
+
+    :else
+    (exception/*default-frame-filter* frame)))
 
 (defn register-exception-reporting
   "Must be invoked to configure the Twixt options with the default `:stack-frame-filter` key, [[default-stack-frame-filter]]."

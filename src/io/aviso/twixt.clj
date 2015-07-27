@@ -52,14 +52,19 @@
    asset-path :- AssetPath
    resource-path :- ResourcePath
    url :- URL]
-  (let [^bytes content-bytes (utils/read-content url)]
+  (let [^bytes content-bytes (utils/read-content url)
+        checksum             (utils/compute-checksum content-bytes)
+        modified-at          (utils/modified-at url)]
     {:asset-path    asset-path
      :resource-path resource-path
-     :modified-at   (utils/modified-at url)
+     :modified-at   modified-at
      :content-type  (extract-content-type content-types resource-path)
      :content       content-bytes
      :size          (alength content-bytes)
-     :checksum      (utils/compute-checksum content-bytes)}))
+     :checksum      checksum
+     :dependencies  {resource-path {:asset-path  asset-path
+                                    :checksum    checksum
+                                    :modified-at modified-at}}}))
 
 (s/defn make-asset-resolver :- AssetHandler
   "Factory for the resolver function which converts a path into an asset map.

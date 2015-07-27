@@ -3,13 +3,11 @@
   In development, the individual files are used, but in production they are aggregated together so that
   the entire stack can be obtained in a single request."
   {:since "0.1.13"}
-  (:import
-    (java.io PushbackReader ByteArrayOutputStream))
-  (:require
-    [io.aviso.tracker :as t]
-    [io.aviso.twixt.utils :as utils]
-    [clojure.java.io :as io]
-    [clojure.edn :as edn]))
+  (:require [io.aviso.tracker :as t]
+            [io.aviso.twixt.utils :as utils]
+            [clojure.java.io :as io]
+            [clojure.edn :as edn])
+  (:import (java.io PushbackReader ByteArrayOutputStream)))
 
 (def stack-mime-type
   "Defines a MIME type for a Twixt stack, a kind of aggregate resource that combines

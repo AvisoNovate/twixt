@@ -68,7 +68,7 @@
    :content                                Content
    (s/optional-key :compiled)              s/Bool
    (s/optional-key :aggregate-asset-paths) [AssetPath]
-   (s/optional-key :dependencies)          DependencyMap
+   :dependencies                           DependencyMap
    (s/optional-key :attachments)           AttachmentMap})
 
 (s/defschema TwixtContext

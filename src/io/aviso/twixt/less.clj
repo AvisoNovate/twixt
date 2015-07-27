@@ -1,12 +1,10 @@
 (ns io.aviso.twixt.less
   "Provides asset pipeline middleware for compiling Less source files to CSS."
-  (:import
-    [com.github.sommeri.less4j LessSource LessSource$FileNotFound Less4jException LessCompiler$Problem LessCompiler LessCompiler$CompilationResult LessSource$StringSource LessCompiler$Configuration LessCompiler$SourceMapConfiguration]
-    [com.github.sommeri.less4j.core DefaultLessCompiler])
-  (:require
-    [clojure.string :as str]
-    [io.aviso.tracker :as t]
-    [io.aviso.twixt.utils :as utils]))
+  (:require [clojure.string :as str]
+            [io.aviso.tracker :as t]
+            [io.aviso.twixt.utils :as utils])
+  (:import [com.github.sommeri.less4j LessSource LessSource$FileNotFound Less4jException LessCompiler$Problem LessCompiler LessCompiler$CompilationResult LessCompiler$Configuration LessCompiler$SourceMapConfiguration]
+           [com.github.sommeri.less4j.core DefaultLessCompiler]))
 
 ;; Putting this logic inside the (proxy) call causes some really awful Clojure compiler problems.
 ;; This shim seems to defuse that.

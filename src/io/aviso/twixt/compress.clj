@@ -1,14 +1,14 @@
 (ns io.aviso.twixt.compress
   "Asset pipeline middleware for handling compressable assets."
-  (:import
-    [java.io ByteArrayOutputStream]
-    [java.util.zip GZIPOutputStream])
-  (:require
-    [clojure.string :as str]
-    [clojure.java.io :as io]
-    [io.aviso.twixt
-     [memory-cache :as mem]
-     [utils :as utils]]))
+  (:require [clojure.string :as str]
+            [clojure.java.io :as io]
+            [io.aviso.twixt
+             [memory-cache :as mem]
+             [utils :as utils]
+             [schemas :refer [AssetHandler]]]
+            [schema.core :as s])
+  (:import [java.io ByteArrayOutputStream]
+           [java.util.zip GZIPOutputStream]))
 
 (defn- make-wildcard [^String mime-type]
   (->
@@ -39,12 +39,13 @@
     (some #(.equalsIgnoreCase ^String % "gzip")
           (str/split encodings #","))))
 
-(defn wrap-pipeline-with-compression
+(s/defn wrap-pipeline-with-compression :- AssetHandler
   "Asset pipeline middleware for detecting if asset content is compressable, and compressing
   the asset when necessary
 
   When an asset is accessed for aggregation, it is never compressed."
-  [asset-handler {compressable-types :compressable}]
+  [asset-handler :- AssetHandler
+   {compressable-types :compressable}]
   (fn [asset-path {:keys [gzip-enabled for-aggregation] :as context}]
     (let [asset (asset-handler asset-path context)]
       (if (and asset
@@ -60,17 +61,17 @@
     (let [delegate (if (:gzip-enabled options) cache asset-handler)]
       (delegate asset-path options))))
 
-(defn wrap-with-sticky-compressed-caching
+(s/defn wrap-with-sticky-compressed-caching :- AssetHandler
   "Adds sticky in-memory caching of just compressed assets.
   The cache is only used when the `:gzip-enabled` options key is true."
-  [asset-handler]
+  [asset-handler :- AssetHandler]
   (with-cache-delegation asset-handler
                          (mem/wrap-with-sticky-cache asset-handler :compressed)))
 
-(defn wrap-with-invalidating-compressed-caching
+(s/defn wrap-with-invalidating-compressed-caching :- AssetHandler
   "Adds an in-memory development cache that includes invalidation checks.
   The cache is only consulted if the `:gzip-enabled` options key is true."
-  [asset-handler]
+  [asset-handler :- AssetHandler]
   (with-cache-delegation asset-handler
                          (mem/wrap-with-invalidating-cache asset-handler :compressed)))
 

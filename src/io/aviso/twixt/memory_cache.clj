@@ -2,7 +2,9 @@
   "Provides asset pipeline middleware implementing an in-memory cache for assets.
   This cache is used to bypass the normal loading, compiling, and transforming steps."
   (:require [clojure.java.io :as io]
-            [io.aviso.twixt.utils :as utils]))
+            [io.aviso.twixt.schemas :refer [Asset AssetHandler]]
+            [io.aviso.twixt.utils :as utils]
+            [schema.core :as s]))
 
 (defn wrap-with-sticky-cache
   "A sticky cache is permanent; it does not check to see if the underlying files have changed.
@@ -44,16 +46,14 @@
   [asset]
   (cond
     (nil? asset) false
-    ;; Non-compiled assets may have no :dependencies key, so use the standard keys
-    (nil? (:dependencies asset)) (modified-at-matches? (:resource-path asset) (:modified-at asset))
-    ;; Compiled assets will have :dependencies that include the original resource.
-    ;; Keys are the resource path, values are a map with keys :modified-at and :checksum
-    :else (every?
+
+    :else
+    (every?
             (fn [[resource-path {:keys [modified-at]}]]
               (modified-at-matches? resource-path modified-at))
             (:dependencies asset))))
 
-(defn wrap-with-invalidating-cache
+(s/defn wrap-with-invalidating-cache :- AssetHandler
   "An invalidating cache is generally used in development; it does more work than the sticky cache;
   assets that are obtained from the cache are checked to ensure they are still valid;
   invalid cached assets are discarded and re-fetched from downstream.
@@ -62,9 +62,10 @@
   intermediate results and only the final aggregated asset needs to be cached.
 
   A cached asset is invalid if any of its dependencies has changed (based on modified-at timestamp)."
-  ([asset-handler]
+  ([asset-handler :- AssetHandler]
    (wrap-with-invalidating-cache asset-handler (constantly true)))
-  ([asset-handler store-in-cache?]
+  ([asset-handler :- AssetHandler
+    store-in-cache? :- (s/=> s/Bool Asset)]
    (let [cache (atom {})]
      (fn [asset-path {:keys [for-aggregation] :as context}]
        (let [asset (get @cache asset-path)]

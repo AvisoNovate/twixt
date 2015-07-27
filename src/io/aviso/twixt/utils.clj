@@ -52,19 +52,11 @@
   [asset :- Asset]
   (select-keys asset [:checksum :modified-at :asset-path]))
 
-(s/defn get-dependencies :- DependencyMap
-  "Returns map from resource path to dependency data. This may be a map of just
-  the asset itself if it has no other dependencies."
-  [asset :- Asset]
-  (if (-> asset :dependencies nil?)
-    {(:resource-path asset) (extract-dependency asset)}
-    (:dependencies asset)))
-
 (s/defn add-asset-as-dependency :- DependencyMap
   "Adds the asset to a dependency map."
-  [dependencies :- (s/maybe DependencyMap)
+  [dependencies :- DependencyMap
    asset :- Asset]
-  (merge (or dependencies {}) (get-dependencies asset)))
+  (merge dependencies (:dependencies asset)))
 
 (s/defn create-compiled-asset :- Asset
   "Used to transform an asset map after it has been compiled from one form to another. Dependencies
@@ -74,7 +66,7 @@
    content-type :- s/Str
    content :- s/Str
    dependencies :- (s/maybe DependencyMap)]
-  (let [merged-dependencies (add-asset-as-dependency dependencies source-asset)]
+  (let [merged-dependencies (add-asset-as-dependency (or dependencies {}) source-asset)]
     (->
       source-asset
       (replace-asset-content content-type (as-bytes content))

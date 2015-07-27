@@ -4,9 +4,10 @@
                                          SourceFile Result CompilationLevel))
   (:require [clojure.java.io :as io]
             [io.aviso.twixt.utils :as utils]
+            [io.aviso.twixt.schemas :refer [AssetHandler]]
             [io.aviso.tracker :as t]
             [clojure.string :as str]
-            [clojure.tools.logging :as l]))
+            [schema.core :as s]))
 
 ;; See bug http://dev.clojure.org/jira/browse/CLJ-1440
 ;; this is an ugly workaround.
@@ -40,9 +41,10 @@
                           :whitespace CompilationLevel/WHITESPACE_ONLY
                           :advanced CompilationLevel/ADVANCED_OPTIMIZATIONS})
 
-(defn wrap-with-javascript-minimizations
+(s/defn wrap-with-javascript-minimizations :- AssetHandler
   "Identifies JavaScript assets and, if not aggregating, passes them through the Google Closure compiler."
-  [asset-handler {:keys [development-mode js-optimizations]}]
+  [asset-handler :- AssetHandler
+   {:keys [development-mode js-optimizations]}]
   (fn [asset-path {:keys [for-aggregation] :as context}]
     (let [{:keys [content-type] :as asset} (asset-handler asset-path context)]
       (if (and (= "text/javascript" content-type)
