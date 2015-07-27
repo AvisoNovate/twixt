@@ -1,21 +1,19 @@
 (ns io.aviso.twixt-spec
-  (:use
-    speclj.core
-    clojure.pprint
-    clojure.template
-    io.aviso.twixt
-    io.aviso.twixt.utils)
-  (:require
-    [clojure.java.io :as io]
-    [io.aviso.exception :as exception]
-    [io.aviso.twixt
-     [coffee-script :as cs]
-     [jade :as jade]
-     [less :as less]
-     [ring :as ring]
-     [stacks :as stacks]]
-    [clojure.string :as str]
-    [clojure.tools.logging :as l]))
+  (:use speclj.core
+        clojure.pprint
+        clojure.template
+        io.aviso.twixt
+        io.aviso.twixt.utils)
+  (:require [clojure.java.io :as io]
+            [io.aviso.exception :as exception]
+            [io.aviso.twixt
+             [coffee-script :as cs]
+             [jade :as jade]
+             [less :as less]
+             [ring :as ring]
+             [stacks :as stacks]]
+            [clojure.string :as str]
+            [clojure.tools.logging :as l]))
 
 (defn read-as-trimmed-string
   [content]

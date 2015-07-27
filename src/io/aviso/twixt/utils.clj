@@ -1,5 +1,7 @@
 (ns io.aviso.twixt.utils
-  "Some re-usable utilities. This namespace should be considered unsupported (subject to change at any time)."
+  "Some re-usable utilities.
+
+  Many of these are useful when creating new compilers or translators for Twixt."
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [schema.core :as s]
@@ -10,9 +12,9 @@
            [java.util Date]))
 
 (defn ^String as-string
-  "Converts a source (compatible with `clojure.java.io/IOFactory`) into a String using the provided encoding.
+  "Converts a source (compatible with clojure.java.io/IOFactory) into a String using the provided encoding.
 
-  The source is typically a byte array, or a `File`.
+  The source is typically a byte array, or a File.
 
   The default charset is UTF-8."
   ([source]
@@ -37,7 +39,8 @@
     Long/toHexString))
 
 (s/defn replace-asset-content :- Asset
-  "Modifies an asset map with new content."
+  "Modifies an Asset new content.
+  This updates the :size and :checksum properties as well."
   [asset :- Asset
    content-type :- ContentType
    ^bytes content-bytes]
@@ -53,15 +56,16 @@
   (select-keys asset [:checksum :modified-at :asset-path]))
 
 (s/defn add-asset-as-dependency :- DependencyMap
-  "Adds the asset to a dependency map."
+  "Adds the dependencies of the Asset to a dependency map."
   [dependencies :- DependencyMap
    asset :- Asset]
   (merge dependencies (:dependencies asset)))
 
 (s/defn create-compiled-asset :- Asset
-  "Used to transform an asset map after it has been compiled from one form to another. Dependencies
-  is a map of resource path to source asset details, used to check cache validity. The source asset's
-  dependencies are merged into any provided dependencies to form the :dependencies entry of the asset."
+  "Used to transform an Asset after it has been compiled from one form to another.
+  Dependencies is a map of resource path to source asset details, used to check cache validity.
+
+  The source asset's dependencies are merged into any provided dependencies to form the :dependencies entry of the output Asset."
   [source-asset :- Asset
    content-type :- s/Str
    content :- s/Str
@@ -131,11 +135,13 @@
     (= "jar" (.getProtocol url)) (jar-to-file url)
     :else (url-to-file url)))
 
-(defn modified-at
-  [url]
+(s/defn modified-at :- Date
+  "Extracts a last-modified Date"
+  [url :- URL]
   (some-> url as-file .lastModified Date.))
 
 (defn nil-check
+  {:no-doc true}
   [value message]
   (or
     value
