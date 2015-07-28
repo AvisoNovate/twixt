@@ -30,8 +30,10 @@
              [schemas :refer [Asset AssetHandler AssetPath AssetURI TwixtContext ResourcePath]]
              [utils :as utils]]
             [ring.util.mime-type :as mime]
-            [schema.core :as s])
-  (:import [java.net URL]))
+            [schema.core :as s]
+            [clojure.string :as str])
+  (:import [java.net URL]
+           org.webjars.WebJarAssetLocator))
 
 ;;; Lots of stuff from Tapestry 5.4 is not yet implemented
 ;;; - multiple domains (the context, the file system, etc.)
@@ -137,10 +139,27 @@
   (make-simple-resolver twixt-options "META-INF/assets/"))
 
 (s/defn make-webjars-asset-resolver :- AssetHandler
-  "As with [[make-asset-resolver]], but "
+  "As with [[make-asset-resolver]], but finds assets inside WebJars.
+
+  The path must start with a WebJar libary name, such as \"bootstrap\".
+  The version number is injected into the resource path."
   {:since "0.1.17"}
   [twixt-options]
-  (make-simple-resolver twixt-options "META-INF/resources/webjars/"))
+  (let [webjar-versions (into {} (-> (WebJarAssetLocator.) .getWebJars))
+        content-types (:content-types twixt-options)]
+    (fn [asset-path _context]
+      (cond-let
+        [[webjar-name webjar-asset-path] (str/split asset-path #"/" 2)
+         webjar-version (get webjar-versions webjar-name)]
+
+        (nil? webjar-version)
+        nil
+
+        [resource-path (str "META-INF/resources/webjars/" webjar-name "/" webjar-version "/" webjar-asset-path)
+         url (io/resource resource-path)]
+
+        (some? url)
+        (new-asset content-types asset-path resource-path url)))))
 
 
 (def default-options

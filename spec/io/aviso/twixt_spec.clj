@@ -126,7 +126,12 @@
     (it "can find WebJars assets"
         (should
           (have-same-content "META-INF/resources/webjars/bootstrap/3.3.5/js/alert.js"
-                             (find-asset "bootstrap/3.3.5/js/alert.js")))))
+                             (find-asset "bootstrap/js/alert.js"))))
+
+    (it "can process compilation of WebJars assets"
+        (should
+          (have-same-content "expected/bootstrap-webjars.css"
+                             (find-asset "bootstrap/less/bootstrap.less")))))
 
   (context "CoffeeScript compilation"
 

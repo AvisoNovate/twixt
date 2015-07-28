@@ -14,9 +14,10 @@
                            [de.neuland-bfi/jade4j "0.4.3"]
                            [prismatic/schema "0.4.3"]
                            [hiccup "1.0.5"]
-                           [org.webjars/bootstrap "3.3.5"]]
+                           [org.webjars/bootstrap "3.3.5"]
+                           [org.webjars/webjars-locator "0.27"]]
   :test-paths ["spec"]
-            :plugins [[speclj "3.3.1"]
+  :plugins [[speclj "3.3.1"]
                       [lein-shell "0.4.0"]]
             :shell {:commands {"scp" {:dir "doc"}}}
             :aliases {"deploy-doc" ["shell"

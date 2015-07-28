@@ -16,7 +16,10 @@ And you can now reference the files within that WebJar:
 
 [source,clojure]
 ----
-    (find-asset-uri context "d3js/3.5.5-1/d3.js)
+    (find-asset-uri context "d3js/d3.js)
 ----
 
-That's it!  The referenced file will be read as normal and processed just like any file under META-INF/assets.
+That's it ... you don't even need to use the version number in the call to find-asset-uri; the version
+number (needed internally to build the path to the referenced file) is determined automatically.
+
+The referenced file will be read as normal and processed just like any file under META-INF/assets.
