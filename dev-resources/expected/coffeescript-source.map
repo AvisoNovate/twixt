@@ -6,7 +6,7 @@
     "coffeescript-source.coffee"
   ],
   "names": [],
-  "mappings": ";AAAA;AAAA,EAAA,OAAA,CAAQ,sBAAR,CAAA,CAAA;AAAA",
+  "mappings": ";AAAA;EAAA,OAAA,CAAQ,sBAAR;AAAA",
   "sourcesContent": [
     "println \"CoffeeScript is fun!\""
   ]

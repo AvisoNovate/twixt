@@ -80,7 +80,7 @@
 ;; Note: updating the CoffeeScript compiler will often change the outputs, including checksums, not least because
 ;; the compiler injects a comment with the compiler version.
 
-(def compiled-coffeescript-checksum "52753585")
+(def compiled-coffeescript-checksum "54753589")
 
 (describe "io.aviso.twixt"
 
@@ -149,8 +149,9 @@
         (should (have-same-content "expected/coffeescript-source.js" @asset)))
 
     (it "has the correct source.map attachment"
-        (should= (read-resource-content "expected/coffeescript-source.map")
-                 (read-attachment-content @asset "source.map")))
+        (should-have-content
+          (read-resource-content "expected/coffeescript-source.map")
+          (read-attachment-content @asset "source.map")))
 
     (it "has the expected dependencies"
         (should= (sorted-dependencies @asset)

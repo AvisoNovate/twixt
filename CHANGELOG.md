@@ -1,11 +1,10 @@
 ## 0.1.17 - UNRELEASED
 
-Update dependencies, including Clojure to 1.7.0.
+Update dependencies, including Clojure to 1.7.0, and CoffeeScript compiler to 1.9.3.
 
 Clarified many APIs by introducing Prismatic Schema signatures.
 
-Added support for finding resources (under META-INF/resources/webjars) for 
-[WebJars](http://www.webjars.org/).
+Added support for finding assets inside [WebJars](http://www.webjars.org/).
 
 ## 0.1.16 - 10 Jun 2015
 
