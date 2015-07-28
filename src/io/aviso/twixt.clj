@@ -82,13 +82,6 @@
                                     :checksum    checksum
                                     :modified-at modified-at}}}))
 
-(defn- make-simple-resolver
-  [{:keys [content-types]} resource-path-root]
-  (fn [asset-path _context]
-    (let [resource-path (str resource-path-root asset-path)]
-      (if-let [url (io/resource resource-path)]
-        (new-asset content-types asset-path resource-path url)))))
-
 (s/defn make-asset-resolver :- AssetHandler
   "Factory for the standard Asset resolver function which converts a path into an Asset.
 
@@ -136,7 +129,11 @@
   :attachments
   : _optional_ - map of string name to attachment (with keys :content, :size, and :content-type)"
   [twixt-options]
-  (make-simple-resolver twixt-options "META-INF/assets/"))
+  (let [{:keys [content-types]} twixt-options]
+    (fn [asset-path _context]
+      (let [resource-path (str "META-INF/assets/" asset-path)]
+        (if-let [url (io/resource resource-path)]
+          (new-asset content-types asset-path resource-path url))))))
 
 (s/defn make-webjars-asset-resolver :- AssetHandler
   "As with [[make-asset-resolver]], but finds assets inside WebJars.
