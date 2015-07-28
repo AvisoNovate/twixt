@@ -212,7 +212,7 @@ h
       [:head
        [:title "Exception"]
        (apply include-css (t/get-asset-uris twixt
-                                            "bootstrap/3.3.5/css/bootstrap.css"
+                                            "bootstrap/css/bootstrap.css"
                                             "twixt/exception.less"))]
       [:body.hide-filtered
        [:div.container
@@ -233,7 +233,7 @@ h
         (sysproperties->markup)
         ]
        (apply include-js (t/get-asset-uris twixt
-                                           "jquery/1.11.1/jquery.js"
+                                           "jquery/jquery.js"
                                            "twixt/exception.coffee"))
        ])))
 
