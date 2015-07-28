@@ -26,6 +26,7 @@ Twixt currently supports:
 * link:stacks.html[JavaScript and CSS aggregation]
 * File system caching of compiled content
 * Automatic GZip compression
+* Works with link:webjars.html[WebJars].
 
 == Stability
 

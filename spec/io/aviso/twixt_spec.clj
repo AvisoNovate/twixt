@@ -101,6 +101,9 @@
 
   (with-all twixt-context (assoc @options :asset-pipeline @pipeline))
 
+  (defn find-asset
+    [asset-path]
+    (@pipeline asset-path @twixt-context))
 
   (context "asset pipeline"
 
@@ -117,7 +120,13 @@
 
     (it "returns the correct asset URI"
         (should= (str "/assets/" compiled-coffeescript-checksum "/coffeescript-source.coffee")
-                 (find-asset-uri @twixt-context "coffeescript-source.coffee"))))
+                 (find-asset-uri @twixt-context "coffeescript-source.coffee")))
+
+
+    (it "can find WebJars assets"
+        (should
+          (have-same-content "META-INF/resources/webjars/bootstrap/3.3.5/js/alert.js"
+                             (find-asset "bootstrap/3.3.5/js/alert.js")))))
 
   (context "CoffeeScript compilation"
 

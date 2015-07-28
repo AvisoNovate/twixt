@@ -12,6 +12,7 @@ The default options:
 (def default-options
   {:path-prefix          "/assets/"
    :content-types        mime/default-mime-types
+   :resolver-factories   [...]
    :twixt-template       {}
    :content-transformers {}
    :js-optimizations     :default
@@ -32,7 +33,12 @@ that all text content types are compressable. Anything not explicitly compressab
 The +:twixt-template+ key is a map that provides default values for the +:twixt+ request key.
 This is often used to provide information to specific content transformers.
 
-The +:js-optimisations+ key is a keyword that specifies which Google Closure compilation level should be used to minimize javascript files.
-This may be one of :default, :none, :simple, :whitespace, :advanced
-The :default option means :none is dev mode and :simple in production mode
+The +:js-optimisations+ key is a keyword that specifies which Google Closure compilation level should be used to minimize
+JavaScript files.
+This may be one of :default, :none, :simple, :whitespace, :advanced.
 
+The :default option corresponds to :none in development mode, and :simple in production mode.
+
+The +:resolver-factories+ key is a list of functions that create Asset resolvers.
+Each factory function is passed the Twixt options and returns an Asset handler.
+The two built-in factories search for standard resources (under META-INF/assets) and WebJars resources (under META-INF/resources/webjars).

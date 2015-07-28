@@ -17,20 +17,20 @@
 
    As with Ring, there's the concept of middleware; functions that accept an asset handler (plus optional
    additional parameters) and return a new asset handler."
-  (:require
-    [clojure.java.io :as io]
-    [io.aviso.tracker :as t]
-    [io.aviso.twixt
-     [asset :as asset]
-     [compress :as compress]
-     [css-rewrite :as rewrite]
-     [fs-cache :as fs]
-     [memory-cache :as mem]
-     [js-minification :as js]
-     [schemas :refer [Asset AssetHandler AssetPath AssetURI TwixtContext ResourcePath]]
-     [utils :as utils]]
-    [ring.util.mime-type :as mime]
-    [schema.core :as s])
+  (:require [clojure.java.io :as io]
+            [io.aviso.toolchest.macros :refer [cond-let]]
+            [io.aviso.tracker :as t]
+            [io.aviso.twixt
+             [asset :as asset]
+             [compress :as compress]
+             [css-rewrite :as rewrite]
+             [fs-cache :as fs]
+             [memory-cache :as mem]
+             [js-minification :as js]
+             [schemas :refer [Asset AssetHandler AssetPath AssetURI TwixtContext ResourcePath]]
+             [utils :as utils]]
+            [ring.util.mime-type :as mime]
+            [schema.core :as s])
   (:import [java.net URL]))
 
 ;;; Lots of stuff from Tapestry 5.4 is not yet implemented
@@ -47,8 +47,22 @@
   [content-types resource-path]
   (get content-types (extract-file-extension resource-path) "application/octet-stream"))
 
-(s/defn ^:private make-asset-map :- Asset
-  [content-types
+(s/defn new-asset :- Asset
+  "Create a new Asset.
+
+  content-types
+  : The content-types map from the Twixt options.
+
+  asset-path
+  : The path to the asset from the asset Root. This may be used in some tracking/debugging output.
+
+  resource-path
+  : The path to the asset on the classpath, used to locate the Asset's raw content.
+
+  url
+  : A URL used to access the raw content for the asset."
+  {:size "0.1.17"}
+  [content-types :- {s/Str s/Str}
    asset-path :- AssetPath
    resource-path :- ResourcePath
    url :- URL]
@@ -66,18 +80,25 @@
                                     :checksum    checksum
                                     :modified-at modified-at}}}))
 
-(s/defn make-asset-resolver :- AssetHandler
-  "Factory for the resolver function which converts a path into an asset map.
+(defn- make-simple-resolver
+  [{:keys [content-types]} resource-path-root]
+  (fn [asset-path _context]
+    (let [resource-path (str resource-path-root asset-path)]
+      (if-let [url (io/resource resource-path)]
+        (new-asset content-types asset-path resource-path url)))))
 
-  The factory function is passed the twixt options, which defines content types mappings.
+(s/defn make-asset-resolver :- AssetHandler
+  "Factory for the standard Asset resolver function which converts a path into an Asset.
+
+  The factory function is passed the Twixt options, which defines content types mappings.
 
   The resolver function is passed an asset path and a pipeline context (which is ignored);
   The asset path is converted to a classpath resource via the configuration;
-  if the resource exists, it is converted to an asset map.
+  if the resource exists, it is converted to an Asset.
 
-  If the asset does not exist, the resolver returns nil.
+  If the Asset does not exist, the resolver returns nil.
 
-  An asset map has the minimum following keys:
+  An Asset has the minimum following keys:
 
   :content
   : content of the asset in a form that is compatible with clojure.java.io
@@ -112,17 +133,22 @@
 
   :attachments
   : _optional_ - map of string name to attachment (with keys :content, :size, and :content-type)"
-  [{:keys [content-types]}]
-  (fn [asset-path _]
-    (let [resource-path (str "META-INF/assets/" asset-path)]
-      (if-let [url (io/resource resource-path)]
-        (make-asset-map content-types asset-path resource-path url)))))
+  [twixt-options]
+  (make-simple-resolver twixt-options "META-INF/assets/"))
+
+(s/defn make-webjars-asset-resolver :- AssetHandler
+  "As with [[make-asset-resolver]], but "
+  {:since "0.1.17"}
+  [twixt-options]
+  (make-simple-resolver twixt-options "META-INF/resources/webjars/"))
+
 
 (def default-options
   "Provides the default options when using Twixt; these rarely need to be changed except, perhaps, for :path-prefix
   or :cache-folder, or by plugins."
   {:path-prefix          "/assets/"
    :content-types        mime/default-mime-types
+   :resolver-factories   [make-asset-resolver make-webjars-asset-resolver]
    ;; Content transformer, e.g., compilers (such as CoffeeScript to JavaScript). Key is a content type,
    ;; value is a function passed an asset and Twixt context, and returns a new asset.
    :content-transformers {}
@@ -269,6 +295,21 @@
   (fn [asset-path context]
     (asset-handler asset-path (assoc context :asset-resolver asset-resolver))))
 
+(defn- merge-handlers [handlers]
+  (fn [asset-path context]
+    (loop [[h & more-handlers] handlers]
+      (cond-let
+        (nil? h)
+        nil
+
+        [result (h asset-path context)]
+
+        (some? result)
+        result
+
+        :else
+        (recur more-handlers)))))
+
 (s/defn default-asset-pipeline :- AssetHandler
   "Sets up the default pipeline.
 
@@ -285,8 +326,11 @@
 
   In some cases, middlware may modify the context before passing it forward to the next asset-handler, typically
   by adding additional keys."
-  [{:keys [development-mode] :as twixt-options}]
-  (let [asset-resolver (make-asset-resolver twixt-options)]
+  [twixt-options]
+  (let [{:keys [development-mode resolver-factories]} twixt-options
+        asset-resolvers (for [factory resolver-factories]
+                          (factory twixt-options))
+        asset-resolver  (merge-handlers asset-resolvers)]
     (->
       asset-resolver
       (default-wrap-pipeline-with-content-transformation twixt-options)

@@ -45,7 +45,7 @@
 
                 ;; This will be on the classpath, but on the filesystem since it is part of the current project.
 
-                (should (-> "META-INF/assets/bootstrap3/css/bootstrap.css"
+                (should (-> "META-INF/assets/colors.less"
                             get-modified-at
                             pos?)))
 

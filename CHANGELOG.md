@@ -4,6 +4,9 @@ Update dependencies, including Clojure to 1.7.0.
 
 Clarified many APIs by introducing Prismatic Schema signatures.
 
+Added support for finding resources (under META-INF/resources/webjars) for 
+[WebJars](http://www.webjars.org/).
+
 ## 0.1.16 - 10 Jun 2015
 
 Update dependencies to latest.

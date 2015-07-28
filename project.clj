@@ -13,8 +13,9 @@
                            [com.github.sommeri/less4j "1.13.0"]
                            [de.neuland-bfi/jade4j "0.4.3"]
                            [prismatic/schema "0.4.3"]
-                           [hiccup "1.0.5"]]
-            :test-paths ["spec"]
+                           [hiccup "1.0.5"]
+                           [org.webjars/bootstrap "3.3.5"]]
+  :test-paths ["spec"]
             :plugins [[speclj "3.3.1"]
                       [lein-shell "0.4.0"]]
             :shell {:commands {"scp" {:dir "doc"}}}

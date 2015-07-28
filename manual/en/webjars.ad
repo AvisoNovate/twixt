@@ -1,0 +1,22 @@
+title: WebJars
+---
+
+link:http://www.webjars.org/[Web Jars] is any easy way to include any number of pre-packaged sets of resources
+as a JAR file.
+Why mess around with getting a distribution, extracting it, and possibly checking those files into your project's
+source code control?
+Just add the WebJar to the classpath (inside your project.clj):
+
+[source,clojure]
+----
+    [org.webjars/d3js "3.5.5-1"]
+----
+
+And you can now reference the files within that WebJar:
+
+[source,clojure]
+----
+    (find-asset-uri context "d3js/3.5.5-1/d3.js)
+----
+
+That's it!  The referenced file will be read as normal and processed just like any file under META-INF/assets.
