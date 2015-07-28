@@ -165,10 +165,10 @@
   This provides the information needed by the actual Twixt handler, as well as anything else downstream that needs to
   generate Twixt asset URIs."
   [handler twixt-options asset-pipeline]
-  (let [twixt (-> twixt-options
+  (let [context (-> twixt-options
                   ;; Pass down only what is needed to generate asset URIs, or to produce the HTML exception report.
                   (select-keys [:path-prefix :stack-frame-filter :development-mode])
                   (assoc :asset-pipeline asset-pipeline)
                   (merge (:twixt-template twixt-options)))]
     (fn [request]
-      (handler (assoc request :twixt twixt)))))
+      (handler (assoc request :twixt context)))))

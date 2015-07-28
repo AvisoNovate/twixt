@@ -74,16 +74,19 @@
 (s/defschema TwixtContext
   "Defines the minimal values provided in the Twixt context (the :twixt key of the Ring
   request map)."
-  {(s/optional-key :asset-pipeline) s/Any                   ; should be AssetHandler
-   :path-prefix                     s/Str
-   s/Any                            s/Any})
+  ;; :asset-pipeline will always be present when requests are processing; there's
+  ;; just a bit of chicken-or-the-egg at startup time.
+  {(s/optional-key :asset-pipeline)     s/Any                   ; should be AssetHandler
+   :path-prefix                         s/Str
+   :development-mode                    s/Bool
+   ;; Other plugins are likely to add thier own data to the context
+   ;; (via the :twixt-template key of the Twixt options).
+   s/Any                                s/Any})
 
 (s/defschema AssetHandler
   "An asset handler is passed as asset path and the Twixt context and, maybe, returns
   an Asset."
   (s/=> (s/maybe Asset) AssetPath TwixtContext))
-
-
 
 (def AssetURI
   "A URI that allows an external client to access the client content. AssetURIs typically
