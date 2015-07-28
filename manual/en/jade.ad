@@ -87,7 +87,7 @@ You can expose Clojure functions as variables if you wish; the Jade template sho
 
 The main issue with helpers and variables relates to cache invalidation.
 Twixt bases cache invalidation entirely on the contents of the underlying files.
-There is now way for Twixt to know to invalidate the cache, just because the implementation
+There is no way for Twixt to know to invalidate the cache just because the implementation
 of a helper has changed, even if that means different markup is being rendered. This
 is one of the primary reasons that link:caching.html[disk cache is disabled in production].
 
