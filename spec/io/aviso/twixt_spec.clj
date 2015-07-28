@@ -2,18 +2,20 @@
   (:use speclj.core
         clojure.pprint
         clojure.template
-        io.aviso.twixt
+        [io.aviso.twixt :exclude [find-asset]]
         io.aviso.twixt.utils)
   (:require [clojure.java.io :as io]
-            [io.aviso.exception :as exception]
+            [ring.middleware.resource :as resource]
             [io.aviso.twixt
              [coffee-script :as cs]
              [jade :as jade]
              [less :as less]
              [ring :as ring]
+             [startup :as startup]
              [stacks :as stacks]]
             [clojure.string :as str]
-            [clojure.tools.logging :as l]))
+            [clojure.tools.logging :as l]
+            [io.aviso.twixt :as twixt]))
 
 (defn read-as-trimmed-string
   [content]
@@ -427,6 +429,27 @@
                      "/"
                      "/a-folder"
                      "/another/folder/")))
+
+  (context "exporter"
+
+    (with-all ring-handler (startup/wrap-with-twixt
+                             (-> (constantly nil)
+                                 (resource/wrap-resource "target/exported"))
+                             (-> twixt/default-options
+                                 (assoc-in [:exports :output-dir] "target/exported")
+                                 (update-in [:exports :assets] into ["sub/jade-include.jade"]))
+                             true))
+
+
+    (it "can export a file"
+        (let [response (@ring-handler {:request-method :get
+                                       :uri            "/sub/jade-include.jade"})]
+
+
+          (should-have-content (read-resource-content "expected/jade-include.html")
+                               (-> "target/exported/sub/jade-include.jade"
+                                   io/file
+                                   read-as-trimmed-string)))))
 
   ;; Slightly bogus; this lets the mass of exceptions written out by the executing tests have a chance to finish
   ;; before speclj outputs the report; without it, you often get a jumble of console output (including formatted exceptions)

@@ -92,3 +92,20 @@
   "A URI that allows an external client to access the client content. AssetURIs typically
   include the checksum in the URI path, forming an immutable web resource."
   s/Str)
+
+(s/defschema ExportsConfiguration
+  "Defines the details of how assets are exported to the file system.
+
+  :interval-ms
+  : The time between checks for performing exports.
+  : Checks only occur during requests, so an external ping process may be needed to keep checks running.
+
+  :output-dir
+  : The root directory to output files to. The directory will be created as necessary.
+
+  :assets
+  : The assets to export.
+  : Keys are the assets to export."
+  {:interval-ms s/Num
+   :output-dir  s/Str
+   :assets      [AssetPath]})

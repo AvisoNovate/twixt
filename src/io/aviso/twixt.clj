@@ -171,7 +171,18 @@
    ;; Identify which content types are compressable; all other content types are assumed to not be compressable.
    :compressable         #{"text/*" "application/edn" "application/json"}
    :js-optimizations     :default
-   :cache-folder         (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))})
+   :cache-folder         (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))
+   :exports              {:interval-ms 1000
+                          :output-dir  "resources/public"
+                          :assets      []}})
+
+
+(s/defn find-asset :- (s/maybe Asset)
+  "Looks for a particular asset by asset path, returning the asset (if found)."
+  {:added "0.1.17"}
+  [asset-path :- AssetPath
+   context :- TwixtContext]
+  ((:asset-pipeline context) asset-path context))
 
 (defn- get-single-asset
   [asset-pipeline context asset-path]

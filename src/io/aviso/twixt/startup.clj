@@ -6,6 +6,7 @@
      [coffee-script :as cs]
      [compress :as compress]
      [exceptions :as te]
+     [export :as export]
      [jade :as jade]
      [less :as less]
      [ring :as ring]
@@ -20,6 +21,7 @@
   - twixt setup (adds `:twixt` key to the request)
   - exception reporting
   - compression analyzer (does the client support GZip encoding?)
+  - asset export logic (exports certain assets to file system when changed
   - asset request handling
   - the provided handler
 
@@ -45,6 +47,7 @@
      (->
        handler
        ring/wrap-with-twixt
+       (export/wrap-with-exporter (:exports twixt-options))
        te/wrap-with-exception-reporting
        compress/wrap-with-compression-analyzer
        (ring/wrap-with-twixt-setup twixt-options' asset-pipeline)))))
