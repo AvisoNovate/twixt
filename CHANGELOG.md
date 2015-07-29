@@ -6,6 +6,11 @@ Clarified many APIs by introducing Prismatic Schema signatures.
 
 Added support for finding assets inside [WebJars](http://www.webjars.org/).
 
+Twixt can now export assets to specific locations (typically, under public/resources).
+Exports are live: monitored for changes and dynamically re-exported as needed.
+This is intended largely to allow Less stylesheets to live-update when using
+[Figwheel](https://github.com/bhauman/lein-figwheel).
+
 ## 0.1.16 - 10 Jun 2015
 
 Update dependencies to latest.

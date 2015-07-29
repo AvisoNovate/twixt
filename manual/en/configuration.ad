@@ -18,27 +18,43 @@ The default options:
    :js-optimizations     :default
    :compressable         #{"text/*" "application/edn" "application/json"}
    :cache-folder         (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))
+   :exports              {:interval-ms 1000
+                          :output-dir  "resources/public"
+                          :assets      []}}
 ----
 
-You can override +:path-prefix+ to change the root URL for assets; +/+ is an acceptable value.
+You can override :path-prefix to change the root URL for assets; / is an acceptable value.
 
-The +:content-types+ key maps file extensions to MIME types.
+The :content-types key maps file extensions to MIME types.
 
-The +:content-transformers+ key is a map of content type keys (as strings, such as "text/coffeescript") to a
-transformation function; The CoffeeScript, Jade, and Less compilers operate by adding entries to +:content-types+ and :content-transformers+.
+The :content-transformers key is a map of content type keys (as strings, such as "text/coffeescript") to a
+transformation function; The CoffeeScript, Jade, and Less compilers operate by adding entries to :content-types and :content-transformers.
 
-The +:compressable+ key is a set used to identify which content types are compressable; note the use of the +/*+ suffix to indicate
+The :compressable key is a set used to identify which content types are compressable; note the use of the /* suffix to indicate
 that all text content types are compressable. Anything not explicitly compressable is considered non-compressable.
 
-The +:twixt-template+ key is a map that provides default values for the +:twixt+ request key.
-This is often used to provide information to specific content transformers.
+The :twixt-template key is a map that provides default values for the :twixt request key.
+This is often used to provide information specific to particular content transformers.
 
-The +:js-optimisations+ key is a keyword that specifies which Google Closure compilation level should be used to minimize
+The :js-optimisations key is a keyword that specifies which Google Closure compilation level should be used to minimize
 JavaScript files.
 This may be one of :default, :none, :simple, :whitespace, :advanced.
 
 The :default option corresponds to :none in development mode, and :simple in production mode.
 
-The +:resolver-factories+ key is a list of functions that create Asset resolvers.
-Each factory function is passed the Twixt options and returns an Asset handler.
+The :resolver-factories key is a list of functions that create Asset resolvers.
+Each factory function is passed the Twixt configuration and returns an Asset handler.
 The two built-in factories search for standard resources (under META-INF/assets) and WebJars resources (under META-INF/resources/webjars).
+
+:exports is used to configure static exports.  A preset list of exports are located by their asset name and output under
+the configured output directory.
+
+Each value in the :assets collection can be a string, or a tuple of asset name and output alias.
+This allows an asset to be exported and renamed at the same time.
+
+Assets are scanned for changes at intervals, and exports occur automatically.
+The thread which performs asset exports is started as needed, and will shutdown
+once the Ring handler pipeline is garbage collected; you should generally include a call to System/gc to
+ensure this happens promptly.
+
+

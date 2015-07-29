@@ -11,4 +11,4 @@ Twixt features a very readable HTML exception report page, which displays:
 * All JVM system properties
 
 Twixt provides middleware that wraps the request in a `try` block; exceptions are caught and converted to the HTML exception report, which is passed down to the client. 
-Twixt does not attempt to perform content negotiation: it sends a `text/html` stream.
+Twixt does not attempt to perform content negotiation: it always sends a `text/html` stream.
