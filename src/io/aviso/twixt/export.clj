@@ -40,23 +40,27 @@
     "Checking exported assets for changes."
     (let [context' (assoc context :gzip-enabled false)]
       (doseq [[asset-path output-alias] assets]
-        (t/track
-          (format "Checking `%s' for changes." asset-path)
-          (cond-let
-            [asset (twixt/find-asset asset-path context')]
+        (try
+          (t/track
+            (format "Checking `%s' for changes." asset-path)
+            (cond-let
+              [asset (twixt/find-asset asset-path context')]
 
-            (nil? asset)
-            nil
+              (nil? asset)
+              nil
 
-            [asset-checksum (:checksum asset)]
+              [asset-checksum (:checksum asset)]
 
-            (= asset-checksum (get @checksums asset-path))
-            nil
+              (= asset-checksum (get @checksums asset-path))
+              nil
 
-            :else
-            (do
-              (export-asset output-dir asset output-alias)
-              (swap! checksums assoc asset-path asset-checksum))))))))
+              :else
+              (do
+                (export-asset output-dir asset output-alias)
+                (swap! checksums assoc asset-path asset-checksum)))
+            (catch Throwable _
+              ;; Reported by the tracker and ignored.
+              )))))))
 
 
 (defn- start-exporter-thread
