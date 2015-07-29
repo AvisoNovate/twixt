@@ -172,7 +172,7 @@
    :compressable         #{"text/*" "application/edn" "application/json"}
    :js-optimizations     :default
    :cache-folder         (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))
-   :exports              {:interval-ms 1000
+   :exports              {:interval-ms 5000
                           :output-dir  "resources/public"
                           :assets      []}})
 
