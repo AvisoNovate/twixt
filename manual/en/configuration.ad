@@ -20,6 +20,7 @@ The default options:
    :cache-folder         (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))
    :exports              {:interval-ms 5000
                           :output-dir  "resources/public"
+                          :output-uri  ""
                           :assets      []}}
 ----
 
@@ -52,9 +53,27 @@ the configured output directory.
 Each value in the :assets collection can be a string, or a tuple of asset name and output alias.
 This allows an asset to be exported and renamed at the same time.
 
+For example, to make the asset css/site.less visible as css/site.css, you would supply a tuple:
+
+[source,clojure]
+----
+  (-> default-options
+      (update-in [:exports :assets] conj ["css/site.less" "css/site.css"]))
+----
+
+This would locate the resource file META-INF/assets/css/site.less, compile it from Less to CSS, and copy it
+to resources/public/css/site.css.
+A call to the io.aviso.twixt/get-asset-uri function would return the URI "/css/site.css",
+which is exactly what the client will need to read the downloaded file.
+
 Assets are scanned for changes at intervals, and exports occur automatically.
 The thread which performs asset exports is started as needed, and will shutdown
-once the Ring handler pipeline is garbage collected; you should generally include a call to System/gc to
+once the Ring handler pipeline is garbage collected; you should generally include a call to (System/gc) to
 ensure this happens promptly.
+
+The output-uri is the URI corresponding to the output-dir.
+
+Twixt does *not* provide a resource handler (to pick up files exported to the output directory) on its own; this is something
+you must supply when setting up your Ring pipeline.
 
 

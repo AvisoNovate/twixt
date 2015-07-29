@@ -1,6 +1,6 @@
-## 0.1.17 - UNRELEASED
+## 0.1.17 - 29 Jul 2015
 
-Update dependencies, including Clojure to 1.7.0, and CoffeeScript compiler to 1.9.3.
+Updated dependencies, including Clojure to 1.7.0, and CoffeeScript compiler to 1.9.3.
 
 Clarified many APIs by introducing Prismatic Schema signatures.
 
