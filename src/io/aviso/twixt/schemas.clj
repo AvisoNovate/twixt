@@ -76,12 +76,13 @@
   request map)."
   ;; :asset-pipeline will always be present when requests are processing; there's
   ;; just a bit of chicken-or-the-egg at startup time.
-  {(s/optional-key :asset-pipeline)     s/Any                   ; should be AssetHandler
-   :path-prefix                         s/Str
-   :development-mode                    s/Bool
+  {(s/optional-key :asset-pipeline) s/Any                   ; should be AssetHandler
+   :path-prefix                     s/Str
+   :development-mode                s/Bool
+   (s/optional-key :gzip-enabled)   s/Bool                  ; often set explicitly to false for aggregation
    ;; Other plugins are likely to add thier own data to the context
    ;; (via the :twixt-template key of the Twixt options).
-   s/Any                                s/Any})
+   s/Any                            s/Any})
 
 (s/defschema AssetHandler
   "An asset handler is passed as asset path and the Twixt context and, maybe, returns
@@ -92,6 +93,12 @@
   "A URI that allows an external client to access the client content. AssetURIs typically
   include the checksum in the URI path, forming an immutable web resource."
   s/Str)
+
+(s/defschema AssetExport
+  "Either just an asset path (a String), or two strings: an Asset to export, and an alias
+  to export it as."
+  (s/either AssetPath
+            [(s/one AssetPath 'asset-path) (s/one AssetPath 'output-alias)]))
 
 (s/defschema ExportsConfiguration
   "Defines the details of how assets are exported to the file system.
@@ -108,4 +115,4 @@
   : Keys are the assets to export."
   {:interval-ms s/Num
    :output-dir  s/Str
-   :assets      [AssetPath]})
+   :assets      [AssetExport]})

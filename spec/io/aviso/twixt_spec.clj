@@ -455,7 +455,9 @@
   ;; before speclj outputs the report; without it, you often get a jumble of console output (including formatted exceptions)
   ;; and the report as well.  Perhaps another solution is to get speclj to pipe its output through clojure.tools.logging?
   (it "needs to slow down to let the console catch up"
-      (Thread/sleep 1000)))
+      (Thread/sleep 1000))
+
+  (after-all (System/gc)))
 
 
 
