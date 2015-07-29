@@ -31,7 +31,7 @@
             :codox {:src-dir-uri               "https://github.com/AvisoNovate/twixt/blob/master/"
                     :src-linenum-anchor-prefix "L"
                     :defaults                  {:doc/format :markdown}}
-            :profiles {:dev {:dependencies [[log4j "1.2.17"]
+  :profiles {:dev {:dependencies           [[ch.qos.logback/logback-classic "1.1.1"]
                                             [speclj "3.3.1"]
                                             [ring/ring-jetty-adapter "1.4.0"]]
                              :jvm-opts     ["-Xmx1g"]}})
