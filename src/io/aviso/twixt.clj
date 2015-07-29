@@ -174,6 +174,7 @@
    :cache-folder         (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))
    :exports              {:interval-ms 5000
                           :output-dir  "resources/public"
+                          :output-uri  ""
                           :assets      []}})
 
 
@@ -183,6 +184,15 @@
   [asset-path :- AssetPath
    context :- TwixtContext]
   ((:asset-pipeline context) asset-path context))
+
+(s/defn asset->uri :- s/Str
+  "Converts an Asset to a URI that can be provided to a client."
+  {:added "0.1.17"}
+  [context :- TwixtContext
+   asset :- Asset]
+  (if-let [alias-uri (get (:asset-aliases context) (:asset-path asset))]
+    alias-uri
+    (asset/asset->request-path (:path-prefix context) asset)))
 
 (defn- get-single-asset
   [asset-pipeline context asset-path]
@@ -208,7 +218,7 @@
 
   paths
   : asset paths to convert to URIs"
-  [{:keys [asset-pipeline path-prefix development-mode] :as context} :- TwixtContext
+  [{:keys [asset-pipeline development-mode] :as context} :- TwixtContext
    & paths :- [AssetPath]]
   (loop [asset-uris []
          [path & more-paths] paths]
@@ -219,7 +229,7 @@
         (if (and development-mode aggregate-asset-paths)
           (recur (into asset-uris (apply get-asset-uris context aggregate-asset-paths))
                  more-paths)
-          (recur (conj asset-uris (asset/asset->request-path path-prefix asset))
+          (recur (conj asset-uris (asset->uri context asset))
                  more-paths))))))
 
 (s/defn get-asset-uri :- AssetURI
@@ -242,19 +252,19 @@
   : path to the asset; asset paths do __not__ start with a leading slash"
   [context :- TwixtContext
    asset-path :- AssetPath]
-  (let [{:keys [asset-pipeline path-prefix]} context]
+  (let [{:keys [asset-pipeline]} context]
     (->>
       asset-path
       (get-single-asset asset-pipeline context)
-      (asset/asset->request-path path-prefix))))
+      (asset->uri context))))
 
 (s/defn find-asset-uri :- (s/maybe AssetURI)
   "Returns the URI for an asset, if it exists.
   If not, returns nil."
-  [{:keys [asset-pipeline path-prefix] :as context}
+  [{:keys [asset-pipeline] :as context}
    asset-path :- AssetPath]
   (if-let [asset (asset-pipeline asset-path context)]
-    (asset/asset->request-path path-prefix asset)))
+    (asset->uri context asset)))
 
 (s/defn wrap-pipeline-with-tracing :- AssetHandler
   "The first middleware in the asset pipeline, used to trace the construction of the asset."

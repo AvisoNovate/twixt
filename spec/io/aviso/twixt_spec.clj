@@ -433,7 +433,10 @@
   (context "exporter"
 
     (with-all ring-handler (startup/wrap-with-twixt
-                             (-> (constantly nil)
+                             (-> (fn [request]
+                                   (-> request
+                                       :twixt
+                                       (get-asset-uri "sub/jade-include.jade")))
                                  (resource/wrap-resource "target/exported"))
                              (-> twixt/default-options
                                  (assoc-in [:exports :output-dir] "target/exported")
@@ -449,7 +452,12 @@
           (should-have-content (read-resource-content "expected/jade-include.html")
                                (-> "target/exported/sub/jade-include.jade"
                                    io/file
-                                   read-as-trimmed-string)))))
+                                   read-as-trimmed-string))))
+
+    (it "exposes the exported alias as the asset URI"
+        (should= "/sub/jade-include.jade"
+                 (@ring-handler {:request-method :get
+                                 :uri            "any-match-ok"}))))
 
   ;; Slightly bogus; this lets the mass of exceptions written out by the executing tests have a chance to finish
   ;; before speclj outputs the report; without it, you often get a jumble of console output (including formatted exceptions)

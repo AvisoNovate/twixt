@@ -99,6 +99,16 @@
     (Token. running? export-thread)))
 
 
+(defn- build-asset-aliases
+  [assets output-uri]
+  (reduce (fn [result asset]
+            (if (string? asset)
+              (assoc result asset (str output-uri "/" asset))
+              (let [[asset-path output-alias] asset]
+                (assoc result asset-path (str output-uri "/" output-alias)))))
+          {}
+          assets))
+
 (s/defn wrap-with-exporter
   "Wraps a Ring handler so that, periodically, assets identified in the configuration
   are checked for changes and copied out to the file system (as needed).
@@ -113,12 +123,13 @@
 
   Note that asset exporting is largely intended for development purposes."
   [ring-handler
-   {:keys [assets] :as configuration} :- ExportsConfiguration]
+   {:keys [assets output-uri] :as configuration} :- ExportsConfiguration]
   (if (empty? assets)
     ring-handler
-    (let [token (atom nil)]
+    (let [token         (atom nil)
+          asset-aliases (build-asset-aliases assets output-uri)]
       (fn [request]
         (when (nil? @token)
           (reset! token (start-exporter-thread (:twixt request) configuration)))
 
-        (ring-handler request)))))
+        (ring-handler (assoc-in request [:twixt :asset-aliases] asset-aliases))))))

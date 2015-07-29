@@ -79,7 +79,7 @@
   {(s/optional-key :asset-pipeline) s/Any                   ; should be AssetHandler
    :path-prefix                     s/Str
    :development-mode                s/Bool
-   (s/optional-key :gzip-enabled)   s/Bool                  ; often set explicitly to false for aggregation
+   (s/optional-key :gzip-enabled)   (s/maybe s/Bool)        ; often set explicitly to false for aggregation
    ;; Other plugins are likely to add thier own data to the context
    ;; (via the :twixt-template key of the Twixt options).
    s/Any                            s/Any})
@@ -115,4 +115,5 @@
   : Keys are the assets to export."
   {:interval-ms s/Num
    :output-dir  s/Str
+   :output-uri  s/Str
    :assets      [AssetExport]})
