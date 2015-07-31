@@ -40,11 +40,11 @@
   [asset asset-cache-dir]
   (if (-> asset :attachments empty?)
     asset
-    (update asset :attachments
-            (fn [attachments]
-              (medley/map-vals
-                #(assoc % :content (io/file asset-cache-dir (:content %)))
-                attachments)))))
+    (update-in asset [:attachments]
+               (fn [attachments]
+                 (medley/map-vals
+                   #(assoc % :content (io/file asset-cache-dir (:content %)))
+                   attachments)))))
 
 (def ^:private asset-file-name "asset.edn")
 (def ^:private content-file-name "content")
@@ -78,12 +78,12 @@
   [asset asset-cache-dir]
   (if (-> asset :attachments empty?)
     asset
-    (update asset :attachments
-            (fn [attachments]
-              (into {}
-                    (map (fn [[name attachment]]
-                           [name (write-attachment asset-cache-dir name attachment)])
-                         attachments))))))
+    (update-in asset [:attachments]
+               (fn [attachments]
+                 (into {}
+                       (map (fn [[name attachment]]
+                              [name (write-attachment asset-cache-dir name attachment)])
+                            attachments))))))
 
 (defn- write-cached-asset
   [^File asset-cache-dir asset]

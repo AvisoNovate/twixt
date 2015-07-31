@@ -1,3 +1,7 @@
+## 0.1.18 - 31 Jul 2015
+
+Reverted Clojure compatibility to 1.6.0.
+
 ## 0.1.17 - 29 Jul 2015
 
 Updated dependencies, including Clojure to 1.7.0, and CoffeeScript compiler to 1.9.3.
