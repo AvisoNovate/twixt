@@ -16,5 +16,6 @@
     </root>
 
     <logger name="org.apache.commons.beanutils.converters" level="off"/>
+    <logger name="org.eclipse.jetty" level="info"/>
 
 </configuration>

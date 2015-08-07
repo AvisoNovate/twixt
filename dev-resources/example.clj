@@ -14,7 +14,7 @@
 
 (defn app
   []
-  (wrap-with-twixt handler default-options true))
+  (wrap-with-twixt handler default-options false))
 
 (defn launch
   []

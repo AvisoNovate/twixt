@@ -1,3 +1,8 @@
+## 0.1.19 - 7 Aug 2015
+
+Fixed bug where compressed assets would cause a double exception (an exception, caused by
+an exception building the exception report).
+
 ## 0.1.18 - 31 Jul 2015
 
 Reverted Clojure compatibility to 1.6.0.

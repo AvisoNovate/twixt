@@ -69,7 +69,10 @@
    (s/optional-key :compiled)              s/Bool
    (s/optional-key :aggregate-asset-paths) [AssetPath]
    :dependencies                           DependencyMap
-   (s/optional-key :attachments)           AttachmentMap})
+   (s/optional-key :attachments)           AttachmentMap
+   ;; Various plugins and extensions will add their own keys, so we need to not be picky:
+   s/Any                                   s/Any
+   })
 
 (s/defschema TwixtContext
   "Defines the minimal values provided in the Twixt context (the :twixt key of the Ring
