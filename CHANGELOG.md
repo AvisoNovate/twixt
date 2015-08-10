@@ -1,3 +1,19 @@
+## 0.1.20 - UNRELEASED
+
+Revised the approach to caching significantly. 
+File-system caching is now enabled for both production and development, but uses
+different sub-directories of the specified root cache folder.
+
+There have been some non-backwards compatible changes to several functions as a result.
+ 
+In the Twixt options may, the :cache-folder key has been renamed to :cache-dir, and moved
+under a new key, :cache.
+
+The new caching and locking approach helps ensure that multiple threads do no attempt
+to perform the same compilation steps in parallel.
+There is now a per-asset lock used to prevent duplicate conflicting work across
+multiple threads.
+
 ## 0.1.19 - 7 Aug 2015
 
 Fixed bug where compressed assets would cause a double exception (an exception, caused by

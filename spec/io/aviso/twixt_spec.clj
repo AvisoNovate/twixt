@@ -86,13 +86,13 @@
 
 (describe "io.aviso.twixt"
 
-  (with-all cache-folder (format "%s/%x" (System/getProperty "java.io.tmpdir") (System/nanoTime)))
+  (with-all cache-dir (format "%s/%x" (System/getProperty "java.io.tmpdir") (System/nanoTime)))
 
   (with-all options (->
                       default-options
                       (assoc :development-mode true
-                             :cache-folder @cache-folder
                              :js-optimizations :none)
+                      (assoc-in [:cache :cache-dir] @cache-dir)
                       ;; This is usually done by the startup namespace:
                       cs/register-coffee-script
                       jade/register-jade
@@ -378,8 +378,13 @@
 
     (context "can be disabled in production mode"
 
-      (with-all prod-options (assoc @options :development-mode false
-                                             :js-optimizations :none))
+      (with-all prod-options (-> @options
+                                 (assoc :development-mode false
+                                        :js-optimizations :none)
+                                 ;; Previous tests leave some cache artifacts behind that
+                                 ;; are a problem. We could delete the cache-dir, or just
+                                 ;; choose a new, empy one.
+                                 (assoc-in [:cache :cache-dir] (str @cache-dir "/xxx"))))
 
       (with-all prod-pipeline (default-asset-pipeline @prod-options))
 

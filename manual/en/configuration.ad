@@ -17,7 +17,8 @@ The default options:
    :content-transformers {}
    :js-optimizations     :default
    :compressable         #{"text/*" "application/edn" "application/json"}
-   :cache-folder         (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))
+   :cache                {:cache-dir         (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))
+                          :check-interval-ms 1000}
    :exports              {:interval-ms 5000
                           :output-dir  "resources/public"
                           :output-uri  ""
@@ -46,6 +47,10 @@ The :default option corresponds to :none in development mode, and :simple in pro
 The :resolver-factories key is a list of functions that create Asset resolvers.
 Each factory function is passed the Twixt configuration and returns an Asset handler.
 The two built-in factories search for standard resources (under META-INF/assets) and WebJars resources (under META-INF/resources/webjars).
+
+The :cache key defines where the file system cache (of compiled assets) is stored, and
+a what interval should invalidation checks occur (invalidation checks detect when any of the files from which an asset
+is obtained and compiled have changed).
 
 :exports is used to configure static exports.  A preset list of exports are located by their asset name and output under
 the configured output directory.

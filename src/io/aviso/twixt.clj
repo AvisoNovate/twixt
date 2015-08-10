@@ -33,7 +33,8 @@
             [schema.core :as s]
             [clojure.string :as str])
   (:import [java.net URL]
-           org.webjars.WebJarAssetLocator))
+           org.webjars.WebJarAssetLocator
+           [java.io File]))
 
 ;;; Lots of stuff from Tapestry 5.4 is not yet implemented
 ;;; - multiple domains (the context, the file system, etc.)
@@ -171,7 +172,8 @@
    ;; Identify which content types are compressable; all other content types are assumed to not be compressable.
    :compressable         #{"text/*" "application/edn" "application/json"}
    :js-optimizations     :default
-   :cache-folder         (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))
+   :cache                {:cache-dir         (System/getProperty "twixt.cache-dir" (System/getProperty "java.io.tmpdir"))
+                          :check-interval-ms 1000}
    :exports              {:interval-ms 5000
                           :output-dir  "resources/public"
                           :output-uri  ""
@@ -298,31 +300,20 @@
     rewrite/wrap-with-css-rewriting))
 
 (s/defn default-wrap-pipeline-with-caching :- AssetHandler
-  "Used when constructing the asset pipeline to wrap the handler with production-mode or development-mode caching.
+  "Used when constructing the asset pipeline to wrap the handler with file system caching
+  of compiled assets, and in-memory caching of all assets.
 
   This is invoked before adding support for compression."
   [asset-handler :- AssetHandler
-   twixt-options
-   development-mode :- s/Bool]
-  (cond->
+   cache-dir :- File
+   check-interval-ms :- s/Num]
+  (->
     asset-handler
-    ;; The file system cache should only be used in development and should come after anything downstream
-    ;; that might compile.
-    development-mode (fs/wrap-with-filesystem-cache (:cache-folder twixt-options))
-    (not development-mode) mem/wrap-with-sticky-cache
-    development-mode mem/wrap-with-invalidating-cache))
-
-(s/defn default-wrap-pipeline-with-compressed-caching :- AssetHandler
-  "Used when constructing the asset pipeline, after compression has been enabled, to cache the
-  compressed version of assets."
-  [asset-handler :- AssetHandler
-   development-mode :- s/Bool]
-  (cond->
-    asset-handler
-    ;; Currently don't bother with file system cache for compression; it's fast enough not
-    ;; to worry.
-    (not development-mode) compress/wrap-with-sticky-compressed-caching
-    development-mode compress/wrap-with-invalidating-compressed-caching))
+    ;; The file system cache should come after anything downstream that might compile.
+    (fs/wrap-with-filesystem-cache cache-dir)
+    ;; This in-memory cache prevents constant checks agains the file system cache, or against
+    ;; the asset resolvers.
+    (mem/wrap-with-memory-cache check-interval-ms)))
 
 (s/defn wrap-pipeline-with-asset-resolver :- AssetHandler
   "Wraps the asset handler so that the :asset-resolver key is set to the asset resolver; the asset resolver
@@ -367,13 +358,16 @@
   (let [{:keys [development-mode resolver-factories]} twixt-options
         asset-resolvers (for [factory resolver-factories]
                           (factory twixt-options))
-        asset-resolver  (merge-handlers asset-resolvers)]
+        asset-resolver  (merge-handlers asset-resolvers)
+        ^String cache-path (-> twixt-options :cache :cache-dir)
+        cache-dir (File. cache-path
+                         (if development-mode "dev" "prod"))
+        check-interval-ms (-> twixt-options :cache :check-interval-ms)]
     (->
       asset-resolver
       (default-wrap-pipeline-with-content-transformation twixt-options)
-      (default-wrap-pipeline-with-caching twixt-options development-mode)
-      (compress/wrap-pipeline-with-compression twixt-options)
-      (default-wrap-pipeline-with-compressed-caching development-mode)
+      (default-wrap-pipeline-with-caching cache-dir check-interval-ms)
+      (compress/wrap-with-gzip-compression twixt-options)
       (wrap-pipeline-with-asset-resolver asset-resolver)
       wrap-pipeline-with-tracing)))
 

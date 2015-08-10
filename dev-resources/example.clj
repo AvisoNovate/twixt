@@ -14,7 +14,7 @@
 
 (defn app
   []
-  (wrap-with-twixt handler default-options false))
+  (wrap-with-twixt handler (assoc-in default-options [:cache :cache-dir] "target/twixt-cache") false))
 
 (defn launch
   []

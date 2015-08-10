@@ -4,33 +4,30 @@ title: Caching
 It is desirable to have Twixt be able to serve-up files quickly, especially in production.
 However, that is counter-balanced by the need to ensure the *correct* content is served.
 
-== Development Mode
+The Twixt options specifies the location of the file system cache used to store compiled assets.
 
-Twixt will cache the results of compilations to the file system; the cache persists between executions.
-This means that on restart, the application will normally start right up, since the compiled files
-will be accessed from the file system cache.
+The location of this is specified in the key `[:cache :cache-dir]` in the Twixt options.
 
-Whenever a source file changes, the corresponding compiled file is rebuilt (and then the file system cache is updated).
-This is great for development, as you will frequently be changing your source files.
+The cache-dir is the root level directory; actually caching occurs in sub-folders for "development"
+or "production".
 
-Twixt is smart about dependencies; for example, a Less file may +@import+ another Less file; the compiled asset
-will have dependencies on _both_ files; if either changes, Twixt will re-compile the sources into a new asset,
-with a new asset URI.
+The cache folder is not cleared on startup; this allow compilation and other transformations
+from previous executions
 
-Twixt doesn't bother to cache the GZip compressed versions of assets to the file system; it is relatively quick
-to rebuild the compressed byte stream. There's an in-memory cache of the compressed assets, but each request includes
-checks to see if the compiled output itself must be updated.
+Generally, when a request for an asset is received, and the asset is in the cache, then
+the response is served from the cache.
 
-You may need to manually clear out the file system cache after upgrading to a new version of Twixt, or any other
-configuration change that can affect the compiled output.
+Periodically (as defined by the `[:cache :cache-interval-ms]` options key), a request for an asset
+will perform a check against the dependencies of the asset; if any of the underlying resources have changed, then the
+cache entry for the asset will be discarded and rebuilt.
 
-== Production Mode
+In production, you may want to set the cache interval to be much higher than in development.
 
-In production mode, Twixt starts from a clean slate; it does not use a file system cache. However, all assets
-are cached in memory; Twixt also caches the compressed versions of assets, to save the cost of repeatedly compressing
-them on the fly.
+On concern is that a change in configuration can also invalidate caches.
+For example, if you upgrade to a newer version of Twixt, or make changes to the configuration
+of Twixt between executions, then the cached versions of the assets may not match what
+Twixt would generate.
 
-In production mode, there are no checks to see if the in-memory cache is valid; if a source file is changed, it is assumed
-that the entire application will be re-deployed and re-started.
-
+You should take this into account while developing and especially when deploying: it may be necessary
+to manually delete the file system cache as part of deploying an application upgrade.
 

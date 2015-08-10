@@ -1,81 +1,126 @@
 (ns io.aviso.twixt.memory-cache
   "Provides asset pipeline middleware implementing an in-memory cache for assets.
   This cache is used to bypass the normal loading, compiling, and transforming steps."
-  (:require [clojure.java.io :as io]
-            [io.aviso.twixt.schemas :refer [Asset AssetHandler]]
-            [io.aviso.twixt.utils :as utils]
-            [schema.core :as s]))
+  (:require [io.aviso.twixt.schemas :refer [Asset AssetHandler]]
+            [io.aviso.toolchest.macros :refer [cond-let]]
+            [schema.core :as s])
+  (:import [java.util.concurrent.locks ReentrantReadWriteLock ReentrantLock]))
 
-(defn wrap-with-sticky-cache
-  "A sticky cache is permanent; it does not check to see if the underlying files have changed.
-   This is generally used only in production, where the files are expected to be packaged into JARs, which would
-   require an application restart anyway.
+(s/defn wrap-with-transforming-cache :- AssetHandler
+  "A cache that operates in terms of a transformation of assets: the canonical example
+  is GZip compression, where a certain assets can be compressed to form new assets.
 
-   Cached values are permanent; in even the largest web application, the amount of assets is relatively finite,
-   so no attempt has been made to evict assets from the cache.
-
-   Assets that are accessed for aggregation are not cached (the aggregated assed will be cached).
-
-   The optional `store-in-cache?` parameter is a function; it is passed an asset, and returns true
-   if the asset should be stored in the cache."
-  ([asset-handler]
-   (wrap-with-sticky-cache asset-handler (constantly true)))
-  ([asset-handler store-in-cache?]
-   (let [cache (atom {})]
-     (fn [asset-path {:keys [for-aggregation] :as context}]
-       (if-let [asset (get @cache asset-path)]
-         asset
-         (when-let [asset (asset-handler asset-path context)]
-           (if (and (not for-aggregation)
-                    (store-in-cache? asset))
-             (swap! cache assoc asset-path asset))
-           asset))))))
-
-(defn- modified-at-matches?
-  "Returns true if the resource is valid (actual `modified-at` matches the provided value from the asset map).
-
-  Also returns true if the `modified-at` is nil (meaning the file is inside a JAR, not on the filesystem)."
-  [resource-path modified-at]
-  ;; For resources inside JARs, we may not have a modified time, and that's OK,
-  ;; because those don't change.
-  (when modified-at
-    (= modified-at
-       (some-> resource-path io/resource utils/modified-at))))
-
-(defn- is-valid?
-  [asset]
-  (cond
-    (nil? asset) false
-
-    :else
-    (every?
-            (fn [[resource-path {:keys [modified-at]}]]
-              (modified-at-matches? resource-path modified-at))
-            (:dependencies asset))))
-
-(s/defn wrap-with-invalidating-cache :- AssetHandler
-  "An invalidating cache is generally used in development; it does more work than the sticky cache;
-  assets that are obtained from the cache are checked to ensure they are still valid;
-  invalid cached assets are discarded and re-fetched from downstream.
-
-  Assets that are obtained for aggregation are _not_ cached; it is assumed that they are
+  Assets that are obtained for aggregation are _never_ cached; it is assumed that they are
   intermediate results and only the final aggregated asset needs to be cached.
 
-  A cached asset is invalid if any of its dependencies has changed (based on modified-at timestamp)."
-  ([asset-handler :- AssetHandler]
-   (wrap-with-invalidating-cache asset-handler (constantly true)))
-  ([asset-handler :- AssetHandler
-    store-in-cache? :- (s/=> s/Bool Asset)]
-   (let [cache (atom {})]
-     (fn [asset-path {:keys [for-aggregation] :as context}]
-       (let [asset (get @cache asset-path)]
-         (if (is-valid? asset)
-           asset
-           (do
-             (swap! cache dissoc asset-path)
-             (when-let [asset (asset-handler asset-path context)]
-               (if (and
-                     (not for-aggregation)
-                     (store-in-cache? asset))
-                 (swap! cache assoc asset-path asset))
-               asset))))))))
+  This cache assumes that another cache is present that can quickly obtain the
+  non-transformed version of the asset.
+
+  asset-handler
+  : The downstream asset handler, from which the untransformed asset is obtained.
+
+  store-in-cache?
+  : Function that is passed an Asset and determines if it can be transformed and stored in the cache.
+
+  asset-tranformer
+  : Function that is passed the untransformed Asset and returns the transformed Asset to be stored
+  in the cache."
+  {:added "0.1.20"}
+  [asset-handler :- AssetHandler
+   store-in-cache? :- (s/=> s/Bool Asset)
+   asset-transformer :- (s/=> Asset Asset)]
+  (let [cache (atom {})]
+    (fn [asset-path {:keys [for-aggregation] :as context}]
+      (cond-let
+        ;; We assume this is cheap because of caching
+        [prime-asset (asset-handler asset-path context)]
+
+        for-aggregation
+        prime-asset
+
+        (nil? prime-asset)
+        nil
+
+        (not (store-in-cache? prime-asset))
+        prime-asset
+
+        [{:keys [transformed prime-checksum]} (get cache asset-path)]
+
+        (= prime-checksum (:checksum prime-asset))
+        transformed
+
+        :else
+        (let [transformed (asset-transformer prime-asset)]
+          (swap! cache assoc asset-path {:transformed    transformed
+                                         :prime-checksum prime-checksum})
+          transformed)))))
+
+(defmacro ^:private with-lock
+  [lock & body]
+  `(let [lock# ~lock]
+     (try
+       (.lock lock#)
+       ~@body
+       (finally
+         (.unlock lock#)))))
+
+(defn- update-cache
+  [cache asset-handler asset-path context]
+  (let [cached-asset (asset-handler asset-path context)]
+    (swap! cache update-in [asset-path]
+           assoc :cached-asset cached-asset
+           :cached-at (System/currentTimeMillis))
+
+    cached-asset))
+
+(s/defn wrap-with-memory-cache :- AssetHandler
+  "Wraps another asset handler in a simple in-memory cache.
+
+  This is useful for both compiled and raw assets, as it does two things.
+
+  On first access to an asset, a cache entry is created. Subsequent accesses
+  to the cache entry within the check interval will be served from the cache.
+
+  After the check interval, the delegate asset handler is used to see if the asset has changed,
+  replacing it in the cache."
+  {:added "0.1.20"}
+  [asset-handler :- AssetHandler
+   check-interval-ms :- s/Num]
+  (let [cache      (atom {})
+        cache-lock (ReentrantLock.)]
+    (fn [asset-path context]
+      (trampoline
+        (fn reentry-point []
+          (cond-let
+            [now (System/currentTimeMillis)
+             {:keys [cached-asset cached-at] :as cache-entry} (get @cache asset-path)]
+
+            (and cached-asset
+                 (< (+ cached-at check-interval-ms) now))
+            cached-asset
+
+            (nil? cache-entry)
+            (let [lock (ReentrantLock.)]
+              (with-lock cache-lock
+                         ;; There can be a race condition where two threads are trying to first
+                         ;; access the same asset. This detects that; the first thread will have
+                         ;; added a cache entry with just the :lock key, then released the cache
+                         ;; lock while obtaining the asset. The second thread will reach this point,
+                         ;; see that there's something in the cache, and loop back
+                         ;; to fall through the normal path, and the per-asset lock.
+                         (if (contains? @cache asset-path)
+                           ;; This releases the cache-lock and falls through the normal
+                           ;; processing. Depending on the timing, either the asset will just be in the cache
+                           ;; and ready to go, or this thread will block while the other thread
+                           ;; is obtaining the asset.
+                           reentry-point
+                           (do
+                             ;; Do this now, with the cache-lock locked
+                             (swap! cache assoc-in [asset-path :lock] lock)
+                             ;; And do this via trampoline, after the cache-lock is unlocked.
+                             #(with-lock lock
+                                         (update-cache cache asset-handler asset-path context))))))
+
+            :else
+            (with-lock (:lock cache-entry)
+                       (update-cache cache asset-handler asset-path context))))))))
