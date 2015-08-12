@@ -1,4 +1,4 @@
-## 0.1.20 - UNRELEASED
+## 0.1.20 - 12 Aug 2015
 
 Added support for CSS Compression (using YUICompressor).
 This is normally enabled only in production mode.
