@@ -9,7 +9,7 @@ different sub-directories of the specified root cache folder.
 
 There have been some non-backwards compatible changes to several functions as a result.
  
-In the Twixt options may, the :cache-folder key has been renamed to :cache-dir, and moved
+In the Twixt options map, the :cache-folder key has been renamed to :cache-dir, and moved
 under a new key, :cache.
 
 The new caching and locking approach helps ensure that multiple threads do no attempt
