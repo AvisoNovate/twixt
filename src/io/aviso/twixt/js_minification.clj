@@ -45,17 +45,15 @@
   "Identifies JavaScript assets and, if not aggregating, passes them through the Google Closure compiler."
   [asset-handler :- AssetHandler
    {:keys [development-mode js-optimizations]}]
-  (fn [asset-path {:keys [for-aggregation] :as context}]
-    (let [{:keys [content-type] :as asset} (asset-handler asset-path context)]
-      (if (and (= "text/javascript" content-type)
-               (not for-aggregation))
-        (case js-optimizations
-          :none asset
-          :default (if development-mode
-                     ;; Do nothing by default in development mode
-                       asset
-                       ;; Otherwise default to :simple in production mode
-                       (minimize-javascript-asset asset (optimization-levels :simple)))
-          ;; Use the provided level if it's set and not :none
-          (minimize-javascript-asset asset (optimization-levels js-optimizations)))
-        asset))))
+  (let [js-optimizations' (if (= :default js-optimizations)
+                           (if development-mode :none :simple)
+                           js-optimizations)
+        level (optimization-levels js-optimizations')]
+    (if (nil? level)
+      asset-handler
+      (fn [asset-path {:keys [for-aggregation] :as context}]
+        (let [{:keys [content-type] :as asset} (asset-handler asset-path context)]
+          (if (and (= "text/javascript" content-type)
+                   (not for-aggregation))
+            (minimize-javascript-asset asset level)
+            asset))))))
