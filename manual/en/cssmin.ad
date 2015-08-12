@@ -1,0 +1,7 @@
+title: CSS Minification
+---
+
+CSS minification is enabled by default in production mode, but is normally disabled in development mode.
+
+The :minimize-css key in the link:configuration.html[Twixt options] overrides the default.
+

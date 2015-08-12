@@ -1,4 +1,4 @@
-(defproject io.aviso/twixt "0.1.19"
+(defproject io.aviso/twixt "0.1.20"
             :description "An extensible asset pipeline for Clojure web applications"
             :url "https://github.com/AvisoNovate/twixt"
             :license {:name "Apache Sofware Licencse 2.0"
@@ -16,6 +16,9 @@
                            [hiccup "1.0.5"]
                            [org.webjars/bootstrap "3.3.5"]
                            [org.webjars/webjars-locator-core "0.27"]]
+  ;; We keep a local copy of YUICompressor's CSSCompressor; we don't want the rest of the dependency
+  ;; since it does evil things to patch Rhino to support JavaScript compression.
+  :java-source-paths ["java"]
   :test-paths ["spec"]
   :plugins [[speclj "3.2.0"]
                       [lein-shell "0.4.0"]]

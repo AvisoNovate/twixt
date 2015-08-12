@@ -88,6 +88,13 @@
 
   (with-all cache-dir (format "%s/%x" (System/getProperty "java.io.tmpdir") (System/nanoTime)))
 
+  (defn with-sub-cache-dir [twixt-options subdir]
+    (update-in twixt-options [:cache :cache-dir] str "/" subdir))
+
+  (defn get-asset-with-options [twixt-options asset-path]
+    (let [pipeline (default-asset-pipeline twixt-options)]
+      (pipeline asset-path (assoc twixt-options :asset-pipeline pipeline))))
+
   (with-all options (->
                       default-options
                       (assoc :development-mode true
@@ -242,7 +249,7 @@
             (@pipeline "invalid-less.less" @twixt-context)
             (should-fail)
             (catch Exception e
-              #_ (-> e .getMessage println)
+              #_(-> e .getMessage println)
               (should (-> e .getMessage (.contains "META-INF/assets/invalid-less.less:3:5: no viable alternative at input 'p'")))))))
 
     (context "using data-uri and getData method"
@@ -361,7 +368,10 @@
   (context "JavaScript Minimization"
     (context "is enabled by default in production mode"
 
-      (with-all prod-options (assoc @options :development-mode false :js-optimizations :default))
+      (with-all prod-options (-> @options
+                                 (assoc :development-mode false
+                                        :js-optimizations :default)
+                                 (with-sub-cache-dir "js-min-1")))
 
       (with-all prod-pipeline (default-asset-pipeline @prod-options))
 
@@ -381,10 +391,7 @@
       (with-all prod-options (-> @options
                                  (assoc :development-mode false
                                         :js-optimizations :none)
-                                 ;; Previous tests leave some cache artifacts behind that
-                                 ;; are a problem. We could delete the cache-dir, or just
-                                 ;; choose a new, empy one.
-                                 (assoc-in [:cache :cache-dir] (str @cache-dir "/xxx"))))
+                                 (with-sub-cache-dir "js-min-2")))
 
       (with-all prod-pipeline (default-asset-pipeline @prod-options))
 
@@ -397,8 +404,9 @@
 
     (context "can be enabled in development mode"
 
-      (with-all dev-options (assoc @options :development-mode true
-                                            :js-optimizations :simple))
+      (with-all dev-options (-> @options
+                                (assoc :js-optimizations :simple)
+                                (with-sub-cache-dir "js-min-3")))
 
       (with-all dev-pipeline (default-asset-pipeline @dev-options))
 
@@ -407,9 +415,27 @@
       (with-all asset (@dev-pipeline "stack/fred.js" @dev-twixt-context))
 
       (it "contains the correct unoptimized content"
-          (should (have-same-content "expected/minimized/fred.js" @asset))))
+          (should (have-same-content "expected/minimized/fred.js" @asset)))))
 
-    )
+  (context "CSS minification"
+    (it "can be expicitly enabled"
+        (let [asset (-> @options
+                        (assoc :minimize-css true)
+                        (with-sub-cache-dir "css-min-1")
+                        (get-asset-with-options "sample.less"))]
+          (should
+            (have-same-content "expected/minimized/sample.css" asset))))
+
+    (it "is enabled by default in production mode"
+        (let [asset (-> @options
+                        (assoc :development-mode false)
+                        (with-sub-cache-dir "css-min-2")
+                        ;; This is not a terrific idea in that a change to the Bootstrap dependency
+                        ;; will invalidate this test. On the other hand, it ensures (on the side)
+                        ;; that YUICompressor can handle compiling all of Bootstrap.
+                        (get-asset-with-options "bootstrap/less/bootstrap.less"))]
+          (should
+            (have-same-content "expected/minimized/bootstrap.css" asset)))))
 
   (context "asset redirector"
     (with-all wrapped (ring/wrap-with-asset-redirector (constantly nil)))

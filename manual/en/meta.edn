@@ -10,6 +10,7 @@
                "stacks"
                "caching"
                "jsmin"
+               "cssmin"
                "configuration"
                "direct-uris"
                "webjars"

@@ -1,5 +1,8 @@
 ## 0.1.20 - UNRELEASED
 
+Added support for CSS Compression (using YUICompressor).
+This is normally enabled only in production mode.
+
 Revised the approach to caching significantly. 
 File-system caching is now enabled for both production and development, but uses
 different sub-directories of the specified root cache folder.

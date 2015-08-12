@@ -24,6 +24,7 @@
              [asset :as asset]
              [compress :as compress]
              [css-rewrite :as rewrite]
+             [css-minification :as cssmin]
              [fs-cache :as fs]
              [memory-cache :as mem]
              [js-minification :as js]
@@ -290,14 +291,18 @@
 (s/defn default-wrap-pipeline-with-content-transformation :- AssetHandler
   "Used when constructing the asset pipeline, wraps a handler (normally, the asset resolver)
    with additional pipeline handlers based on
-   the `:content-transformers` key of the Twixt options, plus JavaScript minification and CSS URL Rewriting."
+   the `:content-transformers` key of the Twixt options, plus JavaScript minification and CSS URL Rewriting
+   and CSS Minification.
+
+   The JavaScript and/or CSS minification may not be enabled in development mode."
   [asset-handler :- AssetHandler
    twixt-options]
   (->
     asset-handler
     (wrap-pipeline-with-per-content-type-transformation twixt-options)
     (js/wrap-with-javascript-minimizations twixt-options)
-    rewrite/wrap-with-css-rewriting))
+    rewrite/wrap-with-css-rewriting
+    (cssmin/wrap-with-css-minification twixt-options)))
 
 (s/defn default-wrap-pipeline-with-caching :- AssetHandler
   "Used when constructing the asset pipeline to wrap the handler with file system caching
