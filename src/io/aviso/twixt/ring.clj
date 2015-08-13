@@ -1,17 +1,15 @@
 (ns io.aviso.twixt.ring
   "Support needed to use Twixt inside a Ring handler pipeline."
-  (:import
-    [java.util Calendar TimeZone])
-  (:require
-    [clojure.java.io :as io]
-    [io.aviso.tracker :as t]
-    [io.aviso.twixt [asset :as asset]]
-    [ring.util.response :as r]))
+  (:require [clojure.java.io :as io]
+            [io.aviso.tracker :as t]
+            [io.aviso.twixt [asset :as asset]]
+            [ring.util.response :as r])
+  (:import [java.util Calendar TimeZone]))
 
 (def ^:private far-future
-  (-> (doto (Calendar/getInstance (TimeZone/getTimeZone "UTC"))
-        (.add Calendar/YEAR 10))
-      .getTime))
+  (let [cal (doto (Calendar/getInstance (TimeZone/getTimeZone "UTC"))
+              (.add Calendar/YEAR 10))]
+    (.getTime cal)))
 
 (defn- asset->ring-response
   [asset attachment-name]
@@ -56,11 +54,11 @@
 (defn- parse-path
   "Parses the complete request path into a checksum, compressed-flag, asset path and (optional) attachment name."
   [^String path-prefix ^String path]
-  (let [suffix (.substring path (.length path-prefix))
-        slashx (.indexOf suffix "/")
+  (let [suffix        (.substring path (.length path-prefix))
+        slashx        (.indexOf suffix "/")
         full-checksum (.substring suffix 0 slashx)
-        compressed? (.startsWith full-checksum "z")
-        checksum (if compressed? (.substring full-checksum 1) full-checksum)
+        compressed?   (.startsWith full-checksum "z")
+        checksum      (if compressed? (.substring full-checksum 1) full-checksum)
         [asset-path attachment-name] (-> suffix (.substring (inc slashx)) split-asset-path-and-attachment-name)]
     [checksum
      compressed?
@@ -93,15 +91,15 @@
    a 301 (moved permanently) response is sent with the correct asset URL."
   [request]
   (let [path-prefix (-> request :twixt :path-prefix)
-        path (:uri request)]
+        path        (:uri request)]
     (when (match? path-prefix path)
       (t/track
         #(format "Handling asset request `%s'" path)
         (let [[requested-checksum compressed? asset-path attachment-name] (parse-path path-prefix path)
-              context (:twixt request)
+              context        (:twixt request)
               ;; When actually servicing an asset request, we have to trust the data in the URL
               ;; that determines whether to server the normal or gzip'ed resource.
-              context' (assoc context :gzip-enabled compressed?)
+              context'       (assoc context :gzip-enabled compressed?)
               asset-pipeline (:asset-pipeline context)]
           (create-asset-response path-prefix
                                  requested-checksum
@@ -166,9 +164,9 @@
   generate Twixt asset URIs."
   [handler twixt-options asset-pipeline]
   (let [context (-> twixt-options
-                  ;; Pass down only what is needed to generate asset URIs, or to produce the HTML exception report.
-                  (select-keys [:path-prefix :stack-frame-filter :development-mode])
-                  (assoc :asset-pipeline asset-pipeline)
-                  (merge (:twixt-template twixt-options)))]
+                    ;; Pass down only what is needed to generate asset URIs, or to produce the HTML exception report.
+                    (select-keys [:path-prefix :stack-frame-filter :development-mode])
+                    (assoc :asset-pipeline asset-pipeline)
+                    (merge (:twixt-template twixt-options)))]
     (fn [request]
       (handler (assoc request :twixt context)))))

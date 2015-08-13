@@ -138,7 +138,8 @@
 (s/defn modified-at :- Date
   "Extracts a last-modified Date"
   [url :- URL]
-  (some-> url as-file .lastModified Date.))
+  (if-let [^long time-modified (some-> url as-file .lastModified)]
+    (Date. time-modified)))
 
 (defn nil-check
   {:no-doc true}

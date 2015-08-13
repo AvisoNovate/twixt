@@ -4,7 +4,7 @@
   (:require [io.aviso.twixt.schemas :refer [Asset AssetHandler]]
             [io.aviso.toolchest.macros :refer [cond-let]]
             [schema.core :as s])
-  (:import [java.util.concurrent.locks ReentrantReadWriteLock ReentrantLock]))
+  (:import [java.util.concurrent.locks ReentrantLock Lock]))
 
 (s/defn wrap-with-transforming-cache :- AssetHandler
   "A cache that operates in terms of a transformation of assets: the canonical example
@@ -57,7 +57,7 @@
 
 (defmacro ^:private with-lock
   [lock & body]
-  `(let [lock# ~lock]
+  `(let [^Lock lock# ~lock]
      (try
        (.lock lock#)
        ~@body
