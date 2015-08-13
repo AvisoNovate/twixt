@@ -8,7 +8,7 @@
                  [io.aviso/tracker "0.1.6"]
                  [medley "0.6.0"]
                  [ring/ring-core "1.4.0"]
-                 [com.google.javascript/closure-compiler "v20150609"]
+                 [com.google.javascript/closure-compiler "v20150729"]
                  [org.mozilla/rhino "1.7.7"]
                  [com.github.sommeri/less4j "1.13.0"]
                  [de.neuland-bfi/jade4j "0.4.3"]

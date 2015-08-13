@@ -1,3 +1,11 @@
+## 0.1.21 - UNRELEASED
+
+Ensured that small amount of Java in the project is compiled for JDK 1.6.
+
+Removed a few reflection warnings.
+ 
+Upgraded Google Closure Compiler to v20150729.
+
 ## 0.1.20 - 12 Aug 2015
 
 Added support for CSS Compression (using YUICompressor).
