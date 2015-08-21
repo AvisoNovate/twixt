@@ -1,4 +1,4 @@
-## 0.1.21 - UNRELEASED
+## 0.1.21 - 21 Aug 2015
 
 Ensured that small amount of Java in the project is compiled for JDK 1.6.
 

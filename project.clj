@@ -5,7 +5,7 @@
             :url  "http://www.apache.org/licenses/LICENSE-2.0.html"}
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [io.aviso/pretty "0.1.18"]
-                 [io.aviso/tracker "0.1.6"]
+                 [io.aviso/tracker "0.1.7"]
                  [medley "0.6.0"]
                  [ring/ring-core "1.4.0"]
                  [com.google.javascript/closure-compiler "v20150729"]
