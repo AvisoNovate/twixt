@@ -1,15 +1,13 @@
 (ns io.aviso.twixt.jade
   "Provides asset pipeline middleware for compiling Jade templates to HTML using jade4j."
-  (:import
-    [de.neuland.jade4j JadeConfiguration]
-    [de.neuland.jade4j.exceptions JadeException]
-    [de.neuland.jade4j.template TemplateLoader])
-  (:require
-    [clojure.java.io :as io]
-    [io.aviso.twixt :as twixt]
-    [io.aviso.tracker :as t]
-    [io.aviso.twixt.utils :as utils]
-    [medley.core :as medley]))
+  (:require [clojure.java.io :as io]
+            [io.aviso.twixt :as twixt]
+            [io.aviso.tracker :as t]
+            [io.aviso.twixt.utils :as utils]
+            [medley.core :as medley])
+  (:import [de.neuland.jade4j JadeConfiguration]
+           [de.neuland.jade4j.exceptions JadeException]
+           [de.neuland.jade4j.template TemplateLoader]))
 
 (defn- add-missing-extension
   [^String name ext]
@@ -97,16 +95,27 @@
   "A Jade4J helper object that is used to allow a template to resolve asset URIs."
   (uri
     [this path]
-    "Used to obtain the URI for a given path.
-    The path may be relative to the currently compiling asset, or may be absoluate (with a leading slash).
+    "Used to obtain the URI for a given asset, identified by its asset path.
+    The path may be relative to the currently compiling asset, or may be absolute (with a leading slash).
 
-    Throws an exception if the asset it not found."))
+    Throws an exception if the asset it not found.")
+  (uris
+    [this paths]
+    "Used to obtain multiple URIs for any number of assets, each identified by a path.
+
+    paths is a seq of asset path strings (eitehr relative to the current asset, or absolute).
+
+    *Added in 0.1.21*"))
 
 (defn- create-twixt-helper
   [asset context]
   (reify TwixtHelper
     (uri [_ path]
-      (twixt/get-asset-uri context (complete-path asset path)))))
+      (twixt/get-asset-uri context (complete-path asset path)))
+    (uris [_ paths]
+      (->> paths
+           (map (partial complete-path asset))
+           (mapcat (partial twixt/get-asset-uris context))))))
 
 (defn register-jade
   "Updates the Twixt options with support for compiling Jade into HTML. Pretty printing of the output HTML is enabled

@@ -4,7 +4,9 @@ Ensured that small amount of Java in the project is compiled for JDK 1.6.
 
 Removed a few reflection warnings.
  
-Upgraded Google Closure Compiler to v20150729.
+Upgraded various dependencies to latest.
+
+The twixt helper provided to Jade templates now has a uris() method, which accepts an array of asset path strings.
 
 ## 0.1.20 - 12 Aug 2015
 

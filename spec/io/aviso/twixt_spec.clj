@@ -222,7 +222,12 @@
 
       (it "includes a dependency on the asset accessed by twixt.uri()"
           (should= ["aviso-logo.png" "jade-helper.jade"]
-                   (sorted-dependencies @asset)))))
+                   (sorted-dependencies @asset)))
+
+
+      (it "supports multiple assets via twixt.uris()"
+          (should (have-same-content "expected/jade-uris-helper.html"
+                                     (@pipeline "jade-uris-helper.jade" @context'))))))
 
   (context "Less compilation"
 

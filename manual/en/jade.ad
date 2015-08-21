@@ -24,7 +24,14 @@ This will output a fully qualified asset URI:
 <img src="/assets/8ee745bf/logo.png">
 ----
 
-NOTE: A second function, `uris()`, should be added soon.
+The +uris+ method accepts an array of paths; an returns an array of individual asset URIs.
+This is useful when the URI references a stack (which will be a single asset in production,
+but multiple assets in development).
+
+---
+for script in twixt.uris(["js/app.stack"])
+  script(src=script)
+----
 
 == Defining your own helpers
 
@@ -44,19 +51,32 @@ Generally, you will want to define a protocol, then use +reify+.  For example, t
   "A Jade4J helper object that is used to allow a template to resolve asset URIs."
   (uri
     [this path]
-    "Used to obtain the URI for a given path. The path may be relative to the currently compiling
-asset, or may be absoluate (with a leading slash). Throws an exception if the asset it not found."))
+    "Used to obtain the URI for a given asset, identified by its asset path.
+    The path may be relative to the currently compiling asset, or may be absolute (with a leading slash).
+
+    Throws an exception if the asset it not found.")
+  (uris
+    [this paths]
+    "Used to obtain multiple URIs for any number of assets, each identified by a path.
+
+    paths is a seq of asset path strings (eitehr relative to the current asset, or absolute).
+
+    *Added in 0.1.21*"))
 
 (defn- create-twixt-helper
   [asset context]
   (reify TwixtHelper
     (uri [_ path]
-      (twixt/get-asset-uri context (complete-path asset path)))))
+      (twixt/get-asset-uri context (complete-path asset path)))
+    (uris [_ paths]
+      (->> paths
+           (map (partial complete-path asset))
+           (mapcat (partial twixt/get-asset-uris context))))))
 ----
 
 NOTE: Any asset URI will cause the asset in question to be added as a dependency of the main Jade template. This means
 that changing the referenced asset will cause the Jade template to be re-compiled. This makes sense: changing an image
-file will change the URI for the image file, which means that the Jade output should also change.
+file will change the URI for the image file (due to content snapshotting), which means that the Jade output should also change.
 
 Creator functions can be added to the Twixt context using Ring middleware:
 
