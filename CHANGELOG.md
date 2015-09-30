@@ -1,3 +1,7 @@
+## 0.1.22 - 30 Sep 2015
+
+Updated a bunch of dependencies to latest version, most important: clojure 1.7 and schema 1.0.1 .
+
 ## 0.1.21 - 21 Aug 2015
 
 Ensured that small amount of Java in the project is compiled for JDK 1.6.
