@@ -47,7 +47,7 @@
      (->
        handler
        ring/wrap-with-twixt
-       (export/wrap-with-exporter (:exports twixt-options))
+       (export/wrap-with-exporter (:exports twixt-options'))
        te/wrap-with-exception-reporting
        compress/wrap-with-compression-analyzer
        (ring/wrap-with-twixt-setup twixt-options asset-pipeline)))))
