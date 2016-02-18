@@ -35,19 +35,19 @@
    (wrap-with-twixt handler false))
   ([handler development-mode]
    (wrap-with-twixt handler t/default-options development-mode))
-  ([handler twixt-options development-mode]
-   (let [twixt-options' (-> (merge t/default-options twixt-options)
-                            (assoc :development-mode development-mode)
-                            te/register-exception-reporting
-                            cs/register-coffee-script
-                            jade/register-jade
-                            less/register-less
-                            stacks/register-stacks)
-         asset-pipeline (t/default-asset-pipeline twixt-options')]
+  ([handler opts development-mode]
+   (let [twixt-options (-> (merge t/default-options opts)
+                        (assoc :development-mode development-mode)
+                        te/register-exception-reporting
+                        cs/register-coffee-script
+                        jade/register-jade
+                        less/register-less
+                        stacks/register-stacks)
+         asset-pipeline (t/default-asset-pipeline twixt-options)]
      (->
        handler
        ring/wrap-with-twixt
        (export/wrap-with-exporter (:exports twixt-options))
        te/wrap-with-exception-reporting
        compress/wrap-with-compression-analyzer
-       (ring/wrap-with-twixt-setup twixt-options' asset-pipeline)))))
+       (ring/wrap-with-twixt-setup twixt-options asset-pipeline)))))
