@@ -96,7 +96,7 @@
              {:keys [cached-asset cached-at] :as cache-entry} (get @cache asset-path)]
 
             (and cached-asset
-                 (< (+ cached-at check-interval-ms) now))
+                 (< now (+ cached-at check-interval-ms)))
             cached-asset
 
             (nil? cache-entry)
