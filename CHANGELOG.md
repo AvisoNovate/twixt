@@ -1,3 +1,7 @@
+## 0.1.24 - 18 Feb 2016
+
+Redeployed on Clojars, POM problematic in previous deploy.
+
 ## 0.1.23 - 18 Feb 2016
 
 Bugfixes
