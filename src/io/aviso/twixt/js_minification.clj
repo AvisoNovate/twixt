@@ -30,7 +30,7 @@
         (if failures
           (throw (ex-info (str "JavaScript minimization failed: "
                                (str/join "; " (seq failures)))
-                          options))
+                          asset))
           (utils/create-compiled-asset asset "text/javascript" output nil))))))
 
 (def ^:private optimization-levels {:simple     CompilationLevel/SIMPLE_OPTIMIZATIONS
