@@ -1,3 +1,10 @@
+## 0.1.23 - 18 Feb 2016
+
+Bugfixes
+- Not passing the merged 'twixt-options' to 'wrap-with-exporter' in 'startup/wrap-with-twixt'
+- Wrong arg passed to 'ex-info' in 'js-minification/minimize-javascript-asset' 
+- [Issue 26](https://github.com/AvisoNovate/twixt/issues/26)
+
 ## 0.1.22 - 30 Sep 2015
 
 Updated a bunch of dependencies to latest version, most important: clojure 1.7 and schema 1.0.1 .
