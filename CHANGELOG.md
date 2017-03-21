@@ -1,3 +1,8 @@
+## 0.1.25 - 21 Mar 2017
+
+Update to Clojure 1.8.0
+Fix bad ns declaration in io.aviso.twixt.fs-cache
+
 ## 0.1.24 - 18 Feb 2016
 
 Redeployed on Clojars, POM problematic in previous deploy.
