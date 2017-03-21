@@ -4,7 +4,7 @@
   duplicated, expensive work from being performed after a restart."
   (:import [java.util UUID]
            [java.io PushbackReader File Writer])
-  (require
+  (:require
     [clojure.java.io :as io]
     [clojure
      [edn :as edn]
