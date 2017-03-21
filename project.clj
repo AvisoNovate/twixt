@@ -3,7 +3,7 @@
   :url "https://github.com/AvisoNovate/twixt"
   :license {:name "Apache Sofware Licencse 2.0"
             :url  "http://www.apache.org/licenses/LICENSE-2.0.html"}
-  :dependencies [[org.clojure/clojure "1.7.0"]
+  :dependencies [[org.clojure/clojure "1.8.0"]
                  [io.aviso/pretty "0.1.19"]
                  [io.aviso/tracker "0.1.7"]
                  [medley "0.7.0"]
